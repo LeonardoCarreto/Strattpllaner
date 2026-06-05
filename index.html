@@ -444,7 +444,7 @@ if (window._hideAppLoader) window._hideAppLoader();
       <span class="al-brain">🧠</span>
       <img class="al-img" src="assets/brain.png" alt="" onerror="this.style.display='none';this.previousElementSibling.style.display='block';" />
     </div>
-    <div class="al-spinner"></div>
+    <svg class="al-chart" viewBox="0 0 100 40" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><polyline points="2,34 16,28 28,32 42,20 56,24 70,12 84,16 98,4"/></svg>
   </div>
 </div>
 <style>
@@ -454,11 +454,12 @@ if (window._hideAppLoader) window._hideAppLoader();
 #app-loader .al-logo-wrap{position:relative;display:flex;align-items:center;justify-content:center;width:260px;height:260px;}
 #app-loader .al-img{position:relative;z-index:2;width:240px;height:240px;object-fit:contain;filter:drop-shadow(0 6px 22px rgba(0,0,0,.55));animation:alPulse 2.4s ease-in-out infinite;}
 #app-loader .al-brain{position:relative;z-index:2;display:none;font-size:200px;line-height:1;animation:alPulse 2.4s ease-in-out infinite;}
-#app-loader .al-ripple{position:absolute;top:50%;left:50%;width:220px;height:220px;margin:-110px 0 0 -110px;border-radius:50%;border:2px solid rgba(200,205,215,.5);opacity:0;animation:alRipple 3s cubic-bezier(.2,.6,.3,1) infinite;}
-#app-loader .al-ripple:nth-child(2){animation-delay:1s;}
-#app-loader .al-ripple:nth-child(3){animation-delay:2s;}
-#app-loader .al-spinner{width:34px;height:34px;border-radius:50%;border:3px solid rgba(255,255,255,.14);border-top-color:#3b82f6;animation:alSpin .8s linear infinite;}
-@keyframes alSpin{to{transform:rotate(360deg);}}
+#app-loader .al-ripple{position:absolute;top:50%;left:50%;width:220px;height:220px;margin:-110px 0 0 -110px;border-radius:50%;border:2px solid rgba(200,205,215,.5);opacity:0;animation:alRipple 4.8s cubic-bezier(.2,.6,.3,1) infinite;}
+#app-loader .al-ripple:nth-child(2){animation-delay:1.6s;}
+#app-loader .al-ripple:nth-child(3){animation-delay:3.2s;}
+#app-loader .al-chart{width:84px;height:34px;overflow:visible;}
+#app-loader .al-chart polyline{fill:none;stroke:#3b82f6;stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:120;stroke-dashoffset:120;filter:drop-shadow(0 0 5px rgba(59,130,246,.55));animation:alChartDraw 1.9s ease-in-out infinite;}
+@keyframes alChartDraw{0%{stroke-dashoffset:120;opacity:0;}12%{opacity:1;}65%{stroke-dashoffset:0;opacity:1;}85%{stroke-dashoffset:0;opacity:1;}100%{stroke-dashoffset:0;opacity:0;}}
 @keyframes alPulse{0%,100%{transform:scale(1);opacity:.92;}50%{transform:scale(1.06);opacity:1;}}
 @keyframes alRipple{0%{transform:scale(.5);opacity:.6;}70%{opacity:.12;}100%{transform:scale(9);opacity:0;}}
 </style>

@@ -1733,109 +1733,10 @@ color:rgba(255,255,255,.35);border-bottom:2px solid transparent;cursor:pointer;
 font-family:'Baloo Bhaijaan 2',sans-serif;letter-spacing:.5px;
 touch-action:manipulation;
 ">🥊 VS GymBros</div>
-<div onclick="switchRutinaMainTab(2)" id="rutinaTabRacha" style="
-flex:1;text-align:center;padding:10px;font-size:12px;font-weight:800;
-color:rgba(255,255,255,.35);border-bottom:2px solid transparent;cursor:pointer;
-font-family:'Baloo Bhaijaan 2',sans-serif;letter-spacing:.5px;
-touch-action:manipulation;
-">🔥 Mi Racha</div>
 </div>
 <div class="panel-content" id="rutinaContent"></div>
 <div class="panel-content" id="rutinaGymbroContent" style="display:none;"></div>
 
-<div class="panel-content" id="rutinaRachaContent" style="display:none;flex-direction:column;gap:14px;padding:16px;">
-
-  
-  <div style="background:linear-gradient(135deg,rgba(255,107,53,.15),rgba(255,60,0,.08));border:1.5px solid rgba(255,107,53,.4);border-radius:18px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:10px;position:relative;overflow:hidden;">
-    <div style="position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 20px,rgba(255,107,53,.03) 20px,rgba(255,107,53,.03) 22px);pointer-events:none;"></div>
-    <div style="font-size:48px;filter:drop-shadow(0 0 12px rgba(255,107,53,.8));animation:gymIconBounce 2.5s ease-in-out infinite;position:relative;z-index:1;">🏋️</div>
-    <div style="font-family:'Baloo Bhaijaan 2',cursive;font-size:20px;font-weight:900;color:#fff;text-align:center;position:relative;z-index:1;">Racha de Ejercicio</div>
-    <div style="position:relative;z-index:1;background:rgba(255,107,53,.2);border:1.5px solid rgba(255,107,53,.5);border-radius:20px;padding:5px 16px;color:#ff6b35;font-size:11px;font-weight:800;">💪 Próximamente</div>
-  </div>
-
-  
-  <div style="display:flex;gap:8px;">
-    <div class="rutina-stat-chip" style="flex:1;opacity:.45;">
-      <div class="rutina-stat-num">–</div>
-      <div class="rutina-stat-label">Racha actual</div>
-    </div>
-    <div class="rutina-stat-chip" style="flex:1;opacity:.45;">
-      <div class="rutina-stat-num">–</div>
-      <div class="rutina-stat-label">Mejor racha</div>
-    </div>
-    <div class="rutina-stat-chip" style="flex:1;opacity:.45;">
-      <div class="rutina-stat-num">–</div>
-      <div class="rutina-stat-label">Sesiones</div>
-    </div>
-  </div>
-
-  
-  <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px;">
-    <div style="color:rgba(255,255,255,.5);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;">¿Qué será esta racha?</div>
-    <div style="display:flex;align-items:flex-start;gap:10px;">
-      <div style="font-size:18px;flex-shrink:0;margin-top:1px;">🔥</div>
-      <div style="color:rgba(255,255,255,.7);font-size:12px;line-height:1.6;">Registra tu <strong style="color:#fff;">racha de días consecutivos</strong> de ejercicio, independiente de tus tareas.</div>
-    </div>
-    <div style="display:flex;align-items:flex-start;gap:10px;">
-      <div style="font-size:18px;flex-shrink:0;margin-top:1px;">📸</div>
-      <div style="color:rgba(255,255,255,.7);font-size:12px;line-height:1.6;">Verifica tus sesiones con <strong style="color:#fff;">fotos</strong> validadas por IA, igual que tus tareas.</div>
-    </div>
-    <div style="display:flex;align-items:flex-start;gap:10px;">
-      <div style="font-size:18px;flex-shrink:0;margin-top:1px;">🏆</div>
-      <div style="color:rgba(255,255,255,.7);font-size:12px;line-height:1.6;">Compite con tus <strong style="color:#fff;">GymBros</strong> en una tabla de rachas de ejercicio.</div>
-    </div>
-  </div>
-
-  
-  <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:14px;">
-    <div style="color:rgba(255,255,255,.4);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Esta semana</div>
-    <div style="display:flex;gap:6px;justify-content:center;">
-      <style>.gym-day-ph{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;background:rgba(255,255,255,.04);border-radius:10px;padding:7px 4px;border:1.5px solid rgba(255,255,255,.06);opacity:.5;} .gym-day-ph span:first-child{font-size:16px;} .gym-day-ph .gd-lbl{color:rgba(255,255,255,.35);font-size:8px;font-weight:800;text-transform:uppercase;}</style>
-      <div class="gym-day-ph"><span>⬜</span><span class="gd-lbl">LUN</span></div>
-      <div class="gym-day-ph"><span>⬜</span><span class="gd-lbl">MAR</span></div>
-      <div class="gym-day-ph"><span>⬜</span><span class="gd-lbl">MIÉ</span></div>
-      <div class="gym-day-ph"><span>⬜</span><span class="gd-lbl">JUE</span></div>
-      <div class="gym-day-ph"><span>⬜</span><span class="gd-lbl">VIE</span></div>
-      <div class="gym-day-ph"><span>⬜</span><span class="gd-lbl">SÁB</span></div>
-      <div class="gym-day-ph"><span>⬜</span><span class="gd-lbl">DOM</span></div>
-    </div>
-  </div>
-
-</div>
-
-<script>
-
-(function(){
-  var _origSwitch = window.switchRutinaMainTab;
-  window.switchRutinaMainTab = function(idx) {
-    
-    var tab0 = document.getElementById('rutinaTabMi');
-    var tab1 = document.getElementById('rutinaTabVs');
-    var tab2 = document.getElementById('rutinaTabRacha');
-    var con0 = document.getElementById('rutinaContent');
-    var con1 = document.getElementById('rutinaGymbroContent');
-    var con2 = document.getElementById('rutinaRachaContent');
-
-    if (idx === 2) {
-      
-      if (tab0) { tab0.style.color='rgba(255,255,255,.35)'; tab0.style.borderBottomColor='transparent'; }
-      if (tab1) { tab1.style.color='rgba(255,255,255,.35)'; tab1.style.borderBottomColor='transparent'; }
-      if (tab2) { tab2.style.color='#ff6b35'; tab2.style.borderBottomColor='#ff6b35'; }
-      if (con0) con0.style.display='none';
-      if (con1) con1.style.display='none';
-      if (con2) con2.style.display='flex';
-      return;
-    }
-    
-    if (tab2) { tab2.style.color='rgba(255,255,255,.35)'; tab2.style.borderBottomColor='transparent'; }
-    if (con2) con2.style.display='none';
-    
-    if (typeof _origSwitch === 'function') {
-      _origSwitch(idx);
-    }
-  };
-})();
-</script>
 
 </div>
 

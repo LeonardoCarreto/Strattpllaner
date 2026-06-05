@@ -668,17 +668,26 @@ Enviar instrucciones <span class="splash-btn-icon">📨</span>
 .hds-progress{font-size:11px;font-weight:700;color:rgba(255,255,255,.4);font-family:'Baloo Bhaijaan 2',sans-serif;}
 .hds-track{display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:4px 2px 6px;}
 .hds-track::-webkit-scrollbar{display:none;}
-.hds-day{flex-shrink:0;width:42px;display:flex;flex-direction:column;align-items:center;gap:2px;scroll-snap-align:center;cursor:default;}
+.hds-day{flex-shrink:0;width:46px;display:flex;flex-direction:column;align-items:center;gap:3px;scroll-snap-align:center;cursor:default;}
 .hds-day-label{font-size:9px;font-weight:700;color:rgba(255,255,255,.38);font-family:'Baloo Bhaijaan 2',sans-serif;text-transform:uppercase;}
-.hds-day-num{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;font-family:'Baloo Bhaijaan 2',sans-serif;color:#fff;background:rgba(255,255,255,.1);transition:transform .15s;}
-.hds-day.today .hds-day-num{width:44px;height:44px;border-radius:13px;font-size:18px;border:2.5px solid #fff;background:rgba(255,255,255,.22);box-shadow:0 0 14px rgba(255,255,255,.35),0 2px 8px rgba(0,0,0,.3);color:#fff!important;font-weight:900;}
-.hds-day.day-green .hds-day-num{background:rgba(94,220,138,.78);}
-.hds-day.day-yellow .hds-day-num{background:rgba(240,192,0,.82);}
-.hds-day.day-red .hds-day-num{background:rgba(232,82,122,.75);}
-.hds-day.day-gray .hds-day-num{background:rgba(255,255,255,.09);color:rgba(255,255,255,.3);}
-.hds-day.hds-focused .hds-day-num{transform:scale(1.18);box-shadow:0 2px 10px rgba(0,0,0,.35);}
-.hds-day.today.hds-focused .hds-day-num{transform:scale(1.08);}
+/* Anillo de progreso (se llena según el % de tareas/hábitos completados) */
+.hds-ring{--pct:0;--ring-fill:#5edc8a;--ring-track:rgba(255,255,255,.12);width:38px;height:38px;box-sizing:border-box;border-radius:50%;padding:3px;background:conic-gradient(var(--ring-fill) calc(var(--pct) * 1turn), var(--ring-track) 0);transition:transform .15s;}
+.hds-day-num{width:100%;height:100%;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;font-family:'Baloo Bhaijaan 2',sans-serif;color:#fff;background:#15171f;}
+/* Hoy: círculo más grande y resaltado, con puntito debajo */
+.hds-day.today .hds-ring{width:48px;height:48px;padding:3.5px;}
+.hds-day.today .hds-day-num{font-size:17px;font-weight:900;background:#1c1f29;box-shadow:inset 0 0 0 2px rgba(255,255,255,.85);}
 .hds-day.today .hds-day-label{color:rgba(255,255,255,.85)!important;font-weight:900;}
+.hds-day.today::after{content:'';width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.7);margin-top:1px;}
+/* Colores por estado */
+.hds-day.day-green .hds-ring{--ring-fill:#5edc8a;}
+.hds-day.day-green .hds-day-num{color:#9affc4;}
+.hds-day.day-yellow .hds-ring{--ring-fill:#f0c000;}
+.hds-day.day-yellow .hds-day-num{color:#ffe082;}
+.hds-day.day-red .hds-ring{--ring-track:rgba(232,82,122,.45);--ring-fill:#e8527a;}
+.hds-day.day-red .hds-day-num{color:rgba(232,82,122,.9);}
+.hds-day.day-gray .hds-day-num{color:rgba(255,255,255,.32);}
+.hds-day.hds-focused .hds-ring{transform:scale(1.15);}
+.hds-day.today.hds-focused .hds-ring{transform:scale(1.06);}
 </style>
 <div id="homeDayStrip">
   <div class="hds-header">
@@ -1385,11 +1394,6 @@ oninput="notasAutoSave()"></textarea>
 <div class="panel-item-text"><strong style="color:var(--green);">Guardar progreso</strong><span id="lastSavedLabel">Toca para guardar</span></div>
 <div class="panel-item-arrow" style="color:var(--green);">›</div>
 </div>
-<div class="panel-item" style="background:rgba(42,100,150,.07);border:1.5px solid rgba(42,100,150,.2);border-radius:12px;" onclick="showChangeApiKey()">
-<div class="panel-item-icon">🤖</div>
-<div class="panel-item-text"><strong style="color:#7ab8e8;">API Key de IA</strong><span id="apiKeyStatusLabel" style="color:rgba(255,255,255,.4);font-size:11px;"> — </span></div>
-<div class="panel-item-arrow" style="color:#7ab8e8;">›</div>
-</div>
 <div class="panel-item" style="background:rgba(232,82,122,.07);border:1.5px solid rgba(232,82,122,.2);border-radius:12px;" onclick="confirmLogout()">
 <div class="panel-item-icon">🚪</div>
 <div class="panel-item-text"><strong style="color:var(--pink);">Cerrar sesión</strong><span id="loggedEmailLabel">—</span></div>
@@ -1733,10 +1737,109 @@ color:rgba(255,255,255,.35);border-bottom:2px solid transparent;cursor:pointer;
 font-family:'Baloo Bhaijaan 2',sans-serif;letter-spacing:.5px;
 touch-action:manipulation;
 ">🥊 VS GymBros</div>
+<div onclick="switchRutinaMainTab(2)" id="rutinaTabRacha" style="
+flex:1;text-align:center;padding:10px;font-size:12px;font-weight:800;
+color:rgba(255,255,255,.35);border-bottom:2px solid transparent;cursor:pointer;
+font-family:'Baloo Bhaijaan 2',sans-serif;letter-spacing:.5px;
+touch-action:manipulation;
+">🔥 Mi Racha</div>
 </div>
 <div class="panel-content" id="rutinaContent"></div>
 <div class="panel-content" id="rutinaGymbroContent" style="display:none;"></div>
 
+<div class="panel-content" id="rutinaRachaContent" style="display:none;flex-direction:column;gap:14px;padding:16px;">
+
+  
+  <div style="background:linear-gradient(135deg,rgba(255,107,53,.15),rgba(255,60,0,.08));border:1.5px solid rgba(255,107,53,.4);border-radius:18px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:10px;position:relative;overflow:hidden;">
+    <div style="position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 20px,rgba(255,107,53,.03) 20px,rgba(255,107,53,.03) 22px);pointer-events:none;"></div>
+    <div style="font-size:48px;filter:drop-shadow(0 0 12px rgba(255,107,53,.8));animation:gymIconBounce 2.5s ease-in-out infinite;position:relative;z-index:1;">🏋️</div>
+    <div style="font-family:'Baloo Bhaijaan 2',cursive;font-size:20px;font-weight:900;color:#fff;text-align:center;position:relative;z-index:1;">Racha de Ejercicio</div>
+    <div style="position:relative;z-index:1;background:rgba(255,107,53,.2);border:1.5px solid rgba(255,107,53,.5);border-radius:20px;padding:5px 16px;color:#ff6b35;font-size:11px;font-weight:800;">💪 Próximamente</div>
+  </div>
+
+  
+  <div style="display:flex;gap:8px;">
+    <div class="rutina-stat-chip" style="flex:1;opacity:.45;">
+      <div class="rutina-stat-num">–</div>
+      <div class="rutina-stat-label">Racha actual</div>
+    </div>
+    <div class="rutina-stat-chip" style="flex:1;opacity:.45;">
+      <div class="rutina-stat-num">–</div>
+      <div class="rutina-stat-label">Mejor racha</div>
+    </div>
+    <div class="rutina-stat-chip" style="flex:1;opacity:.45;">
+      <div class="rutina-stat-num">–</div>
+      <div class="rutina-stat-label">Sesiones</div>
+    </div>
+  </div>
+
+  
+  <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px;">
+    <div style="color:rgba(255,255,255,.5);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;">¿Qué será esta racha?</div>
+    <div style="display:flex;align-items:flex-start;gap:10px;">
+      <div style="font-size:18px;flex-shrink:0;margin-top:1px;">🔥</div>
+      <div style="color:rgba(255,255,255,.7);font-size:12px;line-height:1.6;">Registra tu <strong style="color:#fff;">racha de días consecutivos</strong> de ejercicio, independiente de tus tareas.</div>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:10px;">
+      <div style="font-size:18px;flex-shrink:0;margin-top:1px;">📸</div>
+      <div style="color:rgba(255,255,255,.7);font-size:12px;line-height:1.6;">Verifica tus sesiones con <strong style="color:#fff;">fotos</strong> validadas por IA, igual que tus tareas.</div>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:10px;">
+      <div style="font-size:18px;flex-shrink:0;margin-top:1px;">🏆</div>
+      <div style="color:rgba(255,255,255,.7);font-size:12px;line-height:1.6;">Compite con tus <strong style="color:#fff;">GymBros</strong> en una tabla de rachas de ejercicio.</div>
+    </div>
+  </div>
+
+  
+  <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:14px;">
+    <div style="color:rgba(255,255,255,.4);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Esta semana</div>
+    <div style="display:flex;gap:6px;justify-content:center;">
+      <style>.gym-day-ph{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;background:rgba(255,255,255,.04);border-radius:10px;padding:7px 4px;border:1.5px solid rgba(255,255,255,.06);opacity:.5;} .gym-day-ph span:first-child{font-size:16px;} .gym-day-ph .gd-lbl{color:rgba(255,255,255,.35);font-size:8px;font-weight:800;text-transform:uppercase;}</style>
+      <div class="gym-day-ph"><span>⬜</span><span class="gd-lbl">LUN</span></div>
+      <div class="gym-day-ph"><span>⬜</span><span class="gd-lbl">MAR</span></div>
+      <div class="gym-day-ph"><span>⬜</span><span class="gd-lbl">MIÉ</span></div>
+      <div class="gym-day-ph"><span>⬜</span><span class="gd-lbl">JUE</span></div>
+      <div class="gym-day-ph"><span>⬜</span><span class="gd-lbl">VIE</span></div>
+      <div class="gym-day-ph"><span>⬜</span><span class="gd-lbl">SÁB</span></div>
+      <div class="gym-day-ph"><span>⬜</span><span class="gd-lbl">DOM</span></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+
+(function(){
+  var _origSwitch = window.switchRutinaMainTab;
+  window.switchRutinaMainTab = function(idx) {
+    
+    var tab0 = document.getElementById('rutinaTabMi');
+    var tab1 = document.getElementById('rutinaTabVs');
+    var tab2 = document.getElementById('rutinaTabRacha');
+    var con0 = document.getElementById('rutinaContent');
+    var con1 = document.getElementById('rutinaGymbroContent');
+    var con2 = document.getElementById('rutinaRachaContent');
+
+    if (idx === 2) {
+      
+      if (tab0) { tab0.style.color='rgba(255,255,255,.35)'; tab0.style.borderBottomColor='transparent'; }
+      if (tab1) { tab1.style.color='rgba(255,255,255,.35)'; tab1.style.borderBottomColor='transparent'; }
+      if (tab2) { tab2.style.color='#ff6b35'; tab2.style.borderBottomColor='#ff6b35'; }
+      if (con0) con0.style.display='none';
+      if (con1) con1.style.display='none';
+      if (con2) con2.style.display='flex';
+      return;
+    }
+    
+    if (tab2) { tab2.style.color='rgba(255,255,255,.35)'; tab2.style.borderBottomColor='transparent'; }
+    if (con2) con2.style.display='none';
+    
+    if (typeof _origSwitch === 'function') {
+      _origSwitch(idx);
+    }
+  };
+})();
+</script>
 
 </div>
 
@@ -1775,8 +1878,10 @@ touch-action:manipulation;
 
 <script>
 
+// ⬇️ TU API KEY DE GEMINI (la misma para todos los usuarios). Pégala entre las comillas.
+const OWNER_GEMINI_KEY = '';
 function getUserGeminiKey() {
-  return localStorage.getItem('user_gemini_key') || '';
+  return OWNER_GEMINI_KEY;
 }
 function saveApiKey() {
   const input = document.getElementById('apiKeyInput');
@@ -1807,19 +1912,11 @@ function checkApiKeySetup() {
   }
 }
 function requireApiKey() {
-  const key = getUserGeminiKey();
-  if (!key) {
-    const overlay = document.getElementById('apiKeyOverlay');
-    if (overlay) overlay.style.display = 'flex';
-    return false;
-  }
+  // La key ahora es la del dueño (OWNER_GEMINI_KEY); nunca se le pide al usuario.
   return true;
 }
 function showChangeApiKey() {
-  const overlay = document.getElementById('apiKeyOverlay');
-  const input = document.getElementById('apiKeyInput');
-  if (overlay) overlay.style.display = 'flex';
-  if (input) input.value = getUserGeminiKey() || '';
+  // Deshabilitado: la app usa la key del dueño; el usuario ya no ingresa la suya.
 }
 checkApiKeySetup();
 function updateApiKeyStatusLabel() {
@@ -1851,11 +1948,14 @@ function comprimirImagen(base64, callback) {
   img.src = 'data:image/jpeg;base64,' + base64;
 }
 
+// Proxy seguro: la app NO habla con Gemini directamente. Llama a nuestra
+// función /api/gemini, que guarda la API Key en secreto en el servidor.
+const GEMINI_PROXY_URL = '/api/gemini';
 async function geminiPost(body, maxRetries = 3) {
-  const currentUrl = window._geminiUrl || GEMINI_URL;
-  if (!currentUrl || !getUserGeminiKey()) {
-    requireApiKey();
-    throw new Error('API Key no configurada');
+  const user = window._fbAuth && window._fbAuth.currentUser;
+  if (!user) {
+    showToast('🔒 Inicia sesión para usar la verificación con IA.');
+    throw new Error('Sin sesión iniciada');
   }
   let lastErr;
   for (let attempt = 0; attempt < maxRetries; attempt++) {
@@ -1864,24 +1964,21 @@ async function geminiPost(body, maxRetries = 3) {
       showToast(`⏳ Límite de IA — reintentando en ${wait/1000}s... (${attempt}/${maxRetries-1})`);
       await new Promise(r => setTimeout(r, wait));
     }
-    const res = await fetch(currentUrl, {
+    const token = await user.getIdToken();
+    const res = await fetch(GEMINI_PROXY_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
       body: JSON.stringify(body)
     });
     if (res.status === 429) {
       lastErr = new Error('Límite de IA alcanzado. Espera 1 minuto e intenta de nuevo.');
       continue;
     }
-    if (res.status === 400 || res.status === 403) {
-      const j = await res.json().catch(() => ({}));
-      const msg = j?.error?.message || '';
-      if (msg.toLowerCase().includes('api key') || msg.toLowerCase().includes('invalid')) {
-        localStorage.removeItem('user_gemini_key');
-        window._geminiKey = ''; window._geminiUrl = '';
-        requireApiKey();
-        throw new Error('API Key inválida — por favor ingresa una nueva.');
-      }
+    if (res.status === 401) {
+      throw new Error('Tu sesión expiró — vuelve a iniciar sesión.');
     }
     if (!res.ok) {
       const j = await res.json().catch(() => ({}));
@@ -2641,7 +2738,7 @@ function renderHomeDayStrip() {
     const dow = dayDate.getDay();
     const isToday = d === todayD;
     const isPast = d < todayD;
-    let colorClass = 'day-gray';
+    let colorClass = 'day-gray', pct = 0;
     if (isPast || isToday) {
       try {
         const scheduledTasks = typeof tskData !== 'undefined' ? tskData.filter(t => {
@@ -2656,6 +2753,7 @@ function renderHomeDayStrip() {
         const completedHabits = hasHabits ? habitData.filter(h => (h.doneDates||[]).includes(dateKey)) : [];
         const totalScheduled = scheduledTasks.length + (hasHabits ? habitData.length : 0);
         const totalCompleted = completedTasks.length + completedHabits.length;
+        pct = totalScheduled > 0 ? Math.min(1, totalCompleted / totalScheduled) : 0;
         if (totalScheduled === 0) {
           colorClass = isToday ? 'day-gray' : 'day-red';
         } else if (totalCompleted >= totalScheduled) {
@@ -2669,7 +2767,7 @@ function renderHomeDayStrip() {
     }
     const el = document.createElement('div');
     el.className = 'hds-day' + (isToday ? ' today' : '') + ' ' + colorClass;
-    el.innerHTML = '<div class="hds-day-label">' + DAYS_SHORT_ES[dow] + '</div><div class="hds-day-num">' + d + '</div>';
+    el.innerHTML = '<div class="hds-day-label">' + DAYS_SHORT_ES[dow] + '</div><div class="hds-ring" style="--pct:' + pct + '"><div class="hds-day-num">' + d + '</div></div>';
     track.appendChild(el);
   }
   // Center today on first render

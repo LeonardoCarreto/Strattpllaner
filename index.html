@@ -10898,11 +10898,17 @@ var metas={pierna:0,pecho:0,espalda:0,brazo:0};
 try {
   var rd=getRutinaData();
   rd.forEach(function(day){
-    if(!day.rest&&day.exercises) day.exercises.forEach(function(ex){
-      var g=muscleClassify(ex.name);if(g)metas[g]++;
+    if(day.rest) return;
+    var exs=day.exercises;
+    if(!exs||!exs.length) return;
+    exs.forEach(function(ex){
+      var exName=(typeof ex==='string')?ex:(ex&&(ex.name||ex.label||''));
+      var g=muscleClassify(exName);
+      if(g) metas[g]++;
     });
   });
-} catch(e){}
+} catch(e){ console.error('[calcMetasFromRutina] error:',e); }
+console.log('Metas calculadas:',{pecho:metas.pecho,espalda:metas.espalda,brazo:metas.brazo,pierna:metas.pierna});
 return metas;
 }
 function muscleAdjust(key,field,delta){

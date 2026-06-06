@@ -1809,9 +1809,16 @@ color:rgba(255,255,255,.35);border-bottom:2px solid transparent;cursor:pointer;
 font-family:'Baloo Bhaijaan 2',sans-serif;letter-spacing:.5px;
 touch-action:manipulation;
 ">📊 Analytics</div>
+<div onclick="switchRutinaMainTab(2)" id="rutinaTabGb" style="
+flex:1;text-align:center;padding:10px;font-size:12px;font-weight:800;
+color:rgba(255,255,255,.35);border-bottom:2px solid transparent;cursor:pointer;
+font-family:'Baloo Bhaijaan 2',sans-serif;letter-spacing:.5px;
+touch-action:manipulation;
+">🥊 Gymbros</div>
 </div>
 <div class="panel-content" id="rutinaContent"></div>
 <div class="panel-content" id="rutinaAnalyticsContent" style="display:none;"></div>
+<div class="panel-content" id="rutinaGymbrosContent" style="display:none;"></div>
 
 
 </div>
@@ -10587,24 +10594,122 @@ function switchRutinaMainTab(idx) {
 rutinaMainTab = idx;
 const tabMi = document.getElementById('rutinaTabMi');
 const tabVs = document.getElementById('rutinaTabVs');
+const tabGb = document.getElementById('rutinaTabGb');
 const content = document.getElementById('rutinaContent');
 const anContent = document.getElementById('rutinaAnalyticsContent');
+const gbContent = document.getElementById('rutinaGymbrosContent');
 if (!tabMi || !tabVs) return;
-if (idx === 0) {
-tabMi.style.color = '#fff'; tabMi.style.borderBottomColor = '#fff';
-tabVs.style.color = 'rgba(255,255,255,.35)'; tabVs.style.borderBottomColor = 'transparent';
-content.style.display = '';
-if (anContent) anContent.style.display = 'none';
-renderRutina();
-} else {
-tabMi.style.color = 'rgba(255,255,255,.35)'; tabMi.style.borderBottomColor = 'transparent';
-tabVs.style.color = '#fff'; tabVs.style.borderBottomColor = '#fff';
-content.style.display = 'none';
-if (anContent) anContent.style.display = '';
-renderAnalytics();
-}
+const ON='#fff', OFF='rgba(255,255,255,.35)';
+tabMi.style.color=idx===0?ON:OFF; tabMi.style.borderBottomColor=idx===0?'#fff':'transparent';
+tabVs.style.color=idx===1?ON:OFF; tabVs.style.borderBottomColor=idx===1?'#fff':'transparent';
+if(tabGb){tabGb.style.color=idx===2?ON:OFF; tabGb.style.borderBottomColor=idx===2?'#fff':'transparent';}
+content.style.display=idx===0?'':'none';
+if(anContent) anContent.style.display=idx===1?'':'none';
+if(gbContent) gbContent.style.display=idx===2?'':'none';
+if(idx===0) renderRutina();
+else if(idx===1) renderAnalytics();
+else if(idx===2) renderGymbros();
 }
 async function renderGymbroComparison() {}
+async function renderGymbros() {
+const container = document.getElementById('rutinaGymbrosContent');
+if (!container) return;
+container.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:60px 20px;"><div style="width:36px;height:36px;border-radius:50%;border:3px solid rgba(110,220,210,.15);border-top-color:#6edcd2;animation:rutinaLoadSpin 0.8s linear infinite;"></div><div style="color:rgba(255,255,255,.3);font-size:12px;font-weight:700;letter-spacing:.5px;">Cargando Gymbros...</div></div>';
+const u = window._fbAuth && window._fbAuth.currentUser;
+if (!u) { container.innerHTML = '<div style="padding:40px 20px;text-align:center;color:rgba(255,255,255,.35);font-size:13px;">Inicia sesión para ver tus Gymbros.</div>'; return; }
+try {
+const meData = await fbGet('users/'+u.uid);
+const friendUids = (meData && meData.friends) || [];
+if (!friendUids.length) { container.innerHTML = _gymbrosEmpty(); return; }
+const friendDocs = await Promise.all(friendUids.map(uid => fbGet('users/'+uid).catch(()=>null)));
+const wk = muscleWeekKey();
+const muscleSnaps = await Promise.all(friendDocs.map((f,i) => {
+if (!f) return Promise.resolve(null);
+const uid = f.id || friendUids[i];
+return window._fbDb.collection('users').doc(uid).collection('muscleProgress').doc(wk).get().catch(()=>null);
+}));
+const gymbros = [];
+for (let i=0; i<friendDocs.length; i++) {
+const f = friendDocs[i]; if (!f) continue;
+const uid = f.id || friendUids[i];
+if (!f.rutinaData) continue;
+let rutinaArr = [];
+try { rutinaArr = JSON.parse(f.rutinaData); } catch(e) {}
+if (!rutinaArr.some(d => !d.rest && d.exercises && d.exercises.length > 0)) continue;
+const mSnap = muscleSnaps[i];
+let mData = (mSnap && mSnap.exists) ? mSnap.data() : null;
+let pct = 0;
+if (mData) {
+let tot=0, cnt=0;
+['pierna','pecho','espalda','brazo'].forEach(k => {
+if (mData[k] && mData[k].meta > 0) { tot += Math.min(100, Math.round((mData[k].realizado / (mData[k].meta||1)) * 100)); cnt++; }
+});
+if (cnt > 0) pct = Math.round(tot / cnt);
+}
+const hasThisWeek = mData && ['pierna','pecho','espalda','brazo'].some(k => mData[k] && mData[k].realizado > 0);
+gymbros.push({uid, displayName:f.displayName||'Usuario', avatar:f.avatar||'🧑', pct, hasThisWeek, rutinaData:f.rutinaData, mData});
+}
+if (!gymbros.length) { container.innerHTML = _gymbrosEmpty(); return; }
+gymbros.sort((a,b) => b.pct - a.pct);
+window._gymbrosData = gymbros;
+const pctColor = p => p>=80?'#4ade80':p>=50?'#fbbf24':'#f87171';
+const cards = gymbros.map((g,i) => {
+const c = pctColor(g.pct);
+const act = g.hasThisWeek ? 'Esta semana' : 'Sin actividad reciente';
+return '<div onclick="showGymbrosDetail('+i+')" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:background .15s;" onmouseenter="this.style.background=\'rgba(255,255,255,.08)\'" onmouseleave="this.style.background=\'rgba(255,255,255,.04)\'"><div style="font-size:26px;flex-shrink:0;">'+g.avatar+'</div><div style="flex:1;min-width:0;"><div style="color:#fff;font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+g.displayName+'</div><div style="color:rgba(255,255,255,.35);font-size:10px;margin-top:2px;">Última actividad: '+act+'</div></div><div style="color:'+c+';font-size:18px;font-weight:900;flex-shrink:0;">'+g.pct+'%<span style="font-size:12px;margin-left:2px;">💪</span></div></div>';
+}).join('');
+container.innerHTML = '<div style="padding:12px;display:flex;flex-direction:column;gap:8px;"><div style="color:rgba(255,255,255,.4);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Amigos entrenando — semana actual</div>'+cards+'</div>';
+} catch(e) {
+container.innerHTML = '<div style="padding:40px 20px;text-align:center;color:rgba(255,255,255,.35);font-size:13px;">Error al cargar. Intenta de nuevo.</div>';
+}
+}
+function _gymbrosEmpty() {
+return '<div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:60px 20px;text-align:center;"><div style="font-size:48px;">🏋️</div><div style="color:rgba(255,255,255,.55);font-size:14px;font-weight:700;margin-top:8px;">Ningún amigo tiene rutina aún</div><div style="color:rgba(255,255,255,.3);font-size:12px;margin-top:4px;">Invita a tus amigos a crear su rutina</div></div>';
+}
+async function showGymbrosDetail(idx) {
+const g = window._gymbrosData && window._gymbrosData[idx];
+if (!g) return;
+const container = document.getElementById('rutinaGymbrosContent');
+if (!container) return;
+const pctColor = p => p>=80?'#4ade80':p>=50?'#fbbf24':'#f87171';
+const c = pctColor(g.pct);
+let rutinaArr = [];
+try { rutinaArr = JSON.parse(g.rutinaData); } catch(e) {}
+const dayBlocks = rutinaArr.map(d => {
+if (d.rest) return '<div style="background:rgba(255,255,255,.03);border-radius:10px;padding:10px 12px;"><div style="color:rgba(255,255,255,.4);font-size:11px;font-weight:800;">'+(d.label||d.day)+'</div><div style="color:rgba(255,255,255,.25);font-size:12px;margin-top:4px;">🛌 Descanso</div></div>';
+if (!d.exercises || !d.exercises.length) return '';
+const exList = d.exercises.map(ex => '<div style="display:flex;align-items:center;gap:8px;padding:3px 0;"><span style="font-size:11px;opacity:.45;">⬜</span><span style="color:rgba(255,255,255,.8);font-size:12px;">'+(ex.name||ex)+'</span></div>').join('');
+return '<div style="background:rgba(255,255,255,.03);border-radius:10px;padding:10px 12px;"><div style="color:rgba(255,255,255,.55);font-size:11px;font-weight:800;margin-bottom:6px;">'+(d.label||d.day)+'</div>'+exList+'</div>';
+}).filter(Boolean).join('');
+const cvId = 'gbRadar'+Date.now();
+container.innerHTML =
+'<div style="padding:12px;display:flex;flex-direction:column;gap:14px;">'
++'<div style="display:flex;align-items:center;gap:10px;">'
++'<div onclick="renderGymbros()" style="background:rgba(255,255,255,.08);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:800;cursor:pointer;color:rgba(255,255,255,.7);flex-shrink:0;touch-action:manipulation;">← Volver</div>'
++'<div style="font-size:26px;flex-shrink:0;">'+g.avatar+'</div>'
++'<div style="flex:1;min-width:0;"><div style="color:#fff;font-size:15px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+g.displayName+'</div></div>'
++'<div style="color:'+c+';font-size:22px;font-weight:900;flex-shrink:0;">'+g.pct+'%</div>'
++'</div>'
++'<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:14px;">'
++'<div style="color:rgba(255,255,255,.4);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;">📊 Disciplina semanal</div>'
++'<canvas id="'+cvId+'" style="display:block;margin:0 auto;width:220px;height:220px;"></canvas>'
++'</div>'
++'<div>'
++'<div style="color:rgba(255,255,255,.4);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">📋 Su Rutina</div>'
++'<div style="display:flex;flex-direction:column;gap:8px;">'+(dayBlocks||'<div style="color:rgba(255,255,255,.3);font-size:12px;padding:10px 0;">Sin ejercicios en su rutina.</div>')+'</div>'
++'</div>'
++'</div>';
+requestAnimationFrame(function(){
+const cv = document.getElementById(cvId);
+if (cv && typeof drawDiamondRadar === 'function') {
+const dpr = window.devicePixelRatio||1, size = 220;
+cv.style.width=size+'px'; cv.style.height=size+'px';
+cv.width=size*dpr; cv.height=size*dpr;
+const md = g.mData || {pierna:{meta:1,realizado:0},pecho:{meta:1,realizado:0},espalda:{meta:1,realizado:0},brazo:{meta:1,realizado:0}};
+drawDiamondRadar(cv, md, null);
+}
+});
+}
 const MUSCLE_DEFAULT = {
 pierna:  { meta: 8, realizado: 0 },
 pecho:   { meta: 4, realizado: 0 },

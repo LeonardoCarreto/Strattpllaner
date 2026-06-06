@@ -10716,19 +10716,83 @@ pecho:   { meta: 4, realizado: 0 },
 espalda: { meta: 6, realizado: 0 },
 brazo:   { meta: 4, realizado: 0 }
 };
+function normalizeExName(s) {
+if (!s) return '';
+s=s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+s=s.replace(/\b(de|con|en|al|la|el|los|las|del)\b/g,'');
+return s.replace(/\s+/g,' ').trim();
+}
 const MUSCLE_KW = {
-pecho:   ['press banca','press plano','press inclinado','press declinado','press con mancuernas','press de pecho','aperturas','apertura','crossover','cross over','cable cross','fondos de pecho','peck deck','pec deck','mariposa','chest press','bench press','flye','fly','push up','lagartijas','flexiones','pullover','pecho','chest'],
-espalda: ['jalon al pecho','remo con barra','remo con mancuerna','remo sentado','remo horizontal','remo inclinado','remo en polea','remo t','remo','dominadas','dominada','lat pulldown','pull up','chin up','back extension','buenos dias','good morning','hiperextensiones','hiperextension','superman','encogimientos','encogimiento','face pull','trapecio','pulldown','peso muerto','deadlift','dorsal','espalda','jalon','lat'],
-brazo:   ['curl de biceps','curl biceps','curl martillo','curl con barra','curl con mancuerna','curl predicador','curl concentrado','curl scott','curl','extension de triceps','extension triceps','press frances','fondos de triceps','fondos triceps','patada de triceps','kickback','skull crusher','hammer curl','overhead press','shoulder press','press de hombros','press hombro','press militar','elevaciones laterales','elevacion lateral','elevaciones frontales','elevacion frontal','lateral raise','front raise','pajaros','dips','wrist curl','forearm','antebrazo','triceps','biceps','hombro'],
-pierna:  ['sentadilla bulgara','sentadilla sumo','sentadilla hack','pistol squat','sissy squat','sentadillas','sentadilla','peso muerto rumano','squats','squat','rdl','prensa de pierna','leg press','prensa','extension de pierna','leg extension','curl femoral','curl de pierna','leg curl','desplantes','desplante','zancadas','zancada','lunges','lunge','hip thrust','bulgara','step up','calf raise','gemelos','gemelo','pantorrillas','pantorrilla','aductor','aductores','abductor','abductores','gluteo','hack squat','sumo squat','pierna']
+pecho: [
+'press de banca agarre','press de banca mancuernas','press de banca',
+'press banca inclinado','press banca declinado','press banca','press plano',
+'press inclinado','press declinado','press de pecho',
+'aperturas','apertura','cable crossover','crossover','cross over','cable cross',
+'fondos en paralelas','fondos de pecho','peck deck','pec deck','chest dip',
+'mariposa','chest press','bench press','flye','fly','push up','lagartijas',
+'flexiones con palmada','flexiones','pullover','landmine press','pecho','chest'
+],
+espalda: [
+'jalon al pecho','jalon trasnuca',
+'remo en polea baja','remo con barra','remo con mancuerna','remo sentado',
+'remo horizontal','remo inclinado','remo en maquina','remo pendlay','remo ergometro','remo t','remo',
+'dominadas','dominada',
+'lat pulldown','rack pull','pull up','chin up','pulldown',
+'back extension','buenos dias','good morning',
+'hiperextensiones','hiperextension','superman',
+'encogimientos de hombros','encogimientos','encogimiento',
+'shrug con barra','shrug','face pull','trapecio',
+'peso muerto','deadlift','dorsal','espalda','jalon','lat'
+],
+brazo: [
+'curl de biceps barra','curl de biceps mancuernas','curl de biceps',
+'curl martillo','curl con barra','curl con mancuerna','curl predicador',
+'curl concentrado','curl scott','curl inclinado','curl en banco',
+'curl cable barra recta','curl en polea','curl arana','curl',
+'extension triceps polea alta','overhead triceps cable',
+'extension de triceps','extension triceps',
+'extension en polea con cuerda','extension sobre cabeza',
+'press frances','press cerrado','press tras nuca',
+'fondos de triceps','fondos en banco','fondos triceps',
+'rompecraneos','skull crusher','skullcrusher',
+'patada de triceps','kickback','hammer curl',
+'overhead press','shoulder press',
+'press militar mancuernas','press militar barra','press militar',
+'press de hombros','press hombro',
+'arnold press','cuban press',
+'elevaciones laterales','elevaciones frontales',
+'elevacion lateral','elevacion frontal','lateral raise','front raise',
+'pajaro','pajaros','rotaciones','dips',
+'wrist curl','forearm','antebrazo','triceps','biceps','hombro'
+],
+pierna: [
+'sentadilla bulgara','sentadilla sumo','sentadilla frontal','sentadilla hack',
+'sentadillas','sentadilla','pistol squat','sissy squat',
+'peso muerto pierna recta','peso muerto sumo','peso muerto rumano','pierna recta',
+'squats','squat','rdl','hack squat',
+'prensa de piernas','leg press una pierna','leg press','prensa',
+'extension de cuadriceps','extension cuadriceps','cuadriceps',
+'extension de pierna','leg extension',
+'curl femoral tumbado','curl femoral sentado','curl femoral','curl de pierna',
+'nordic curl','nordic','leg curl',
+'zancadas lunges','desplantes','desplante','zancadas','zancada','lunges','lunge',
+'elevacion de pantorrillas','pantorrillas','pantorrilla','calf raise',
+'hip thrust con barra','hip thrust',
+'step up con mancuernas','step up',
+'abductor en maquina','abductores','abductor',
+'glute bridge','glute kick','glute','gluteo',
+'patada de gluteo en polea','patada de gluteo','clamshell','bulgara',
+'gemelos','gemelo','aductores','aductor','pierna'
+]
 };
 function muscleClassify(name) {
 if (!name) return null;
-var norm=name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+var norm=normalizeExName(name);
 var bestGroup=null,bestLen=0;
 for (var g in MUSCLE_KW) {
   MUSCLE_KW[g].forEach(function(k){
-    if(norm.includes(k)&&k.length>bestLen){bestGroup=g;bestLen=k.length;}
+    var kn=normalizeExName(k);
+    if(kn&&norm.includes(kn)&&kn.length>bestLen){bestGroup=g;bestLen=kn.length;}
   });
 }
 if(!bestGroup) console.warn('[muscleClassify] Sin clasificar:',name);

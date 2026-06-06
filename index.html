@@ -1808,10 +1808,10 @@ flex:1;text-align:center;padding:10px;font-size:12px;font-weight:800;
 color:rgba(255,255,255,.35);border-bottom:2px solid transparent;cursor:pointer;
 font-family:'Baloo Bhaijaan 2',sans-serif;letter-spacing:.5px;
 touch-action:manipulation;
-">🥊 VS GymBros</div>
+">📊 Analytics</div>
 </div>
 <div class="panel-content" id="rutinaContent"></div>
-<div class="panel-content" id="rutinaGymbroContent" style="display:none;"></div>
+<div class="panel-content" id="rutinaAnalyticsContent" style="display:none;"></div>
 
 
 </div>
@@ -10593,287 +10593,253 @@ rutinaMainTab = idx;
 const tabMi = document.getElementById('rutinaTabMi');
 const tabVs = document.getElementById('rutinaTabVs');
 const content = document.getElementById('rutinaContent');
-const gbContent = document.getElementById('rutinaGymbroContent');
+const anContent = document.getElementById('rutinaAnalyticsContent');
 if (!tabMi || !tabVs) return;
 if (idx === 0) {
 tabMi.style.color = '#fff'; tabMi.style.borderBottomColor = '#fff';
 tabVs.style.color = 'rgba(255,255,255,.35)'; tabVs.style.borderBottomColor = 'transparent';
 content.style.display = '';
-gbContent.style.display = 'none';
+if (anContent) anContent.style.display = 'none';
 renderRutina();
 } else {
 tabMi.style.color = 'rgba(255,255,255,.35)'; tabMi.style.borderBottomColor = 'transparent';
 tabVs.style.color = '#fff'; tabVs.style.borderBottomColor = '#fff';
 content.style.display = 'none';
-gbContent.style.display = '';
-renderGymbroComparison();
+if (anContent) anContent.style.display = '';
+renderAnalytics();
 }
 }
-async function renderGymbroComparison() {
-const container = document.getElementById('rutinaGymbroContent');
-if (!container) return;
-container.innerHTML = `
-<div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:60px 20px;">
-<div style="width:40px;height:40px;border-radius:50%;border:3px solid rgba(255,107,53,.15);border-top-color:#ff6b35;animation:rutinaLoadSpin 0.8s linear infinite;"></div>
-<div style="color:rgba(255,255,255,.3);font-size:12px;font-weight:700;letter-spacing:.5px;">Cargando batalla...</div>
-</div>`;
-if (!window._vsActiveBroUid || !myGymBroUids.includes(window._vsActiveBroUid)) {
-window._vsActiveBroUid = myGymBroUids[0] || null;
-}
-const activeBroUid = window._vsActiveBroUid;
-let gymBroFriend = activeBroUid ? myFriends.find(f => f.uid === activeBroUid) : null;
-if (activeBroUid && !gymBroFriend) {
-try {
-let _br = null;
-if (window.fbGet) { _br = await window.fbGet(`users/${activeBroUid}`).catch(()=>null); }
-else if (window._fbDb) { const _s = await window._fbDb.collection('users').doc(activeBroUid).get(); if(_s.exists) _br={..._s.data(),id:_s.id}; }
-if (_br) {
-gymBroFriend = { uid:_br.id||_br.uid||activeBroUid, displayName:_br.displayName||'GymBro', avatar:_br.avatar||'🧑', xp:_br.xp||0, streakDays:_br.streakDays||0 };
-if (!myFriends.find(f=>f.uid===gymBroFriend.uid)) myFriends.push(gymBroFriend);
-}
-} catch(e) { console.warn('[GymBro] fetch error:',e); }
-}
-if (myGymBroUids.length === 0 || !gymBroFriend) {
-container.innerHTML = `
-<div style="display:flex;flex-direction:column;align-items:center;padding:40px 24px 60px;text-align:center;gap:0;">
-<div style="position:relative;margin-bottom:20px;">
-<div style="width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,rgba(255,107,53,.12),rgba(247,197,159,.06));border:2px solid rgba(255,107,53,.25);display:flex;align-items:center;justify-content:center;font-size:40px;">🥊</div>
-<div style="position:absolute;bottom:-4px;right:-4px;width:36px;height:36px;border-radius:50%;background:rgba(255,107,53,.2);border:2px solid rgba(255,107,53,.4);display:flex;align-items:center;justify-content:center;font-size:14px;">?</div>
-</div>
-<div style="color:#fff;font-size:17px;font-weight:900;margin-bottom:8px;font-family:'Baloo Bhaijaan 2',cursive;letter-spacing:.5px;">Sin GymBros Asignados</div>
-<div style="color:rgba(255,255,255,.35);font-size:12px;line-height:1.7;max-width:260px;">Para comparar tu entrenamiento, asigna un <strong style="color:#ff6b35;">GymBro</strong> desde el perfil de un amigo en la sección Social.</div>
-<div style="margin-top:20px;display:flex;flex-direction:column;gap:10px;width:100%;max-width:280px;">
-<div style="background:rgba(255,107,53,.08);border:1.5px solid rgba(255,107,53,.2);border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:12px;text-align:left;">
-<div style="font-size:22px;">1️⃣</div>
-<div style="color:rgba(255,255,255,.6);font-size:11px;line-height:1.5;">Ve a <strong style="color:#fff;">Social</strong> y abre el perfil de un amigo</div>
-</div>
-<div style="background:rgba(255,107,53,.08);border:1.5px solid rgba(255,107,53,.2);border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:12px;text-align:left;">
-<div style="font-size:22px;">2️⃣</div>
-<div style="color:rgba(255,255,255,.6);font-size:11px;line-height:1.5;">Toca <strong style="color:#ff6b35;">💪 Asignar GymBro</strong> en su perfil</div>
-</div>
-<div style="background:rgba(255,107,53,.08);border:1.5px solid rgba(255,107,53,.2);border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:12px;text-align:left;">
-<div style="font-size:22px;">3️⃣</div>
-<div style="color:rgba(255,255,255,.6);font-size:11px;line-height:1.5;">¡Vuelve aquí y actívate!</div>
-</div>
-</div>
-</div>`;
-return;
-}
-const days = [];
-for (let i = 6; i >= 0; i--) {
-const d = new Date(); d.setDate(d.getDate() - i);
-days.push({
-key: `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`,
-label: d.toLocaleDateString('es-MX', { weekday:'short', day:'numeric' })
-});
-}
-let myWeekData = [];
-try {
-const user = window._fbAuth?.currentUser;
-if (user) {
-const snaps = await Promise.all(days.map(d =>
-window._fbDb.collection('users').doc(user.uid).collection('dailyProgress').doc(d.key).get()
-.then(s => s.exists ? { ...s.data(), dateKey: d.key } : null).catch(() => null)
-));
-myWeekData = snaps.filter(Boolean);
-}
-} catch(e) {}
-// Merge local data for today so stats are always current even before Firestore sync
-try {
-const todayKey = habitTodayKey();
-const todayIdx = myWeekData.findIndex(d => d.dateKey === todayKey);
-const jsDay = new Date().getDay(), rutinaIdx = jsDay === 0 ? 6 : jsDay - 1;
-let rutinaItems = [];
-try {
-const rd = getRutinaData(), rc = getRutinaCompleted(), dr = rd[rutinaIdx];
-if (dr && !dr.rest) dr.exercises.forEach((ex,i) => rutinaItems.push({ name:ex.name, icon:ex.icon||'💪', done:!!(rc[rutinaIdx+'-'+i]) }));
-} catch(e2) {}
-const localToday = {
-dateKey: todayKey,
-tasks: (typeof tskData !== 'undefined') ? tskData.filter(t => tskIsToday(t)).map(t => ({ name:t.name, done:tskIsDoneToday(t) })) : [],
-habits: (typeof habitData !== 'undefined') ? habitData.map(h => ({ name:h.name, done:habitIsDoneToday(h) })) : [],
-rutina: rutinaItems,
-xp: (typeof xp !== 'undefined') ? xp : 0,
-streak: (typeof streakDays !== 'undefined') ? streakDays : 0,
+async function renderGymbroComparison() {}
+const MUSCLE_DEFAULT = {
+pierna:  { meta: 8, realizado: 0 },
+pecho:   { meta: 4, realizado: 0 },
+espalda: { meta: 6, realizado: 0 },
+brazo:   { meta: 4, realizado: 0 }
 };
-if (todayIdx >= 0) myWeekData[todayIdx] = { ...myWeekData[todayIdx], ...localToday };
-else myWeekData.push(localToday);
-} catch(e) {}
-let broWeekData = [];
+const MUSCLE_KW = {
+pecho:   ['press banca','press inclinado','apertura','aperturas','fondos pecho','crossover','pec deck','pecho','chest','mariposa','mancuerna pecho'],
+espalda: ['dominada','dominadas','remo','jalón','jalon','peso muerto','pullover','pull','espalda','back','trapecio','lat'],
+brazo:   ['curl','bícep','bicep','trícep','tricep','martillo','press militar','elevacion lateral','hombro','shoulder','fondos tricep'],
+pierna:  ['sentadilla','prensa','extensión pierna','curl femoral','desplante','hip thrust','rumano','pierna','leg press','squat','lunge','glúteo','gluteo','pantorrilla','calf']
+};
+function muscleClassify(name) {
+var l = (name||'').toLowerCase();
+for (var g in MUSCLE_KW) {
+  if (MUSCLE_KW[g].some(function(k){return l.indexOf(k)>=0;})) return g;
+}
+return null;
+}
+function muscleWeekKey() {
+var d=new Date(), day=d.getDay()||7;
+d.setDate(d.getDate()+4-day);
+var ys=new Date(d.getFullYear(),0,1);
+var wn=Math.ceil((((d-ys)/86400000)+1)/7);
+return d.getFullYear()+'-W'+(wn<10?'0':'')+wn;
+}
+var _mData=null, _mWeekKey=null;
+async function loadMuscleProgress() {
+_mWeekKey=muscleWeekKey();
 try {
-const snaps = await Promise.all(days.map(d =>
-window._fbDb.collection('users').doc(activeBroUid || myGymBroUids[0]).collection('dailyProgress').doc(d.key).get()
-.then(s => s.exists ? { ...s.data(), dateKey: d.key } : null).catch(() => null)
-));
-broWeekData = snaps.filter(Boolean);
-} catch(e) {}
-function weekStats(data) {
-const tasksTotal = data.reduce((a,d) => a + (d.tasks||[]).length, 0);
-const tasksDone  = data.reduce((a,d) => a + (d.tasks||[]).filter(t=>t.done).length, 0);
-const habitsTotal = data.reduce((a,d) => a + (d.habits||[]).length, 0);
-const habitsDone  = data.reduce((a,d) => a + (d.habits||[]).filter(h=>h.done).length, 0);
-const rutinaTotal = data.reduce((a,d) => a + (d.rutina||[]).length, 0);
-const rutinaDone  = data.reduce((a,d) => a + (d.rutina||[]).filter(r=>r.done).length, 0);
-const activeDays  = data.filter(d =>
-(d.tasks||[]).some(t=>t.done) || (d.habits||[]).some(h=>h.done) || (d.rutina||[]).some(r=>r.done)
-).length;
-const maxXP = data.reduce((a,d) => Math.max(a, d.xp||0), 0);
-return { tasksTotal, tasksDone, habitsTotal, habitsDone, rutinaTotal, rutinaDone, activeDays, maxXP };
+  var u=window._fbAuth&&window._fbAuth.currentUser;
+  if (u&&window._fbDb) {
+    var s=await window._fbDb.collection('users').doc(u.uid).collection('muscleProgress').doc(_mWeekKey).get();
+    if (s.exists){_mData=s.data();return;}
+  }
+} catch(e){}
+try {
+  var sv=localStorage.getItem('mpr_'+_mWeekKey);
+  if(sv){_mData=JSON.parse(sv);return;}
+} catch(e){}
+_mData=JSON.parse(JSON.stringify(MUSCLE_DEFAULT));
 }
-const me = weekStats(myWeekData);
-const bro = weekStats(broWeekData);
-const myName = document.getElementById('profileName')?.textContent || 'Tú';
-const broName = gymBroFriend.displayName || gymBroFriend.name || gymBroFriend.username || 'GymBro';
-const myAvatar = document.getElementById('profileAvatarHome')?.textContent || '🧑';
-const broAvatar = gymBroFriend.avatar || gymBroFriend.emoji || '🧑';
-function barPair(meVal, broVal, label, suffix='') {
-const maxVal = Math.max(meVal, broVal, 1);
-const meW = Math.round((meVal / maxVal) * 100);
-const broW = Math.round((broVal / maxVal) * 100);
-const meWins = meVal > broVal;
-const broWins = broVal > meVal;
-return `
-<div style="margin-bottom:12px;">
-<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-<span style="color:rgba(255,255,255,.5);font-size:10px;font-weight:800;">${label}</span>
-<span style="font-size:10px;font-weight:800;color:${meWins?'var(--teal)':broWins?'#e8527a':'rgba(255,255,255,.3)'};">${meWins?'🏆 Tú':broWins?`🏆 ${escapeHtml(broName.split(' ')[0])}`:'🤝'}</span>
-</div>
-<div style="display:flex;flex-direction:column;gap:4px;">
-<div style="display:flex;align-items:center;gap:8px;">
-<div style="width:36px;font-size:10px;font-weight:800;color:var(--teal);text-align:right;flex-shrink:0;">${meVal}${suffix}</div>
-<div style="flex:1;height:7px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;">
-<div style="height:100%;width:${meW}%;background:${meWins?'var(--teal)':'rgba(255,255,255,.2)'};border-radius:4px;transition:width .5s;"></div>
-</div>
-</div>
-<div style="display:flex;align-items:center;gap:8px;">
-<div style="width:36px;font-size:10px;font-weight:800;color:#e8527a;text-align:right;flex-shrink:0;">${broVal}${suffix}</div>
-<div style="flex:1;height:7px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;">
-<div style="height:100%;width:${broW}%;background:${broWins?'#e8527a':'rgba(232,82,122,.25)'};border-radius:4px;transition:width .5s;"></div>
-</div>
-</div>
-</div>
-</div>`;
+async function saveMuscleProgress() {
+var wk=_mWeekKey||muscleWeekKey();
+try {
+  var u=window._fbAuth&&window._fbAuth.currentUser;
+  if(u&&window._fbDb) await window._fbDb.collection('users').doc(u.uid).collection('muscleProgress').doc(wk).set(_mData,{merge:true});
+} catch(e){}
+try{localStorage.setItem('mpr_'+wk,JSON.stringify(_mData));}catch(e){}
 }
-let myPoints = 0, broPoints = 0;
-if (me.tasksDone > bro.tasksDone) myPoints++; else if (bro.tasksDone > me.tasksDone) broPoints++;
-if (me.habitsDone > bro.habitsDone) myPoints++; else if (bro.habitsDone > me.habitsDone) broPoints++;
-if (me.rutinaDone > bro.rutinaDone) myPoints++; else if (bro.rutinaDone > me.rutinaDone) broPoints++;
-if (me.activeDays > bro.activeDays) myPoints++; else if (bro.activeDays > me.activeDays) broPoints++;
-const weekWinner = myPoints > broPoints ? 'me' : broPoints > myPoints ? 'bro' : 'tie';
-const dayRowsHTML = days.map(d => {
-const myDay = myWeekData.find(x => x.dateKey === d.key);
-const broDay = broWeekData.find(x => x.dateKey === d.key);
-const myDone = (myDay?.tasks||[]).filter(t=>t.done).length + (myDay?.habits||[]).filter(h=>h.done).length + (myDay?.rutina||[]).filter(r=>r.done).length;
-const broDone = (broDay?.tasks||[]).filter(t=>t.done).length + (broDay?.habits||[]).filter(h=>h.done).length + (broDay?.rutina||[]).filter(r=>r.done).length;
-const myWins = myDone > broDone, broWins = broDone > myDone;
-return `
-<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);">
-<div style="color:rgba(255,255,255,.4);font-size:10px;font-weight:700;width:46px;flex-shrink:0;">${d.label}</div>
-<div style="flex:1;display:flex;gap:4px;align-items:center;">
-<span style="font-size:11px;font-weight:800;color:${myWins?'var(--teal)':'rgba(255,255,255,.3)'};">${myDone}</span>
-<div style="flex:1;height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;display:flex;">
-${myDone > 0 ? `<div style="width:${Math.round(myDone/(myDone+broDone||1)*100)}%;background:${myWins?'var(--teal)':'rgba(255,255,255,.2)'};"></div>` : ''}
-${broDone > 0 ? `<div style="width:${Math.round(broDone/(myDone+broDone||1)*100)}%;background:${broWins?'#e8527a':'rgba(232,82,122,.3)'};"></div>` : ''}
-</div>
-<span style="font-size:11px;font-weight:800;color:${broWins?'#e8527a':'rgba(255,255,255,.3)'};">${broDone}</span>
-</div>
-<div style="font-size:14px;width:20px;text-align:center;">${myWins?'🏆':broWins?'💔':'—'}</div>
-</div>`;
+function syncMusclesFromRutina() {
+var counts={pierna:0,pecho:0,espalda:0,brazo:0};
+try {
+  var rd=getRutinaData(),rc=getRutinaCompleted();
+  rd.forEach(function(day,di){
+    if(!day.rest) day.exercises.forEach(function(ex,ei){
+      if(rc[di+'_'+ei]){var g=muscleClassify(ex.name);if(g)counts[g]++;}
+    });
+  });
+} catch(e){}
+if(_mData) Object.keys(counts).forEach(function(g){if(_mData[g])_mData[g].realizado=counts[g];});
+}
+var _radarGeo=null;
+function drawDiamondRadar(canvas,data) {
+if(!canvas) return null;
+var ctx=canvas.getContext('2d');
+var dpr=window.devicePixelRatio||1;
+var W=canvas.width/dpr, H=canvas.height/dpr;
+ctx.setTransform(dpr,0,0,dpr,0,0);
+ctx.clearRect(0,0,W,H);
+var padT=34,padR=56,padB=34,padL=44;
+var cx=padL+(W-padL-padR)/2, cy=padT+(H-padT-padB)/2;
+var R=Math.min(W-padL-padR,H-padT-padB)/2;
+var MS=1.5, uR=R/MS;
+ctx.beginPath();
+ctx.moveTo(cx,cy-R);ctx.lineTo(cx+R,cy);ctx.lineTo(cx,cy+R);ctx.lineTo(cx-R,cy);
+ctx.closePath();ctx.fillStyle='rgba(8,16,28,0.55)';ctx.fill();
+[0.2,0.4,0.6,0.8,1.0].forEach(function(lv){
+  var r=lv*R;
+  ctx.beginPath();
+  ctx.moveTo(cx,cy-r);ctx.lineTo(cx+r,cy);ctx.lineTo(cx,cy+r);ctx.lineTo(cx-r,cy);
+  ctx.closePath();
+  ctx.strokeStyle=lv===1?'rgba(255,255,255,.22)':'rgba(255,255,255,.1)';
+  ctx.setLineDash(lv===1?[]:[3,4]);ctx.lineWidth=lv===1?1.5:1;ctx.stroke();
+  ctx.setLineDash([]);
+});
+ctx.strokeStyle='rgba(255,255,255,.18)';ctx.lineWidth=1;
+ctx.beginPath();ctx.moveTo(cx,cy-R);ctx.lineTo(cx,cy+R);ctx.stroke();
+ctx.beginPath();ctx.moveTo(cx-R,cy);ctx.lineTo(cx+R,cy);ctx.stroke();
+var fSz=Math.max(8,Math.round(W*0.03));
+[0.2,0.4,0.6,0.8,1.0].forEach(function(lv){
+  ctx.fillStyle='rgba(255,255,255,.4)';
+  ctx.font='bold '+fSz+'px Baloo Bhaijaan 2,sans-serif';
+  ctx.textAlign='right';ctx.textBaseline='middle';
+  ctx.fillText(Math.round(lv*100)+'%',cx-7,cy-lv*R);
+});
+var V={
+  pierna:  Math.min(((data.pierna&&data.pierna.realizado)||0)/((data.pierna&&data.pierna.meta)||1),MS),
+  pecho:   Math.min(((data.pecho&&data.pecho.realizado)||0)/((data.pecho&&data.pecho.meta)||1),MS),
+  espalda: Math.min(((data.espalda&&data.espalda.realizado)||0)/((data.espalda&&data.espalda.meta)||1),MS),
+  brazo:   Math.min(((data.brazo&&data.brazo.realizado)||0)/((data.brazo&&data.brazo.meta)||1),MS)
+};
+var pts={
+  pierna:  {x:cx,y:cy-V.pierna*uR},
+  pecho:   {x:cx+V.pecho*uR,y:cy},
+  espalda: {x:cx,y:cy+V.espalda*uR},
+  brazo:   {x:cx-V.brazo*uR,y:cy}
+};
+ctx.beginPath();
+ctx.moveTo(pts.pierna.x,pts.pierna.y);
+ctx.lineTo(pts.pecho.x,pts.pecho.y);
+ctx.lineTo(pts.espalda.x,pts.espalda.y);
+ctx.lineTo(pts.brazo.x,pts.brazo.y);
+ctx.closePath();
+ctx.fillStyle='rgba(94,170,168,.42)';ctx.fill();
+ctx.strokeStyle='#6edcd2';ctx.lineWidth=2;ctx.setLineDash([]);ctx.stroke();
+[pts.pierna,pts.pecho,pts.espalda,pts.brazo].forEach(function(p){
+  ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);
+  ctx.fillStyle='#6edcd2';ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.85)';ctx.lineWidth=1.5;ctx.stroke();
+});
+var lSz=Math.max(10,Math.round(W*0.033));
+ctx.font='bold '+lSz+'px Baloo Bhaijaan 2,sans-serif';
+ctx.fillStyle='#fff';
+ctx.textAlign='center';ctx.textBaseline='bottom';
+ctx.fillText('PIERNA',cx,cy-R-7);
+ctx.textBaseline='top';
+ctx.fillText('ESPALDA',cx,cy+R+7);
+ctx.textAlign='left';ctx.textBaseline='middle';
+ctx.fillText('PECHO',cx+R+7,cy);
+ctx.textAlign='right';
+ctx.fillText('BRAZO',cx-R-7,cy);
+return {pts:pts,uR:uR,cx:cx,cy:cy,R:R};
+}
+function muscleAdjust(key,field,delta){
+if(!_mData||!_mData[key]) return;
+if(field==='meta') _mData[key].meta=Math.max(1,(_mData[key].meta||1)+delta);
+else _mData[key].realizado=Math.max(0,(_mData[key].realizado||0)+delta);
+saveMuscleProgress();renderAnalytics();
+}
+async function renderAnalytics(){
+var container=document.getElementById('rutinaAnalyticsContent');
+if(!container) return;
+container.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:60px 20px;"><div style="width:36px;height:36px;border-radius:50%;border:3px solid rgba(110,220,210,.15);border-top-color:#6edcd2;animation:rutinaLoadSpin 0.8s linear infinite;"></div><div style="color:rgba(255,255,255,.3);font-size:12px;font-weight:700;letter-spacing:.5px;">Cargando Analytics...</div></div>';
+if(!_mData||!_mWeekKey||_mWeekKey!==muscleWeekKey()) await loadMuscleProgress();
+syncMusclesFromRutina();
+await saveMuscleProgress();
+var mInfo=[
+  {key:'pierna', label:'Pierna', icon:'🦵', color:'#6edcd2', border:'rgba(110,220,210,.3)'},
+  {key:'pecho',  label:'Pecho',  icon:'💪', color:'#a78bfa', border:'rgba(167,139,250,.3)'},
+  {key:'espalda',label:'Espalda',icon:'🔙', color:'#60a5fa', border:'rgba(96,165,250,.3)'},
+  {key:'brazo',  label:'Brazo',  icon:'🏋️', color:'#fb923c', border:'rgba(251,146,60,.3)'}
+];
+var chipHTML=mInfo.map(function(m){
+  var d=_mData[m.key]||{meta:1,realizado:0};
+  var pct=Math.round((d.realizado/(d.meta||1))*100);
+  var barW=Math.min(100,pct);
+  return '<div style="background:#0d1117;border-radius:14px;padding:12px 14px;border:1px solid '+m.border+';display:flex;align-items:center;gap:12px;margin-bottom:0;">'
+    +'<div style="font-size:22px;flex-shrink:0;">'+m.icon+'</div>'
+    +'<div style="flex:1;min-width:0;">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">'
+        +'<span style="color:#fff;font-size:12px;font-weight:800;">'+m.label+'</span>'
+        +'<span style="color:'+m.color+';font-size:11px;font-weight:800;">'+d.realizado+'/'+d.meta+'  '+pct+'%</span>'
+      +'</div>'
+      +'<div style="height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;">'
+        +'<div style="height:100%;width:'+barW+'%;background:'+m.color+';border-radius:3px;transition:width .4s;"></div>'
+      +'</div>'
+    +'</div>'
+    +'<div style="display:flex;flex-direction:column;gap:3px;flex-shrink:0;">'
+      +'<button onclick="muscleAdjust(\''+m.key+'\',\'meta\',1)" style="background:rgba(255,255,255,.07);border:none;color:#fff;border-radius:6px;width:24px;height:24px;font-size:14px;cursor:pointer;font-family:Baloo Bhaijaan 2,sans-serif;display:flex;align-items:center;justify-content:center;touch-action:manipulation;">+</button>'
+      +'<button onclick="muscleAdjust(\''+m.key+'\',\'meta\',-1)" style="background:rgba(255,255,255,.07);border:none;color:#fff;border-radius:6px;width:24px;height:24px;font-size:14px;cursor:pointer;font-family:Baloo Bhaijaan 2,sans-serif;display:flex;align-items:center;justify-content:center;touch-action:manipulation;">−</button>'
+    +'</div>'
+    +'</div>';
 }).join('');
-const bannerBg = weekWinner==='me'
-? 'linear-gradient(135deg,rgba(94,220,138,.15),rgba(45,138,78,.05))'
-: weekWinner==='bro'
-? 'linear-gradient(135deg,rgba(232,82,122,.15),rgba(180,40,80,.05))'
-: 'linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,255,255,.02))';
-const bannerBorder = weekWinner==='me' ? 'rgba(94,220,138,.3)' : weekWinner==='bro' ? 'rgba(232,82,122,.3)' : 'rgba(255,255,255,.1)';
-const bannerText  = weekWinner==='me' ? '#5edc8a' : weekWinner==='bro' ? '#e8527a' : 'rgba(255,255,255,.6)';
-const bannerMsg   = weekWinner==='me' ? '🏆 ¡Vas ganando esta semana!' : weekWinner==='bro' ? `💪 ${escapeHtml(broName)} va adelante` : '🤝 Empate — ¡Sigan así!';
-let _gbSel = '';
-if (myGymBroUids.length > 1) {
-const _gbBtns = myGymBroUids.map(uid => {
-const _f = myFriends.find(x=>x.uid===uid)||{displayName:'GymBro',avatar:'💪'};
-const _a = uid===activeBroUid;
-return `<button onclick="window._vsActiveBroUid='${uid}';renderGymbroComparison();" style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;border:1.5px solid ${_a?'rgba(255,107,53,.6)':'rgba(255,255,255,.12)'};background:${_a?'rgba(255,107,53,.15)':'rgba(255,255,255,.05)'};color:${_a?'#ff6b35':'rgba(255,255,255,.5)'};font-size:11px;font-weight:800;cursor:pointer;font-family:Baloo Bhaijaan 2,sans-serif;">${_f.avatar} ${escapeHtml((_f.displayName||'GymBro').split(' ')[0])}</button>`;
-}).join('');
-_gbSel = `<div style="display:flex;gap:8px;flex-wrap:wrap;padding:4px 16px 8px;">${_gbBtns}</div>`;
+container.innerHTML=
+  '<div style="padding:16px;display:flex;flex-direction:column;gap:14px;">'
+  +'<div style="display:flex;align-items:center;justify-content:space-between;">'
+    +'<div>'
+      +'<div style="color:#fff;font-size:16px;font-weight:900;font-family:Baloo Bhaijaan 2,cursive;">📊 Analytics</div>'
+      +'<div style="color:rgba(255,255,255,.35);font-size:10px;font-weight:700;margin-top:2px;">Progreso muscular semanal</div>'
+    +'</div>'
+    +'<button onclick="renderAnalytics()" style="background:rgba(110,220,210,.1);border:1.5px solid rgba(110,220,210,.3);border-radius:10px;padding:6px 12px;color:#6edcd2;font-size:10px;font-weight:800;cursor:pointer;font-family:Baloo Bhaijaan 2,sans-serif;touch-action:manipulation;">↻ Sync</button>'
+  +'</div>'
+  +'<div style="background:#0a1420;border-radius:18px;border:1px solid rgba(110,220,210,.15);padding:10px;position:relative;">'
+    +'<canvas id="muscleRadarCanvas" style="display:block;width:100%;border-radius:8px;"></canvas>'
+    +'<div id="muscleTooltip" style="display:none;position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(8,18,32,.96);border:1.5px solid #6edcd2;border-radius:10px;padding:8px 14px;font-family:Baloo Bhaijaan 2,sans-serif;pointer-events:none;z-index:10;white-space:nowrap;">'
+      +'<div id="muscleTooltipTxt" style="color:#fff;font-size:12px;font-weight:800;text-align:center;"></div>'
+    +'</div>'
+  +'</div>'
+  +'<div style="display:flex;flex-direction:column;gap:8px;">'
+    +'<div style="color:rgba(255,255,255,.4);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">📈 Detalle&nbsp;<span style="color:rgba(255,255,255,.2);font-size:9px;font-weight:600;text-transform:none;letter-spacing:0;">Toca + / − para ajustar meta</span></div>'
+    +chipHTML
+  +'</div>'
+  +'<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:12px 14px;margin-bottom:8px;">'
+    +'<div style="color:rgba(255,255,255,.4);font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">&#8505;&#65039; Cómo funciona</div>'
+    +'<div style="color:rgba(255,255,255,.5);font-size:11px;line-height:1.65;">Los ejercicios completados en <strong style="color:#fff;">Mi Rutina</strong> se clasifican automáticamente por grupo muscular. Toca la gráfica para ver detalles. Se reinicia cada lunes.</div>'
+  +'</div>'
+  +'</div>';
+var canvas=document.getElementById('muscleRadarCanvas');
+if(canvas){
+  var dpr=window.devicePixelRatio||1;
+  var size=Math.max(240,(canvas.parentElement.clientWidth||280)-20);
+  canvas.style.width=size+'px';canvas.style.height=size+'px';
+  canvas.width=size*dpr;canvas.height=size*dpr;
+  _radarGeo=drawDiamondRadar(canvas,_mData);
+  var mLabels={pierna:'Pierna',pecho:'Pecho',espalda:'Espalda',brazo:'Brazo'};
+  function showMuscleTip(key){
+    if(!_mData||!_mData[key]) return;
+    var d=_mData[key],pct=Math.round((d.realizado/(d.meta||1))*100);
+    var tip=document.getElementById('muscleTooltip'),txt=document.getElementById('muscleTooltipTxt');
+    if(!tip||!txt) return;
+    txt.innerHTML='<span style="color:#6edcd2;">'+mLabels[key]+'</span>&nbsp;&nbsp;'+d.realizado+'/'+d.meta+' ej. — <strong>'+pct+'%</strong>';
+    tip.style.display='block';
+    clearTimeout(tip._h);tip._h=setTimeout(function(){if(tip)tip.style.display='none';},2600);
+  }
+  function handleCanvasTap(e){
+    if(!_radarGeo) return;
+    e.preventDefault();
+    var rect=canvas.getBoundingClientRect();
+    var touch=e.touches?e.touches[0]:e;
+    var mx=touch.clientX-rect.left, my=touch.clientY-rect.top;
+    var geo=_radarGeo,best=null,bestD=Infinity;
+    [{key:'pierna',pt:geo.pts.pierna},{key:'pecho',pt:geo.pts.pecho},{key:'espalda',pt:geo.pts.espalda},{key:'brazo',pt:geo.pts.brazo}]
+    .forEach(function(a){var dx=mx-a.pt.x,dy=my-a.pt.y,dist=Math.sqrt(dx*dx+dy*dy);if(dist<bestD){bestD=dist;best=a.key;}});
+    if(bestD>geo.R*0.5){var rx=mx-geo.cx,ry=my-geo.cy;best=Math.abs(ry)>Math.abs(rx)?(ry<0?'pierna':'espalda'):(rx>0?'pecho':'brazo');}
+    if(best) showMuscleTip(best);
+  }
+  canvas.addEventListener('click',handleCanvasTap);
+  canvas.addEventListener('touchstart',handleCanvasTap,{passive:false});
 }
-container.innerHTML = _gbSel + `
-
-<div style="padding:0 16px;">
-
-<div style="
-background:linear-gradient(160deg,rgba(20,8,4,.95),rgba(35,15,5,.9));
-border:1.5px solid rgba(255,107,53,.3);
-border-radius:22px;padding:20px 16px 16px;
-margin-bottom:12px;position:relative;overflow:hidden;
-box-shadow:0 8px 32px rgba(255,107,53,.1),inset 0 0 40px rgba(255,107,53,.04);
-">
-<div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% -10%,rgba(255,107,53,.08) 0%,transparent 60%);pointer-events:none;"></div>
-<div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,107,53,.5),transparent);"></div>
-
-<div style="font-size:9px;color:rgba(255,107,53,.7);font-weight:800;text-transform:uppercase;letter-spacing:2px;text-align:center;margin-bottom:16px;">⚔️ Semana ${days[0].label.toUpperCase()} — ${days[6].label.toUpperCase()}</div>
-
-<div style="display:flex;align-items:center;gap:8px;">
-<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
-<div style="position:relative;">
-<div style="width:60px;height:60px;border-radius:50%;font-size:30px;display:flex;align-items:center;justify-content:center;background:${weekWinner==='me'?'rgba(94,220,138,.18)':'rgba(255,255,255,.07)'};border:2.5px solid ${weekWinner==='me'?'rgba(94,220,138,.6)':'rgba(255,255,255,.15)'};box-shadow:${weekWinner==='me'?'0 0 20px rgba(94,220,138,.3)':'none'};">${myAvatar}</div>
-${weekWinner==='me'?'<div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:14px;">👑</div>':''}
-</div>
-<div style="font-size:12px;font-weight:800;color:#fff;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(myName)}</div>
-<div style="font-size:28px;font-weight:900;color:${weekWinner==='me'?'#5edc8a':weekWinner==='bro'?'rgba(255,255,255,.3)':'#fff'};font-family:'Baloo Bhaijaan 2',cursive;line-height:1;${weekWinner==='me'?'text-shadow:0 0 20px rgba(94,220,138,.5);':''}">${myPoints}</div>
-<div style="font-size:8px;color:rgba(255,255,255,.3);font-weight:800;text-transform:uppercase;letter-spacing:.8px;">puntos</div>
-</div>
-
-<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;">
-<div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#e8527a,#ff6b35);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#fff;box-shadow:0 4px 16px rgba(232,82,122,.4);letter-spacing:1px;font-family:'Baloo Bhaijaan 2',cursive;">VS</div>
-</div>
-
-<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
-<div style="position:relative;">
-<div style="width:60px;height:60px;border-radius:50%;font-size:30px;display:flex;align-items:center;justify-content:center;background:${weekWinner==='bro'?'rgba(232,82,122,.18)':'rgba(255,255,255,.07)'};border:2.5px solid ${weekWinner==='bro'?'rgba(232,82,122,.6)':'rgba(255,255,255,.15)'};box-shadow:${weekWinner==='bro'?'0 0 20px rgba(232,82,122,.3)':'none'};">${broAvatar}</div>
-${weekWinner==='bro'?'<div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:14px;">👑</div>':''}
-</div>
-<div style="font-size:12px;font-weight:800;color:#fff;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(broName)}</div>
-<div style="font-size:28px;font-weight:900;color:${weekWinner==='bro'?'#e8527a':weekWinner==='me'?'rgba(255,255,255,.3)':'#fff'};font-family:'Baloo Bhaijaan 2',cursive;line-height:1;${weekWinner==='bro'?'text-shadow:0 0 20px rgba(232,82,122,.5);':''}">${broPoints}</div>
-<div style="font-size:8px;color:rgba(255,255,255,.3);font-weight:800;text-transform:uppercase;letter-spacing:.8px;">puntos</div>
-</div>
-</div>
-
-<div style="margin-top:14px;padding:10px 16px;border-radius:14px;text-align:center;background:${bannerBg};border:1px solid ${bannerBorder};">
-<div style="font-size:13px;font-weight:900;color:${bannerText};">${bannerMsg}</div>
-</div>
-</div>
-
-<div style="background:rgba(255,255,255,.03);border-radius:18px;border:1px solid rgba(255,255,255,.07);padding:14px;margin-bottom:12px;">
-<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-<div style="font-size:10px;font-weight:800;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:1.2px;">📊 Estadísticas</div>
-<div style="display:flex;gap:10px;font-size:9px;font-weight:800;">
-<span style="color:var(--teal);">▲ ${escapeHtml(myName.split(' ')[0])}</span>
-<span style="color:#e8527a;">▼ ${escapeHtml(broName.split(' ')[0])}</span>
-</div>
-</div>
-${barPair(me.tasksDone, bro.tasksDone, '📋 Tareas')}
-${barPair(me.habitsDone, bro.habitsDone, '🌿 Hábitos')}
-${barPair(me.rutinaDone, bro.rutinaDone, '💪 Ejercicios')}
-${barPair(me.activeDays, bro.activeDays, '🔥 Días activos')}
-</div>
-
-<div style="background:rgba(255,255,255,.03);border-radius:18px;border:1px solid rgba(255,255,255,.07);padding:14px;margin-bottom:12px;">
-<div style="font-size:10px;font-weight:800;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:12px;">📅 Día a día</div>
-${dayRowsHTML}
-</div>
-
-<button onclick="renderGymbroComparison()" style="
-width:100%;padding:13px;border-radius:14px;border:1.5px solid rgba(255,107,53,.25);
-background:rgba(255,107,53,.08);color:#ff6b35;
-font-size:12px;font-weight:800;cursor:pointer;touch-action:manipulation;
-font-family:'Baloo Bhaijaan 2',sans-serif;letter-spacing:.5px;
-display:flex;align-items:center;justify-content:center;gap:8px;
-margin-bottom:16px;
-">↻ Actualizar datos</button>
-
-</div>
-`;
 }
 (function(){
 const eventoSets = [

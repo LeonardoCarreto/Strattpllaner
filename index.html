@@ -10793,10 +10793,21 @@ function togglePrevWeek(){
 _showPrev=!_showPrev;
 renderAnalytics();
 }
+function calcMetasFromRutina() {
+var metas={pierna:0,pecho:0,espalda:0,brazo:0};
+try {
+  var rd=getRutinaData();
+  rd.forEach(function(day){
+    if(!day.rest&&day.exercises) day.exercises.forEach(function(ex){
+      var g=muscleClassify(ex.name);if(g)metas[g]++;
+    });
+  });
+} catch(e){}
+return metas;
+}
 function muscleAdjust(key,field,delta){
 if(!_mData||!_mData[key]) return;
-if(field==='meta') _mData[key].meta=Math.max(1,(_mData[key].meta||1)+delta);
-else _mData[key].realizado=Math.max(0,(_mData[key].realizado||0)+delta);
+_mData[key].realizado=Math.max(0,(_mData[key].realizado||0)+delta);
 saveMuscleProgress();renderAnalytics();
 }
 async function renderAnalytics(){
@@ -10804,8 +10815,11 @@ var container=document.getElementById('rutinaAnalyticsContent');
 if(!container) return;
 container.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:60px 20px;"><div style="width:36px;height:36px;border-radius:50%;border:3px solid rgba(110,220,210,.15);border-top-color:#6edcd2;animation:rutinaLoadSpin 0.8s linear infinite;"></div><div style="color:rgba(255,255,255,.3);font-size:12px;font-weight:700;letter-spacing:.5px;">Cargando Analytics...</div></div>';
 if(!_mData||!_mWeekKey||_mWeekKey!==muscleWeekKey()) await loadMuscleProgress();
+var metas=calcMetasFromRutina();
+Object.keys(metas).forEach(function(g){if(_mData[g]) _mData[g].meta=metas[g];});
 syncMusclesFromRutina();
 await saveMuscleProgress();
+var totalMeta=metas.pierna+metas.pecho+metas.espalda+metas.brazo;
 var hasPrev=!!_mDataPrev;
 var showingPrev=_showPrev&&hasPrev;
 var mInfo=[
@@ -10815,11 +10829,12 @@ var mInfo=[
   {key:'brazo',  label:'Brazo',  icon:'🏋️', color:'#fb923c', border:'rgba(251,146,60,.3)'}
 ];
 var chipHTML=mInfo.map(function(m){
-  var d=_mData[m.key]||{meta:1,realizado:0};
-  var pct=Math.round((d.realizado/(d.meta||1))*100);
+  var d=_mData[m.key]||{meta:0,realizado:0};
+  var noEx=d.meta===0;
+  var pct=noEx?0:Math.round((d.realizado/(d.meta||1))*100);
   var barW=Math.min(100,pct);
   var changeHTML='';
-  if(showingPrev&&_mDataPrev[m.key]){
+  if(!noEx&&showingPrev&&_mDataPrev&&_mDataPrev[m.key]){
     var pd=_mDataPrev[m.key];
     var ppct=Math.round((pd.realizado/(pd.meta||1))*100);
     var dd=pct-ppct;
@@ -10827,26 +10842,30 @@ var chipHTML=mInfo.map(function(m){
     else if(dd<0) changeHTML='<span style="color:#e8527a;font-size:9px;font-weight:800;margin-left:4px;">↓ '+dd+'%</span>';
     else changeHTML='<span style="color:rgba(255,255,255,.4);font-size:9px;font-weight:800;margin-left:4px;">= 0%</span>';
   }
-  return '<div style="background:#0d1117;border-radius:14px;padding:12px 14px;border:1px solid '+m.border+';display:flex;align-items:center;gap:12px;margin-bottom:0;">'
+  var statHTML=noEx
+    ?'<span style="color:rgba(255,255,255,.28);font-size:10px;font-style:italic;font-weight:600;">Sin ejercicios</span>'
+    :'<span style="display:flex;align-items:center;"><span style="color:'+m.color+';font-size:11px;font-weight:800;">'+d.realizado+'/'+d.meta+'&nbsp;&nbsp;'+pct+'%</span>'+changeHTML+'</span>';
+  var barHTML=noEx
+    ?'<div style="height:5px;background:rgba(255,255,255,.04);border-radius:3px;"></div>'
+    :'<div style="height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;"><div style="height:100%;width:'+barW+'%;background:'+m.color+';border-radius:3px;transition:width .4s;"></div></div>';
+  return '<div style="background:#0d1117;border-radius:14px;padding:12px 14px;border:1px solid '+(noEx?'rgba(255,255,255,.06)':m.border)+';display:flex;align-items:center;gap:12px;margin-bottom:0;opacity:'+(noEx?'.55':'1')+';transition:opacity .3s;">'
     +'<div style="font-size:22px;flex-shrink:0;">'+m.icon+'</div>'
     +'<div style="flex:1;min-width:0;">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">'
         +'<span style="color:#fff;font-size:12px;font-weight:800;">'+m.label+'</span>'
-        +'<span style="display:flex;align-items:center;">'
-          +'<span style="color:'+m.color+';font-size:11px;font-weight:800;">'+d.realizado+'/'+d.meta+'  '+pct+'%</span>'
-          +changeHTML
-        +'</span>'
+        +statHTML
       +'</div>'
-      +'<div style="height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;">'
-        +'<div style="height:100%;width:'+barW+'%;background:'+m.color+';border-radius:3px;transition:width .4s;"></div>'
-      +'</div>'
-    +'</div>'
-    +'<div style="display:flex;flex-direction:column;gap:3px;flex-shrink:0;">'
-      +'<button onclick="muscleAdjust(\''+m.key+'\',\'meta\',1)" style="background:rgba(255,255,255,.07);border:none;color:#fff;border-radius:6px;width:24px;height:24px;font-size:14px;cursor:pointer;font-family:Baloo Bhaijaan 2,sans-serif;display:flex;align-items:center;justify-content:center;touch-action:manipulation;">+</button>'
-      +'<button onclick="muscleAdjust(\''+m.key+'\',\'meta\',-1)" style="background:rgba(255,255,255,.07);border:none;color:#fff;border-radius:6px;width:24px;height:24px;font-size:14px;cursor:pointer;font-family:Baloo Bhaijaan 2,sans-serif;display:flex;align-items:center;justify-content:center;touch-action:manipulation;">−</button>'
+      +barHTML
     +'</div>'
     +'</div>';
 }).join('');
+var noRoutineBanner=totalMeta===0
+  ?'<div style="background:rgba(110,220,210,.05);border:1px dashed rgba(110,220,210,.25);border-radius:14px;padding:16px;text-align:center;">'
+    +'<div style="font-size:22px;margin-bottom:6px;">📋</div>'
+    +'<div style="color:rgba(255,255,255,.7);font-size:12px;font-weight:800;margin-bottom:4px;">Rutina no configurada</div>'
+    +'<div style="color:rgba(255,255,255,.4);font-size:11px;line-height:1.5;">Configura tu rutina semanal para ver<br>tu progreso muscular aquí.</div>'
+  +'</div>'
+  :'';
 var prevBtnOff='background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.15);border-radius:10px;padding:6px 10px;color:rgba(255,255,255,.45);font-size:9px;font-weight:800;cursor:pointer;font-family:Baloo Bhaijaan 2,sans-serif;touch-action:manipulation;';
 var prevBtnOn='background:rgba(110,220,210,.1);border:1.5px solid rgba(110,220,210,.3);border-radius:10px;padding:6px 10px;color:#6edcd2;font-size:9px;font-weight:800;cursor:pointer;font-family:Baloo Bhaijaan 2,sans-serif;touch-action:manipulation;';
 var prevBtnHTML=hasPrev
@@ -10864,6 +10883,7 @@ container.innerHTML=
       +'<button onclick="renderAnalytics()" style="background:rgba(110,220,210,.1);border:1.5px solid rgba(110,220,210,.3);border-radius:10px;padding:6px 12px;color:#6edcd2;font-size:10px;font-weight:800;cursor:pointer;font-family:Baloo Bhaijaan 2,sans-serif;touch-action:manipulation;">↻ Sync</button>'
     +'</div>'
   +'</div>'
+  +noRoutineBanner
   +'<div style="background:#0a1420;border-radius:18px;border:1px solid rgba(110,220,210,.15);padding:10px;position:relative;">'
     +'<canvas id="muscleRadarCanvas" style="display:block;width:100%;border-radius:8px;"></canvas>'
     +'<div id="muscleTooltip" style="display:none;position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(8,18,32,.96);border:1.5px solid #6edcd2;border-radius:10px;padding:8px 14px;font-family:Baloo Bhaijaan 2,sans-serif;pointer-events:none;z-index:10;white-space:nowrap;">'
@@ -10871,12 +10891,12 @@ container.innerHTML=
     +'</div>'
   +'</div>'
   +'<div style="display:flex;flex-direction:column;gap:8px;">'
-    +'<div style="color:rgba(255,255,255,.4);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">📈 Detalle&nbsp;<span style="color:rgba(255,255,255,.2);font-size:9px;font-weight:600;text-transform:none;letter-spacing:0;">Toca + / − para ajustar meta</span></div>'
+    +'<div style="color:rgba(255,255,255,.4);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">📈 Detalle</div>'
     +chipHTML
   +'</div>'
   +'<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:12px 14px;margin-bottom:8px;">'
     +'<div style="color:rgba(255,255,255,.4);font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">&#8505;&#65039; Cómo funciona</div>'
-    +'<div style="color:rgba(255,255,255,.5);font-size:11px;line-height:1.65;">Los ejercicios completados en <strong style="color:#fff;">Mi Rutina</strong> se clasifican automáticamente por grupo muscular. Toca la gráfica para ver detalles. Se reinicia cada lunes.</div>'
+    +'<div style="color:rgba(255,255,255,.5);font-size:11px;line-height:1.65;">Las metas se calculan automáticamente según los ejercicios que configuraste en tu rutina semanal. Los ejercicios completados se cuentan por grupo muscular. Se reinicia cada lunes.</div>'
   +'</div>'
   +'</div>';
 var canvas=document.getElementById('muscleRadarCanvas');
@@ -10889,16 +10909,23 @@ if(canvas){
   var mLabels={pierna:'Pierna',pecho:'Pecho',espalda:'Espalda',brazo:'Brazo'};
   function showMuscleTip(key){
     if(!_mData||!_mData[key]) return;
-    var d=_mData[key],pct=Math.round((d.realizado/(d.meta||1))*100);
+    var d=_mData[key];
+    var noEx=d.meta===0;
+    var pct=noEx?0:Math.round((d.realizado/(d.meta||1))*100);
     var tip=document.getElementById('muscleTooltip'),txt=document.getElementById('muscleTooltipTxt');
     if(!tip||!txt) return;
-    var html='<span style="color:#6edcd2;">'+mLabels[key]+'</span>&nbsp;&nbsp;'+d.realizado+'/'+d.meta+' — <strong>'+pct+'%</strong>';
-    if(showingPrev&&_mDataPrev&&_mDataPrev[key]){
-      var pd=_mDataPrev[key],ppct=Math.round((pd.realizado/(pd.meta||1))*100);
-      var dd=pct-ppct;
-      var arrow=dd>0?'↑':dd<0?'↓':'=';
-      var ac=dd>0?'#4ade80':dd<0?'#e8527a':'rgba(255,255,255,.4)';
-      html+='&nbsp;<span style="color:rgba(255,255,255,.4);font-size:10px;">← ant: '+pd.realizado+'/'+pd.meta+' ('+ppct+'%)</span>&nbsp;<span style="color:'+ac+';font-size:10px;">'+arrow+'</span>';
+    var html='<span style="color:#6edcd2;">'+mLabels[key]+'</span>&nbsp;&nbsp;';
+    if(noEx){
+      html+='<span style="color:rgba(255,255,255,.4);font-style:italic;">Sin ejercicios</span>';
+    } else {
+      html+=d.realizado+'/'+d.meta+' — <strong>'+pct+'%</strong>';
+      if(showingPrev&&_mDataPrev&&_mDataPrev[key]){
+        var pd=_mDataPrev[key],ppct=Math.round((pd.realizado/(pd.meta||1))*100);
+        var dd=pct-ppct;
+        var arrow=dd>0?'↑':dd<0?'↓':'=';
+        var ac=dd>0?'#4ade80':dd<0?'#e8527a':'rgba(255,255,255,.4)';
+        html+='&nbsp;<span style="color:rgba(255,255,255,.4);font-size:10px;">← ant: '+pd.realizado+'/'+pd.meta+' ('+ppct+'%)</span>&nbsp;<span style="color:'+ac+';font-size:10px;">'+arrow+'</span>';
+      }
     }
     txt.innerHTML=html;
     tip.style.display='block';

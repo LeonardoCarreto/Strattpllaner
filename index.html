@@ -6726,9 +6726,10 @@ const rutinaData = getRutinaData();
 const rutinaCompleted = getRutinaCompleted();
 const todayIdx = (() => { const d = new Date().getDay(); return d === 0 ? 6 : d - 1; })();
 const dayData = rutinaData[rutinaActiveDay];
-const totalDone = rutinaData.filter(d=>!d.rest).reduce((acc,d,di)=>
-acc + d.exercises.filter((_,ei)=>rutinaCompleted[`${di}_${ei}`]).length, 0);
-const totalEx = rutinaData.filter(d=>!d.rest).reduce((a,d)=>a+d.exercises.length, 0);
+const todayData = rutinaData[todayIdx];
+const isRestDay = !todayData || todayData.rest || !todayData.exercises || todayData.exercises.length === 0;
+const totalEx = isRestDay ? 0 : todayData.exercises.length;
+const totalDone = isRestDay ? 0 : todayData.exercises.filter((_,ei)=>rutinaCompleted[`${todayIdx}_${ei}`]).length;
 const gymHeader = document.createElement('div');
 gymHeader.className = 'rutina-gym-header';
 gymHeader.innerHTML = `
@@ -6742,7 +6743,7 @@ gymHeader.innerHTML = `
       <span class="rsc-lbl">Progreso</span>
       <span class="rsc-hoy rsc-hoy-orange">Hoy</span>
     </div>
-    <div class="rsc-num">${totalEx>0?Math.round(totalDone/totalEx*100):0}%</div>
+    <div class="rsc-num">${isRestDay?'🛌':totalEx>0?Math.round(totalDone/totalEx*100)+'%':'0%'}</div>
   </div>
   <div class="rutina-stat-chip">
     <div class="rsc-circle rsc-circle-green">✓</div>

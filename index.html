@@ -4883,7 +4883,7 @@ let currentPanel=null;
 function openPanel(name){
 if(currentPanel&&currentPanel!==name) exitPanel(currentPanel,()=>window.enterPanel(name));
 else window.enterPanel(name);
-if(name==='rutina') setTimeout(renderRutina,50);
+if(name==='rutina'){rutinaActiveDay=(()=>{const d=new Date().getDay();return d===0?6:d-1;})();setTimeout(renderRutina,50);}
 }
 function enterPanel(name){
 document.querySelectorAll('.panel').forEach(p=>{p.classList.remove('open','anim-slide-up','anim-slide-down','anim-slide-left','anim-slide-right','anim-zoom','anim-flip');p.style.transition='';p.style.transform='';p.style.opacity='';p.style.visibility='hidden';});
@@ -6748,10 +6748,11 @@ container.appendChild(gymHeader);
 {
 const wbWrap = document.createElement('div');
 wbWrap.style.cssText = 'padding:4px 0 8px;';
-if (isRestDay) {
+if (rutinaActiveDay !== todayIdx) {
+wbWrap.innerHTML = `<div style="text-align:center;padding:10px;font-size:12px;color:rgba(255,255,255,.25);font-weight:700;letter-spacing:.3px;">Solo puedes entrenar el día de hoy</div>`;
+} else if (isRestDay) {
 wbWrap.innerHTML = `<div style="text-align:center;padding:14px;background:rgba(255,255,255,.04);border-radius:14px;font-size:14px;color:rgba(255,255,255,.45);font-weight:700;">🛌 Hoy es día de descanso</div>`;
 } else {
-const doneDat = getWorkoutDone();
 wbWrap.innerHTML = `<button id="workoutStartBtn" onclick="workoutBtnClick()" style="width:100%;padding:14px;border-radius:14px;border:none;color:#fff;cursor:pointer;touch-action:manipulation;font-family:'Baloo Bhaijaan 2',sans-serif;font-size:16px;font-weight:800;transition:filter .15s,transform .15s;box-shadow:0 4px 20px rgba(22,163,74,.4);" ontouchstart="this.style.transform='scale(.97)'" ontouchend="this.style.transform=''">📸 Iniciar Entrenamiento</button>`;
 setTimeout(renderWorkoutBtn, 0);
 }
@@ -6838,12 +6839,19 @@ progWrap.innerHTML = `
 container.appendChild(progWrap);
 const list = document.createElement('div');
 list.className = 'rutina-exercise-list';
+const _isViewingToday = rutinaActiveDay === todayIdx;
+const _wStarted = _isViewingToday ? getWorkoutStartTime() : null;
+const _wDone = _isViewingToday ? getWorkoutDone() : null;
+const _cardsInteractive = _isViewingToday && !!_wStarted && !_wDone;
+const _cardsLockedPreStart = _isViewingToday && !_wStarted && !_wDone;
 dayData.exercises.forEach((ex, ei) => {
 const key = `${rutinaActiveDay}_${ei}`;
 const isDone = !!rutinaCompleted[key];
 const card = document.createElement('div');
 card.className = 'rutina-exercise-card' + (isDone?' done':'');
 card.style.setProperty('--ex-color', ex.sport ? '#2aaa64' : (ex.color || '#555'));
+if (_cardsLockedPreStart) { card.style.opacity='0.35'; card.style.pointerEvents='none'; }
+else if (!_isViewingToday) { card.style.opacity='0.55'; card.style.pointerEvents='none'; }
 card.innerHTML = `
 <div class="rutina-ex-icon" style="${ex.sport ? 'background:rgba(42,170,100,.12);' : ''}">${ex.icon || '🏋️'}</div>
 <div class="rutina-ex-info">
@@ -6864,6 +6872,9 @@ card.innerHTML = `
 `;
 card.onclick = (e) => {
 if (e.target.classList.contains('rutina-ex-delete')) return;
+if (!_isViewingToday) return;
+if (_wDone) return;
+if (!_wStarted) { showToast('📸 Inicia tu entrenamiento primero'); return; }
 const comp = getRutinaCompleted();
 comp[key] = !comp[key];
 saveRutinaCompleted(comp);

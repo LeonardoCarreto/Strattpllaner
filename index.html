@@ -826,44 +826,7 @@ function switchHomeHabitTab(tab) {
 </script>
 </div>
 
-<div class="rutina-photo-overlay" id="rutinaPhotoOverlay">
-<div class="rutina-photo-modal" style="gap:12px;">
-
-<div class="rutina-photo-title" id="rutinaPhotoExName">📸 Verificar Ejercicio</div>
-<div class="rutina-photo-subtitle" id="rutinaPhotoSubtitle" style="margin-top:-6px;"></div>
-
-<div id="rutinaPhotoPreview" style="width:100%;min-height:130px;border-radius:14px;background:rgba(255,255,255,.04);border:2px dashed rgba(255,255,255,.15);display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;padding:12px;cursor:pointer;transition:border-color .2s;position:relative;" onclick="rutinaOpenGallery()">
-  <div id="rutinaPhotoPlaceholder" style="display:flex;flex-direction:column;align-items:center;gap:6px;color:rgba(255,255,255,.3);pointer-events:none;">
-    <div style="font-size:36px;">📁</div>
-    <div style="font-size:11px;font-weight:700;">Toca para agregar foto</div>
-  </div>
-</div>
-
-<input type="file" accept="image/*" class="rutina-photo-input" id="rutinaPhotoInput" onchange="rutinaHandlePhoto(this)">
-
-<div style="display:flex;gap:8px;">
-<button class="rutina-photo-cancel" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;" onclick="rutinaOpenCamera()">📷 Cámara</button>
-<button class="rutina-photo-cancel" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;" onclick="rutinaOpenGallery()">🖼️ Galería</button>
-</div>
-
-<div style="display:flex;flex-direction:column;gap:6px;">
-  <label style="color:rgba(255,255,255,.45);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;">¿Qué muestra la foto? <span style="color:#e8527a;">*</span></label>
-  <textarea id="rutinaContextInput" placeholder="Ej: yo haciendo press de banca con 60kg, foto de frente..." maxlength="200" oninput="rutinaOnContextInput(this)" style="background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;color:#fff;font-size:12px;font-family:inherit;padding:10px 12px;outline:none;resize:none;height:64px;line-height:1.5;transition:border-color .2s;" onblur="this.style.borderColor='rgba(255,255,255,.1)'" onfocus="this.style.borderColor='rgba(58,133,196,.6)'"></textarea>
-  <div style="text-align:right;color:rgba(255,255,255,.2);font-size:9px;font-weight:700;" id="rutinaContextChars">0/200</div>
-</div>
-
-<div id="rutinaAiResult" style="display:none;" class="rutina-ai-result checking">
-  <span class="rutina-ai-icon">🤖</span>
-  <span id="rutinaAiText">Analizando...</span>
-</div>
-
-<div class="rutina-photo-actions">
-<button class="rutina-photo-cancel" onclick="closeRutinaPhotoModal()">Cancelar</button>
-<button class="rutina-photo-confirm" id="rutinaPhotoConfirmBtn" onclick="rutinaConfirmExercise()">📎 Adjuntar</button>
-</div>
-
-</div>
-</div>
+<input type="file" accept="image/*" capture="environment" id="workoutCameraInput" style="display:none;" onchange="handleWorkoutCameraInput(this)">
 <div class="tsk-modal-overlay" id="tskModalOverlay" onclick="closeAddTaskModal()"></div>
 <div class="tsk-modal" id="tskModal">
 <div class="tsk-modal-title" id="tskModalTitle">Nueva Tarea</div>
@@ -6782,6 +6745,18 @@ container.appendChild(gymHeader);
     gymLottieEl.textContent = '🏋️';
   }
 })();
+{
+const wbWrap = document.createElement('div');
+wbWrap.style.cssText = 'padding:4px 0 8px;';
+if (isRestDay) {
+wbWrap.innerHTML = `<div style="text-align:center;padding:14px;background:rgba(255,255,255,.04);border-radius:14px;font-size:14px;color:rgba(255,255,255,.45);font-weight:700;">🛌 Hoy es día de descanso</div>`;
+} else {
+const doneDat = getWorkoutDone();
+wbWrap.innerHTML = `<button id="workoutStartBtn" onclick="workoutBtnClick()" style="width:100%;padding:14px;border-radius:14px;border:none;color:#fff;cursor:pointer;touch-action:manipulation;font-family:'Baloo Bhaijaan 2',sans-serif;font-size:16px;font-weight:800;transition:filter .15s,transform .15s;box-shadow:0 4px 20px rgba(22,163,74,.4);" ontouchstart="this.style.transform='scale(.97)'" ontouchend="this.style.transform=''">📸 Iniciar Entrenamiento</button>`;
+setTimeout(renderWorkoutBtn, 0);
+}
+container.appendChild(wbWrap);
+}
 const tabsWrap = document.createElement('div');
 tabsWrap.className = 'rutina-day-tabs';
 rutinaData.forEach((d, i) => {
@@ -6866,17 +6841,9 @@ list.className = 'rutina-exercise-list';
 dayData.exercises.forEach((ex, ei) => {
 const key = `${rutinaActiveDay}_${ei}`;
 const isDone = !!rutinaCompleted[key];
-const hasPending = !!_rutinaPendingPhotos[key];
-const batchResult = _rutinaBatchResults[key];
 const card = document.createElement('div');
 card.className = 'rutina-exercise-card' + (isDone?' done':'');
 card.style.setProperty('--ex-color', ex.sport ? '#2aaa64' : (ex.color || '#555'));
-let statusBadge = '';
-if (!isDone && hasPending) {
-statusBadge = `<span style="background:rgba(255,200,0,.15);color:#ffd700;border-radius:20px;padding:2px 7px;font-size:10px;font-weight:800;white-space:nowrap;">📎 foto</span>`;
-} else if (!isDone && batchResult && !batchResult.approved) {
-statusBadge = `<span style="background:rgba(255,60,60,.15);color:#ff6b6b;border-radius:20px;padding:2px 7px;font-size:10px;font-weight:800;white-space:nowrap;">❌ reintentar</span>`;
-}
 card.innerHTML = `
 <div class="rutina-ex-icon" style="${ex.sport ? 'background:rgba(42,170,100,.12);' : ''}">${ex.icon || '🏋️'}</div>
 <div class="rutina-ex-info">
@@ -6884,74 +6851,28 @@ card.innerHTML = `
   ${ex.name}
   ${ex.sport ? '<span style="background:rgba(42,170,100,.2);color:#2adb80;border-radius:6px;padding:1px 5px;font-size:8px;font-weight:800;margin-left:4px;vertical-align:middle;">DEPORTE</span>' : ''}
 </div>
-<div class="rutina-ex-detail">${ex.sport ? '🕐 ' : ''}${ex.series}${statusBadge ? ' &nbsp;' + statusBadge : ''}</div>
+<div class="rutina-ex-detail">${ex.sport ? '🕐 ' : ''}${ex.series}</div>
 </div>
 <div class="rutina-ex-check" style="${
   isDone
     ? 'background:var(--green);border-color:var(--green);color:#111;'
-    : hasPending
-      ? 'background:rgba(255,200,0,.15);border-color:#ffd700;'
-      : ex.sport
-        ? 'background:rgba(42,170,100,.12);border-color:rgba(42,170,100,.5);'
-        : 'background:rgba(220,50,50,.12);border-color:#e05050;'
+    : ex.sport
+      ? 'background:rgba(42,170,100,.12);border-color:rgba(42,170,100,.5);'
+      : 'background:rgba(220,50,50,.12);border-color:#e05050;'
 }">${isDone?'✓':''}</div>
 <div class="rutina-ex-delete" onclick="deleteRutinaEx(${rutinaActiveDay},${ei},event)">✕</div>
 `;
 card.onclick = (e) => {
 if (e.target.classList.contains('rutina-ex-delete')) return;
 const comp = getRutinaCompleted();
-if (comp[key]) {
-comp[key] = false;
+comp[key] = !comp[key];
 saveRutinaCompleted(comp);
 renderRutina();
-} else {
-openRutinaPhotoModal(rutinaActiveDay, ei, ex.name);
-}
 };
 list.appendChild(card);
 });
 container.appendChild(list);
-{
-const comp = getRutinaCompleted();
-const exercises = rutinaData[rutinaActiveDay]?.exercises || [];
-const pendingIdxs = exercises
-.map((_, ei) => ei)
-.filter(ei => !comp[`${rutinaActiveDay}_${ei}`]);
-const withPhoto = pendingIdxs.filter(ei => !!_rutinaPendingPhotos[`${rutinaActiveDay}_${ei}`]);
-const missingPhoto = pendingIdxs.filter(ei => !_rutinaPendingPhotos[`${rutinaActiveDay}_${ei}`]);
-const hasPendingExercises = pendingIdxs.length > 0;
-const allHavePhoto = hasPendingExercises && missingPhoto.length === 0;
-const anyPhoto = withPhoto.length > 0;
-if (hasPendingExercises && anyPhoto) {
-const analyzeWrap = document.createElement('div');
-analyzeWrap.style.cssText = 'padding:10px 0 4px;display:flex;flex-direction:column;gap:8px;';
-if (!allHavePhoto) {
-const hint = document.createElement('div');
-hint.style.cssText = 'display:flex;align-items:center;gap:8px;background:rgba(255,200,0,.08);border:1.5px solid rgba(255,200,0,.2);border-radius:12px;padding:10px 14px;font-size:11px;font-weight:700;color:rgba(255,200,0,.8);';
-hint.innerHTML = `📸 Faltan fotos en <strong style="color:#ffd700;">${missingPhoto.length} ejercicio${missingPhoto.length > 1 ? 's' : ''}</strong> — adjunta una foto en cada ejercicio para analizar todos`;
-analyzeWrap.appendChild(hint);
-}
-const analyzeBtn = document.createElement('button');
-analyzeBtn.id = 'rutinaAnalyzeAllBtn';
-const btnOk = allHavePhoto;
-analyzeBtn.style.cssText = `
-      width:100%;padding:14px;border-radius:14px;
-      background:${btnOk ? 'linear-gradient(135deg,var(--teal),var(--purple))' : 'rgba(255,255,255,.06)'};
-      border:${btnOk ? 'none' : '1.5px solid rgba(255,255,255,.1)'};
-      color:${btnOk ? '#fff' : 'rgba(255,255,255,.3)'};
-      font-size:14px;font-weight:800;font-family:'Baloo Bhaijaan 2',sans-serif;
-      cursor:${btnOk ? 'pointer' : 'not-allowed'};
-      display:flex;align-items:center;justify-content:center;gap:8px;
-      box-shadow:${btnOk ? '0 4px 20px rgba(42,100,150,.4)' : 'none'};
-      touch-action:manipulation;opacity:${btnOk ? '1' : '0.5'};
-    `;
-analyzeBtn.innerHTML = `🤖 Analizar ejercicios del día <span style="background:rgba(255,255,255,.2);border-radius:20px;padding:2px 8px;font-size:12px;">${withPhoto.length} foto${withPhoto.length > 1 ? 's' : ''}</span><span style="background:rgba(255,200,0,.25);border-radius:20px;padding:2px 8px;font-size:11px;margin-left:4px;">${AI_DAILY_LIMIT - getAnalysisUsageSync('rutina')}/${AI_DAILY_LIMIT} hoy</span>`;
-analyzeBtn.disabled = !btnOk;
-if (btnOk) analyzeBtn.onclick = () => rutinaAnalyzeAll();
-analyzeWrap.appendChild(analyzeBtn);
-container.appendChild(analyzeWrap);
-}
-}
+
 const addForm = document.createElement('div');
 addForm.className = 'rutina-add-form';
 addForm.style.cssText = 'cursor:default;';
@@ -7017,244 +6938,150 @@ container.appendChild(decoBottom);
 }
 let _rutinaPhotoDay = null;
 let _rutinaPhotoEx  = null;
-let _rutinaPhotoB64 = null;
-let _rutinaPhotoApproved = false;
-let _rutinaPendingPhotos = {};
-let _rutinaBatchResults = {};
-function rutinaOpenCamera() {
-const input = document.getElementById('rutinaPhotoInput');
-input.setAttribute('capture', 'environment');
-input.value = '';
-input.click();
+// ─── WORKOUT START/FINISH SYSTEM ────────────────────────────
+let _workoutTimerInterval = null;
+let _workoutPhotoPhase = null;
+
+function getWorkoutDateKey() {
+const d = new Date();
+return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
-function rutinaOpenGallery() {
-const input = document.getElementById('rutinaPhotoInput');
-input.removeAttribute('capture');
-input.value = '';
-input.click();
+function getWorkoutStartTime() {
+const v = localStorage.getItem('workout_start_time');
+return v ? parseInt(v) : null;
 }
-function openRutinaPhotoModal(dayIdx, exIdx, exName) {
-_rutinaPhotoDay = dayIdx;
-_rutinaPhotoEx  = exIdx;
-_rutinaPhotoB64 = null;
-_rutinaPhotoApproved = false;
-document.getElementById('rutinaPhotoExName').textContent = '📸 Verificar Ejercicio';
-const subtitle = document.getElementById('rutinaPhotoSubtitle');
-if (subtitle) subtitle.innerHTML = `<span style="font-size:13px;">${exName}</span>`;
-const key = `${dayIdx}_${exIdx}`;
-const pending = _rutinaPendingPhotos[key];
-const preview = document.getElementById('rutinaPhotoPreview');
-const placeholder = document.getElementById('rutinaPhotoPlaceholder');
-preview.style.borderColor = 'rgba(255,255,255,.15)';
-const ctxInput = document.getElementById('rutinaContextInput');
-const ctxChars = document.getElementById('rutinaContextChars');
-const savedCtx = pending?.context || '';
-if (ctxInput) { ctxInput.value = savedCtx; }
-if (ctxChars) { ctxChars.textContent = `${savedCtx.length}/200`; }
-const aiResult = document.getElementById('rutinaAiResult');
-if (aiResult) aiResult.style.display = 'none';
-const confirmBtn = document.getElementById('rutinaPhotoConfirmBtn');
-if (pending) {
-_rutinaPhotoB64 = pending.base64;
-if (placeholder) placeholder.style.display = 'none';
-preview.querySelectorAll('img').forEach(el => el.remove());
-const img = document.createElement('img');
-img.src = `data:image/jpeg;base64,${pending.base64}`;
-img.style.cssText = 'width:100%;height:100%;object-fit:cover;position:absolute;inset:0;border-radius:12px;';
-preview.style.position = 'relative';
-preview.appendChild(img);
-preview.style.borderColor = 'rgba(42,100,150,.5)';
-if (aiResult) {
-aiResult.style.display = 'flex';
-aiResult.className = 'rutina-ai-result checking';
-aiResult.innerHTML = `<span class="rutina-ai-icon">📎</span><span>Foto adjuntada — se verificará con "Analizar todo"</span>`;
+function getWorkoutDone() {
+try { return JSON.parse(localStorage.getItem('workout_done_'+getWorkoutDateKey()) || 'null'); } catch(e) { return null; }
 }
-const hasCtx = savedCtx.length >= 5;
-confirmBtn.className = hasCtx ? 'rutina-photo-confirm approved-btn' : 'rutina-photo-confirm ready';
-confirmBtn.textContent = '🔄 Cambiar foto';
+function formatWorkoutTime(ms) {
+const totalSecs = Math.floor(ms/1000);
+const h = Math.floor(totalSecs/3600);
+const m = Math.floor((totalSecs%3600)/60);
+const s = totalSecs%60;
+if (h > 0) return h+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+function renderWorkoutBtn() {
+const btn = document.getElementById('workoutStartBtn');
+if (!btn) return;
+const startTime = getWorkoutStartTime();
+const doneDat = getWorkoutDone();
+if (doneDat) {
+clearInterval(_workoutTimerInterval);
+const mins = Math.floor(doneDat.duration/60000);
+const secs = Math.floor((doneDat.duration%60000)/1000);
+btn.style.background = 'linear-gradient(135deg,#166534,#15803d)';
+btn.style.boxShadow = '0 4px 20px rgba(21,128,61,.35)';
+btn.style.cursor = 'default';
+btn.innerHTML = '<div style="font-size:15px;font-weight:800;">✅ Entrenamiento de hoy completado</div><div style="font-size:12px;opacity:.8;margin-top:4px;">⏱ Duración: '+mins+' min '+secs+' seg · 📸 Verificado con IA</div>';
+btn.onclick = null;
+} else if (startTime) {
+btn.style.background = 'linear-gradient(135deg,#b45309,#d97706)';
+btn.style.boxShadow = '0 4px 20px rgba(217,119,6,.45)';
+const elapsed = Date.now()-startTime;
+btn.innerHTML = '<div style="font-size:13px;font-weight:800;opacity:.85;">🏋️ En entrenamiento...</div><div id="workoutTimerDisplay" style="font-size:26px;font-weight:900;margin:4px 0;letter-spacing:2px;">⏱ '+formatWorkoutTime(elapsed)+'</div><div style="font-size:14px;font-weight:800;margin-top:2px;">📸 Finalizar Entrenamiento</div>';
+startWorkoutTimerTick();
 } else {
-_rutinaPhotoB64 = null;
-preview.querySelectorAll('img').forEach(el => el.remove());
-if (placeholder) placeholder.style.display = 'flex';
-document.getElementById('rutinaPhotoInput').value = '';
-confirmBtn.className = 'rutina-photo-confirm';
-confirmBtn.textContent = '📎 Adjuntar';
+clearInterval(_workoutTimerInterval);
+btn.style.background = 'linear-gradient(135deg,#22c55e,#16a34a)';
+btn.style.boxShadow = '0 4px 20px rgba(34,197,94,.4)';
+btn.innerHTML = '📸 Iniciar Entrenamiento';
+btn.onclick = workoutBtnClick;
 }
-document.getElementById('rutinaPhotoInput').value = '';
-document.getElementById('rutinaPhotoOverlay').classList.add('open');
 }
-function closeRutinaPhotoModal() {
-document.getElementById('rutinaPhotoOverlay').classList.remove('open');
-const preview = document.getElementById('rutinaPhotoPreview');
-if (preview) {
-preview.querySelectorAll('img').forEach(el => el.remove());
-preview.style.borderColor = 'rgba(255,255,255,.15)';
+function startWorkoutTimerTick() {
+clearInterval(_workoutTimerInterval);
+_workoutTimerInterval = setInterval(() => {
+const startTime = getWorkoutStartTime();
+if (!startTime) { clearInterval(_workoutTimerInterval); return; }
+const el = document.getElementById('workoutTimerDisplay');
+if (!el) { clearInterval(_workoutTimerInterval); return; }
+el.textContent = '⏱ '+formatWorkoutTime(Date.now()-startTime);
+}, 1000);
 }
-const placeholder = document.getElementById('rutinaPhotoPlaceholder');
-if (placeholder) placeholder.style.display = 'flex';
-const ctxInput = document.getElementById('rutinaContextInput');
-if (ctxInput) ctxInput.value = '';
-const ctxChars = document.getElementById('rutinaContextChars');
-if (ctxChars) ctxChars.textContent = '0/200';
-const aiResult = document.getElementById('rutinaAiResult');
-if (aiResult) aiResult.style.display = 'none';
-const btn = document.getElementById('rutinaPhotoConfirmBtn');
-if (btn) { btn.className = 'rutina-photo-confirm'; btn.textContent = '📎 Adjuntar'; }
-_rutinaPhotoB64 = null;
+function workoutBtnClick() {
+const doneDat = getWorkoutDone();
+if (doneDat) return;
+const startTime = getWorkoutStartTime();
+openWorkoutCamera(startTime ? 'finish' : 'start');
 }
-function rutinaHandlePhoto(input) {
+function openWorkoutCamera(phase) {
+_workoutPhotoPhase = phase;
+const input = document.getElementById('workoutCameraInput');
+if (!input) return;
+input.value = '';
+input.click();
+}
+async function handleWorkoutCameraInput(input) {
 const file = input.files[0];
 if (!file) return;
-const reader = new FileReader();
-reader.onload = (e) => {
-const rawBase64 = e.target.result.split(',')[1];
-comprimirImagen(rawBase64, (b64) => {
-_rutinaPhotoB64 = b64;
-const preview = document.getElementById('rutinaPhotoPreview');
-const placeholder = document.getElementById('rutinaPhotoPlaceholder');
-if (placeholder) placeholder.style.display = 'none';
-preview.querySelectorAll('img').forEach(el => el.remove());
-const img = document.createElement('img');
-img.src = 'data:image/jpeg;base64,' + b64;
-img.style.cssText = 'width:100%;height:100%;object-fit:cover;position:absolute;inset:0;border-radius:12px;';
-preview.style.position = 'relative';
-preview.style.borderColor = 'rgba(42,100,150,.5)';
-preview.appendChild(img);
-const aiResult = document.getElementById('rutinaAiResult');
-if (aiResult) {
-aiResult.style.display = 'flex';
-aiResult.className = 'rutina-ai-result checking';
-aiResult.innerHTML = `<span class="rutina-ai-icon">📸</span><span>Foto lista — escribe una descripción y presiona Adjuntar.</span>`;
-}
-rutinaUpdateConfirmBtn();
-});
-};
-reader.readAsDataURL(file);
-}
-function rutinaOnContextInput(el) {
-const val = el.value;
-const chars = document.getElementById('rutinaContextChars');
-if (chars) chars.textContent = `${val.length}/200`;
-rutinaUpdateConfirmBtn();
-}
-function rutinaUpdateConfirmBtn() {
-const hasPhoto = !!_rutinaPhotoB64;
-const hasCtx = (document.getElementById('rutinaContextInput')?.value || '').trim().length >= 5;
-const btn = document.getElementById('rutinaPhotoConfirmBtn');
-if (!btn) return;
-if (hasPhoto && hasCtx) {
-btn.className = 'rutina-photo-confirm approved-btn';
-btn.textContent = '📎 Adjuntar';
-} else if (hasPhoto) {
-btn.className = 'rutina-photo-confirm ready';
-btn.textContent = '📎 Adjuntar';
-} else {
-btn.className = 'rutina-photo-confirm';
-btn.textContent = '📎 Adjuntar';
-}
-}
-
-function rutinaAICheck() {
-if (!_rutinaPhotoB64) return;
-const resultEl = document.getElementById('rutinaAiResult');
-const rutinaData = getRutinaData();
-const exName = rutinaData[_rutinaPhotoDay]?.exercises[_rutinaPhotoEx]?.name || 'ejercicio';
-resultEl.style.display = 'flex';
-resultEl.className = 'rutina-ai-result checking';
-resultEl.innerHTML = `<div class="rutina-ai-icon">📎</div><div>Foto lista para <strong>${exName}</strong>. Presiona "Adjuntar" y luego analiza todo con un solo clic.</div>`;
-_rutinaPhotoApproved = true;
-const btn = document.getElementById('rutinaPhotoConfirmBtn');
-if (btn) { btn.className = 'rutina-photo-confirm approved-btn'; btn.textContent = '📎 Adjuntar'; }
-}
-function rutinaConfirmExercise() {
-if (!_rutinaPhotoB64) {
-rutinaOpenGallery();
-return;
-}
-const context = (document.getElementById('rutinaContextInput')?.value || '').trim();
-if (context.length < 5) {
-showToast('⚠️ Describe qué muestra la foto primero');
-document.getElementById('rutinaContextInput')?.focus();
-return;
-}
-const key = `${_rutinaPhotoDay}_${_rutinaPhotoEx}`;
-const rutinaData = getRutinaData();
-const exName = rutinaData[_rutinaPhotoDay]?.exercises[_rutinaPhotoEx]?.name || 'ejercicio';
-_rutinaPendingPhotos[key] = { base64: _rutinaPhotoB64, exName, context };
-delete _rutinaBatchResults[key];
-showToast(`📎 Foto adjuntada: ${exName}`);
-closeRutinaPhotoModal();
-renderRutina();
-}
-document.getElementById('rutinaPhotoOverlay')?.addEventListener('click', function(e) {
-if (e.target === this) closeRutinaPhotoModal();
-});
-async function rutinaAnalyzeAll() {
-const dayPrefix = `${rutinaActiveDay}_`;
-const pendingEntries = Object.entries(_rutinaPendingPhotos).filter(([k]) => k.startsWith(dayPrefix));
-if (pendingEntries.length === 0) {
-showToast('⚠️ No hay fotos adjuntadas para hoy'); return;
-}
-const usedRut = await getAnalysisUsage('rutina');
-if (usedRut >= AI_DAILY_LIMIT) {
-showToast(`⛔ Límite diario alcanzado (${AI_DAILY_LIMIT} análisis/día). Vuelve mañana.`);
-return;
-}
 if (!requireApiKey()) return;
-const remainingRut = AI_DAILY_LIMIT - usedRut;
-const confirmRut = `💪 ANÁLISIS DE RUTINA (${usedRut + 1}/${AI_DAILY_LIMIT} de hoy)\n\n💡 Recomendación: Adjunta las fotos de TODOS tus ejercicios del día antes de analizar para no desperdiciar un análisis.\n\nTienes ${pendingEntries.length} ejercicio${pendingEntries.length > 1 ? 's' : ''} listo${pendingEntries.length > 1 ? 's' : ''}.\n\n${remainingRut === 1 ? '⚠️ Este es tu ÚLTIMO análisis de hoy.' : `Te quedarán ${remainingRut - 1} análisis después de este.`}\n\n¿Continuar ahora?`;
-if (!confirm(confirmRut)) return;
-const btn = document.getElementById('rutinaAnalyzeAllBtn');
-if (btn) { btn.disabled = true; btn.textContent = '⏳ Analizando...'; }
-showToast(`🤖 Analizando ${pendingEntries.length} ejercicio${pendingEntries.length > 1 ? 's' : ''} del día...`);
-let approved = 0, rejected = 0;
-for (const [key, data] of pendingEntries) {
+const phase = _workoutPhotoPhase;
+const btn = document.getElementById('workoutStartBtn');
+if (btn) {
+btn.style.background = 'linear-gradient(135deg,#1e3a5f,#2563eb)';
+btn.style.boxShadow = 'none';
+btn.innerHTML = '<div style="font-size:15px;font-weight:800;">🤖 Verificando con IA...</div><div style="font-size:12px;opacity:.7;margin-top:4px;">Analizando tu foto...</div>';
+btn.onclick = null;
+}
+const reader = new FileReader();
+reader.onload = async (ev) => {
+const rawBase64 = ev.target.result.split(',')[1];
+comprimirImagen(rawBase64, async (b64) => {
 try {
-const contextLine = data.context ? `\nDESCRIPCIÓN DEL USUARIO: "${data.context}" — úsala como contexto adicional para validar la foto.` : '';
-const prompt = `Eres un verificador de actividad física. El usuario dice haber realizado: "${data.exName}".${contextLine} Analiza si la foto muestra evidencia real de esa actividad (puede ser un ejercicio de gym, un deporte, una actividad deportiva, equipo deportivo, lugar de práctica, etc.). NO aceptes screenshots ni imágenes de internet.${data.context ? ` La descripción "${data.context}" debe corresponder con algo visible en la imagen.` : ''} Responde SOLO con JSON: {"aprobado": true/false, "trampa": true/false, "mensaje": "descripción en 10 palabras"}`;
+const prompt = phase === 'start'
+? '¿Esta foto muestra un lugar adecuado para hacer ejercicio? (gimnasio, parque, espacio en casa con equipo, etc). Responde SOLO con JSON: {"aprobado": true/false, "razon": "..."}'
+: '¿Esta foto muestra un lugar donde alguien acaba de hacer ejercicio? (gimnasio, espacio de entrenamiento, equipo deportivo, etc). Responde SOLO con JSON: {"aprobado": true/false, "razon": "..."}';
 const json = await geminiPost({
-contents: [{
-parts: [
-{ inline_data: { mime_type: 'image/jpeg', data: data.base64 } },
-{ text: prompt }
-]
-}],
-generationConfig: { maxOutputTokens: 80, temperature: 0.3 }
+contents: [{parts: [{inline_data:{mime_type:'image/jpeg',data:b64}},{text:prompt}]}],
+generationConfig: {maxOutputTokens:80,temperature:0.3}
 });
 const text = json.candidates?.[0]?.content?.parts?.[0]?.text || '';
 let result;
-try { result = JSON.parse(text.replace(/```json|```/g, '').trim()); }
-catch(e) { result = { aprobado: text.includes('"aprobado": true') || text.includes('"aprobado":true'), trampa: false, mensaje: 'Análisis completado.' }; }
-_rutinaBatchResults[key] = { approved: result.aprobado && !result.trampa, message: result.mensaje || '' };
-_aiDebugAddEntry({ source: 'Rutina (batch)', exName: data.exName, context: data.context, approved: result.aprobado && !result.trampa, trampa: result.trampa, confianza: result.confianza, mensaje: result.mensaje, rawText: text });
-await new Promise(r => setTimeout(r, 4500));
-if (result.aprobado && !result.trampa) {
-approved++;
-const comp = getRutinaCompleted();
-comp[key] = true;
-saveRutinaCompleted(comp);
-delete _rutinaPendingPhotos[key];
-xp += 3; updateXP();
+try { result = JSON.parse(text.replace(/```json|```/g,'').trim()); }
+catch(e2) { result = {aprobado: text.includes('"aprobado": true')||text.includes('"aprobado":true'), razon:'OK'}; }
+if (result.aprobado) {
+if (phase === 'start') {
+localStorage.setItem('workout_start_time', String(Date.now()));
+showToast('🏋️ ¡Entrenamiento iniciado! A darle 💪');
+renderRutina();
 } else {
-rejected++;
+const startTime = getWorkoutStartTime();
+const endTime = Date.now();
+const duration = endTime - (startTime || endTime);
+const doneData = {duration, startTime: startTime||endTime, endTime};
+localStorage.setItem('workout_done_'+getWorkoutDateKey(), JSON.stringify(doneData));
+localStorage.removeItem('workout_start_time');
+clearInterval(_workoutTimerInterval);
+const rutinaData = getRutinaData();
+const todayIdx2 = (()=>{ const d=new Date().getDay(); return d===0?6:d-1; })();
+const comp = getRutinaCompleted();
+(rutinaData[todayIdx2]?.exercises||[]).forEach((_,ei)=>{ comp[todayIdx2+'_'+ei]=true; });
+saveRutinaCompleted(comp);
+const uid = window._fbAuth?.currentUser?.uid;
+if (uid && typeof db !== 'undefined') {
+try { await db.collection('users').doc(uid).collection('workouts').doc(getWorkoutDateKey()).set({startTime:doneData.startTime,endTime:doneData.endTime,duration:doneData.duration,verified:true,exercises:(rutinaData[todayIdx2]?.exercises||[]).length}); } catch(e3) {}
+}
+xp += 15; updateXP();
+coins += 5; updateCoinDisplay();
+const mins = Math.floor(duration/60000);
+const secs = Math.floor((duration%60000)/1000);
+showToast('✅ ¡Entrenamiento completado! ⏱ '+mins+'m '+secs+'s · +15 XP · +5 🪙');
+setTimeout(()=>launchConfetti(window.innerWidth/2,window.innerHeight/4),300);
+renderRutina();
+}
+} else {
+const msg = phase==='start' ? '❌ No parece un lugar adecuado para entrenar. Intenta de nuevo.' : '❌ No se pudo verificar el fin del entrenamiento. Intenta de nuevo.';
+showToast(msg);
+renderWorkoutBtn();
 }
 } catch(err) {
-_rutinaBatchResults[key] = { approved: false, message: 'Error de conexión — reintenta.' };
-rejected++;
-_aiDebugAddEntry({ source: 'Rutina (batch)', exName: data ? data.exName : key, approved: false, error: true, errorMsg: err.message || String(err) });
+showToast('❌ Error de conexión. Intenta de nuevo.');
+renderWorkoutBtn();
 }
-}
-renderRutina();
-if (btn) { btn.disabled = false; btn.textContent = '🤖 Analizar todo'; }
-await incrementAnalysisUsage('rutina');
-const rutRemaining = AI_DAILY_LIMIT - getAnalysisUsageSync('rutina');
-const rutRemainingMsg = rutRemaining > 0 ? ` (te queda${rutRemaining > 1 ? 'n' : ''} ${rutRemaining} análisis hoy)` : ' (sin análisis restantes hoy)';
-if (rejected === 0) {
-showToast(`💪 ¡${approved} ejercicio${approved > 1 ? 's' : ''} verificado${approved > 1 ? 's' : ''}! +${approved * 3} XP${rutRemainingMsg}`);
-if (approved > 0) setTimeout(() => launchConfetti(window.innerWidth/2, window.innerHeight/4), 200);
-} else {
-showToast(`✅ ${approved} aprobado${approved !== 1 ? 's' : ''} · ❌ ${rejected} rechazado${rejected !== 1 ? 's' : ''}${rutRemainingMsg}`);
-}
+});
+};
+reader.readAsDataURL(file);
 }
 document.getElementById('tskPhotoOverlay')?.addEventListener('click', function(e) {
 if (e.target === this) closeTskPhotoModal();
@@ -7653,24 +7480,7 @@ else if (i > exIdx) newComp[`${d}_${i-1}`] = v;
 } else { newComp[k] = v; }
 });
 saveRutinaCompleted(newComp);
-const newPending = {};
-Object.entries(_rutinaPendingPhotos).forEach(([k,v]) => {
-const [d,i] = k.split('_').map(Number);
-if (d === dayIdx) {
-if (i < exIdx) newPending[k] = v;
-else if (i > exIdx) newPending[`${d}_${i-1}`] = v;
-} else { newPending[k] = v; }
-});
-_rutinaPendingPhotos = newPending;
-const newBatch = {};
-Object.entries(_rutinaBatchResults).forEach(([k,v]) => {
-const [d,i] = k.split('_').map(Number);
-if (d === dayIdx) {
-if (i < exIdx) newBatch[k] = v;
-else if (i > exIdx) newBatch[`${d}_${i-1}`] = v;
-} else { newBatch[k] = v; }
-});
-_rutinaBatchResults = newBatch;
+
 renderRutina();
 }
 let progCalYear, progCalMonth, progSelectedDay = null, progView = 'week';

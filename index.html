@@ -117,6 +117,7 @@ window._fbUserData    = data;
 if (typeof restoreSaveData === 'function') {
 regData.email = user.email;
 restoreSaveData(data);
+if (typeof applyAdminPrivileges === 'function') applyAdminPrivileges();
 setTimeout(restoreProfilePhoto, 150);
 }
 const splash = document.getElementById('splash-screen');
@@ -149,6 +150,7 @@ window._fbUserData = initData;
 if (typeof restoreSaveData === 'function') {
 regData.email = user.email || '';
 restoreSaveData(initData);
+if (typeof applyAdminPrivileges === 'function') applyAdminPrivileges();
 if (typeof setAppColors === 'function') {
 setTimeout(() => setAppColors('#06070a','#0c0e14','#2563eb','#04050a'), 150);
 }
@@ -2291,9 +2293,17 @@ setTimeout(checkDailyPenalty, 800);
 regData.email = data.email || '';
 regData.displayName = name;
 regData.avatar = avatar;
-if ((data.email || '').toLowerCase().trim() === 'carretoleonardo2312@gmail.com') {
+}
+window._isAdmin = false;
+async function applyAdminPrivileges() {
+const user = window._fbCurrentUser || window._fbAuth?.currentUser;
+if (!user) return;
+try {
+const adminSnap = await window._fbDb.collection('admins').doc(user.uid).get();
+if (!adminSnap.exists) return;
+window._isAdmin = true;
 const ceoBadge = SHOP_ITEMS.badges.find(b => b.ceo);
-if (ceoBadge) {
+if (ceoBadge && !ceoBadge.owned) {
 ceoBadge.owned = true;
 ceoBadge.ceo   = true;
 if (!equippedBadgeIds.includes(ceoBadge.id)) equippedBadgeIds = [ceoBadge.id, ...equippedBadgeIds].slice(0,3);
@@ -2305,7 +2315,7 @@ coins = 100000;
 updateCoinDisplay();
 setTimeout(() => showToast('<span class="coin-custom"></span> ¡100,000 Strattcoin CEO desbloqueadas!'), 1200);
 }
-}
+} catch(e) { /* fail silently */ }
 }
 let _saveGuardUntil = 0; // timestamp: block restoreSaveData until this time
 async function saveAccount() {
@@ -2389,18 +2399,7 @@ const el = document.getElementById(id); if(el) el.textContent = regData.avatar;
 });
 launchConfetti(window.innerWidth/2, window.innerHeight/2);
 showToast('¡Bienvenido, ' + regData.displayName + '! 🎉');
-if (regData.email.toLowerCase().trim() === 'carretoleonardo2312@gmail.com') {
-const ceoBadge = SHOP_ITEMS.badges.find(b => b.ceo);
-if (ceoBadge) {
-ceoBadge.owned = true;
-if (!equippedBadgeIds.includes(ceoBadge.id)) equippedBadgeIds = [ceoBadge.id, ...equippedBadgeIds].slice(0,3);
-updateEquippedBadgeDisplay();
-setTimeout(() => showToast('👑 Badge CEO desbloqueado — eres VIP!'), 1500);
-}
-coins = 100000;
-updateCoinDisplay();
-setTimeout(() => showToast('<span class="coin-custom"></span> ¡100,000 Strattcoin CEO!'), 2000);
-}
+applyAdminPrivileges();
 } catch(e) {
 let msg = 'Error al crear cuenta';
 if (e.code === 'auth/email-already-in-use') msg = 'Este correo ya está registrado';
@@ -2428,6 +2427,7 @@ if (snap.exists) {
 regData.email = fbUser.email;
 regData.pass  = pass;
 restoreSaveData(snap.data());
+applyAdminPrivileges();
 }
 setHelper('loginHelper', '¡Bienvenido de vuelta! ✓', 'ok');
 showToast('¡Hola de nuevo! 👋');
@@ -2458,10 +2458,11 @@ auth.signInWithPopup(provider).then(async (cred) => {
     
     regData.email = user.email;
     restoreSaveData(snap.data());
+    applyAdminPrivileges();
     showToast('¡Hola de nuevo, ' + (snap.data().displayName || user.displayName) + '! 👋');
     setTimeout(() => enterAppFromSplash(), 900);
   } else {
-    
+
     const displayName = user.displayName || user.email.split('@')[0];
     const initData = { email: user.email, displayName, displayNameLower: displayName.toLowerCase(),
       avatar: '😊', googleLinked: true, xp: 0, coins: 0, streakDays: 1, streakGoal: 100,
@@ -2470,9 +2471,7 @@ auth.signInWithPopup(provider).then(async (cred) => {
       ownedAvatarIds: [], powerQtys: {}, savedAt: firebase.firestore.FieldValue.serverTimestamp() };
     await db.collection('users').doc(user.uid).set(initData);
     regData.email = user.email; regData.displayName = displayName;
-    if (user.email.toLowerCase().trim() === 'carretoleonardo2312@gmail.com') {
-      setTimeout(() => { coins = 100000; updateCoinDisplay(); }, 500);
-    }
+    applyAdminPrivileges();
     showGoogleWelcome(displayName, '😊');
   }
 }).catch((e) => {
@@ -2550,10 +2549,11 @@ if (regData.email) saveAccount();
       
       regData.email = user.email;
       restoreSaveData(snap.data());
+      applyAdminPrivileges();
       showToast('¡Hola de nuevo, ' + (snap.data().displayName || user.displayName) + '! 👋');
       setTimeout(() => enterAppFromSplash(), 900);
     } else {
-      
+
       const displayName = user.displayName || user.email.split('@')[0];
       const initData = { email: user.email, displayName, displayNameLower: displayName.toLowerCase(),
         avatar: '😊', googleLinked: true, xp: 0, coins: 0, streakDays: 1, streakGoal: 100,
@@ -2562,9 +2562,7 @@ if (regData.email) saveAccount();
         ownedAvatarIds: [], powerQtys: {}, savedAt: firebase.firestore.FieldValue.serverTimestamp() };
       await db.collection('users').doc(user.uid).set(initData);
       regData.email = user.email; regData.displayName = displayName;
-      if (user.email.toLowerCase().trim() === 'carretoleonardo2312@gmail.com') {
-        setTimeout(() => { coins = 100000; updateCoinDisplay(); }, 500);
-      }
+      applyAdminPrivileges();
       showGoogleWelcome(displayName, '😊');
     }
   } catch(e) {
@@ -2580,6 +2578,7 @@ await window._fbFns.signOut(window._fbAuth);
 localStorage.removeItem('strat_had_session');
 } catch(e) {}
 
+window._isAdmin         = false;
 window._luckSkinOwned   = false;
 window._luckSkinEquipped = false;
 const _luckIdxLogout = THEMES.findIndex(t => t.luck);
@@ -5998,7 +5997,7 @@ const owned    = SHOP_ITEMS.badges.filter(b => b.owned && !b.ceo && !b.gang && !
 const notOwned = SHOP_ITEMS.badges.filter(b => !b.owned && !b.ceo && !b.gang && !b.luck && !b.top1);
 const ceoBadge  = SHOP_ITEMS.badges.find(b => b.ceo);
 const gangBadge = SHOP_ITEMS.badges.find(b => b.gang);
-const isVIP = (regData.email || '').toLowerCase().trim() === 'carretoleonardo2312@gmail.com';
+const isVIP = window._isAdmin === true;
 if (equippedBadgeIds.length > 0) {
 const header = document.createElement('div');
 header.style.cssText = 'display:flex;align-items:center;gap:6px;background:rgba(240,192,64,.08);border:1.5px solid rgba(240,192,64,.2);border-radius:12px;padding:8px 12px;margin-bottom:6px;flex-wrap:wrap;';

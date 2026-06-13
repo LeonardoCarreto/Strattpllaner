@@ -1888,19 +1888,6 @@ function comprimirImagen(base64, callback) {
 // que guarda la API Key como secret en Cloudflare (nunca expuesta al frontend).
 // ⬇️ Reemplaza esta URL con la de tu Worker después de ejecutar: wrangler deploy
 const GEMINI_PROXY_URL = 'https://strattpllaner-gemini-proxy.sttratup.workers.dev';
-// Shared secret for app-attestation HMAC (must match HMAC_SECRET set via: wrangler secret put HMAC_SECRET)
-const APP_HMAC_SECRET = 'str4tt_2024_7f3e9a1b_c4d5e6f8';
-async function _computeAppSig(uid) {
-  const ts  = String(Date.now());
-  const enc = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    'raw', enc.encode(APP_HMAC_SECRET),
-    { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
-  );
-  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(`${ts}:${uid}`));
-  const hex = Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('');
-  return `${ts}.${hex}`;
-}
 async function geminiPost(body, maxRetries = 3) {
   const user = window._fbAuth && window._fbAuth.currentUser;
   if (!user) {
@@ -1915,13 +1902,11 @@ async function geminiPost(body, maxRetries = 3) {
       await new Promise(r => setTimeout(r, wait));
     }
     const token  = await user.getIdToken();
-    const appSig = await _computeAppSig(user.uid);
     const res = await fetch(GEMINI_PROXY_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + token,
-        'X-App-Sig':     appSig,
         'X-User-Id':     user.uid
       },
       body: JSON.stringify(body)

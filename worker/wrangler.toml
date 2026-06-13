@@ -16,5 +16,5 @@ preview_id = "84b510f2509849a1a93ecf520e57f98b"
 # wrangler secret put GEMINI_KEY
 #   → paste your Gemini API key when prompted
 #
-# wrangler secret put HMAC_SECRET
-#   → paste the same value as APP_HMAC_SECRET in index.html
+# Authentication: Firebase ID tokens are verified server-side using Google's
+# public JWK endpoint — no shared secret needed in the frontend.

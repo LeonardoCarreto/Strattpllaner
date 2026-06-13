@@ -1,9 +1,11 @@
 'use strict';
 
-const GEMINI_MODEL   = 'gemini-2.5-flash-lite';
-const RATE_LIMIT     = 10;                // max calls per IP per hour
-const MAX_BYTES      = 5 * 1024 * 1024;  // 5 MB
-const HMAC_WINDOW_MS = 5 * 60 * 1000;    // 5-minute replay window
+const GEMINI_MODEL      = 'gemini-2.5-flash-lite';
+const RATE_LIMIT        = 10;                // max calls per IP per hour
+const MAX_BYTES         = 5 * 1024 * 1024;  // 5 MB
+const FIREBASE_PROJECT  = 'strattpllaner';
+const FIREBASE_JWK_URL  =
+  'https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com';
 
 const ALLOWED_ORIGINS = new Set([
   'https://strattpllaner.github.io',
@@ -60,7 +62,7 @@ function corsHeaders(origin) {
   return {
     'Access-Control-Allow-Origin':  origin,
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, X-App-Sig, X-User-Id, Authorization',
+    'Access-Control-Allow-Headers': 'Content-Type, X-User-Id, Authorization',
     'Access-Control-Max-Age':       '3600',
     'Vary':                         'Origin',
   };
@@ -77,35 +79,61 @@ function jsonResponse(status, body, extraHeaders = {}) {
   });
 }
 
-// ── HMAC app-attestation (constant-time via Web Crypto) ───────────────────────
+// ── Firebase ID-token verification (RS256 JWT via Google JWK endpoint) ────────
 
-async function verifyHmac(sigHeader, userId, secret) {
-  if (!sigHeader || !userId || !secret) return false;
+function _b64url(str) {
+  return atob(str.replace(/-/g, '+').replace(/_/g, '/'));
+}
 
-  const dotIdx = sigHeader.indexOf('.');
-  if (dotIdx === -1) return false;
-  const ts     = sigHeader.slice(0, dotIdx);
-  const sigHex = sigHeader.slice(dotIdx + 1);
+async function verifyFirebaseToken(authHeader, userId) {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) return false;
+  const token = authHeader.slice(7);
 
-  const age = Date.now() - Number(ts);
-  if (isNaN(age) || age < 0 || age > HMAC_WINDOW_MS) return false;
-  if (sigHex.length === 0 || sigHex.length % 2 !== 0) return false;
-  if (!/^[0-9a-f]+$/i.test(sigHex)) return false;
+  const parts = token.split('.');
+  if (parts.length !== 3) return false;
 
-  const cryptoKey = await crypto.subtle.importKey(
-    'raw', _enc.encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' }, false, ['verify'],
-  );
+  let header, payload;
+  try {
+    header  = JSON.parse(_b64url(parts[0]));
+    payload = JSON.parse(_b64url(parts[1]));
+  } catch { return false; }
 
-  const sigBytes = Uint8Array.from(
-    sigHex.match(/.{2}/g).map(b => parseInt(b, 16)),
-  );
+  if (header.alg !== 'RS256' || !header.kid) return false;
 
-  // crypto.subtle.verify performs constant-time comparison internally
-  return crypto.subtle.verify(
-    'HMAC', cryptoKey, sigBytes,
-    _enc.encode(`${ts}:${userId}`),
-  );
+  const now = Math.floor(Date.now() / 1000);
+  if (!payload.exp || payload.exp < now)   return false;
+  if (!payload.iat || payload.iat > now + 300) return false;
+  if (payload.iss !== `https://securetoken.google.com/${FIREBASE_PROJECT}`) return false;
+  if (payload.aud !== FIREBASE_PROJECT)    return false;
+  if (!payload.sub || payload.sub !== userId) return false;
+
+  let jwks;
+  try {
+    const res = await fetch(FIREBASE_JWK_URL, {
+      cf: { cacheEverything: true, cacheTtl: 3600 },
+    });
+    if (!res.ok) return false;
+    ({ keys: jwks } = await res.json());
+  } catch { return false; }
+
+  const jwk = jwks.find(k => k.kid === header.kid);
+  if (!jwk) return false;
+
+  let cryptoKey;
+  try {
+    cryptoKey = await crypto.subtle.importKey(
+      'jwk', jwk,
+      { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+      false, ['verify'],
+    );
+  } catch { return false; }
+
+  const sigBytes = Uint8Array.from(_b64url(parts[2]), c => c.charCodeAt(0));
+  const signedData = _enc.encode(`${parts[0]}.${parts[1]}`);
+
+  try {
+    return await crypto.subtle.verify('RSASSA-PKCS1-v1_5', cryptoKey, sigBytes, signedData);
+  } catch { return false; }
 }
 
 // ── Rate limiting via KV (eventually-consistent — acceptable here) ─────────────
@@ -206,17 +234,17 @@ export default {
       return jsonResponse(405, { error: { message: 'Method not allowed' } }, cors);
     }
 
-    // ── 1. HMAC app-attestation ──
-    const userId = request.headers.get('X-User-Id') ?? '';
-    const appSig = request.headers.get('X-App-Sig') ?? '';
+    // ── 1. Firebase ID-token authentication ──
+    const userId   = request.headers.get('X-User-Id') ?? '';
+    const authHeader = request.headers.get('Authorization') ?? '';
 
-    let hmacOk = false;
+    let authed = false;
     try {
-      hmacOk = await verifyHmac(appSig, userId, env.HMAC_SECRET);
+      authed = await verifyFirebaseToken(authHeader, userId);
     } catch { /* fail closed */ }
 
-    if (!hmacOk) {
-      return jsonResponse(403, { error: { message: 'Firma de request inválida' } }, cors);
+    if (!authed) {
+      return jsonResponse(403, { error: { message: 'Token de autenticación inválido' } }, cors);
     }
 
     // ── 2. Rate limiting (fail-open to avoid blocking users on KV outage) ──

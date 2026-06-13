@@ -1,0 +1,20 @@
+name            = "strattpllaner-gemini-proxy"
+main            = "src/index.js"
+compatibility_date = "2024-09-23"
+
+# ── KV namespace for IP-based rate limiting ───────────────────────────────────
+# 1. Create the namespaces:
+#      wrangler kv namespace create RATE_LIMIT_KV
+#      wrangler kv namespace create RATE_LIMIT_KV --preview
+# 2. Replace the placeholder IDs below with the output of those commands.
+[[kv_namespaces]]
+binding    = "RATE_LIMIT_KV"
+id         = "7d9b538bb67347d0b32798395472b9d0"
+preview_id = "84b510f2509849a1a93ecf520e57f98b"
+
+# ── Secrets (never stored here — set via CLI) ─────────────────────────────────
+# wrangler secret put GEMINI_KEY
+#   → paste your Gemini API key when prompted
+#
+# wrangler secret put HMAC_SECRET
+#   → paste the same value as APP_HMAC_SECRET in index.html

@@ -1884,9 +1884,23 @@ function comprimirImagen(base64, callback) {
   img.src = 'data:image/jpeg;base64,' + base64;
 }
 
-// Proxy seguro: la app NO habla con Gemini directamente. Llama a nuestra
-// función /api/gemini, que guarda la API Key en secreto en el servidor.
-const GEMINI_PROXY_URL = '/api/gemini';
+// Proxy seguro: la app NO habla con Gemini directamente. Llama al Cloudflare Worker,
+// que guarda la API Key como secret en Cloudflare (nunca expuesta al frontend).
+// ⬇️ Reemplaza esta URL con la de tu Worker después de ejecutar: wrangler deploy
+const GEMINI_PROXY_URL = 'https://strattpllaner-gemini-proxy.sttratup.workers.dev';
+// Shared secret for app-attestation HMAC (must match HMAC_SECRET set via: wrangler secret put HMAC_SECRET)
+const APP_HMAC_SECRET = 'str4tt_2024_7f3e9a1b_c4d5e6f8';
+async function _computeAppSig(uid) {
+  const ts  = String(Date.now());
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw', enc.encode(APP_HMAC_SECRET),
+    { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+  );
+  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(`${ts}:${uid}`));
+  const hex = Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('');
+  return `${ts}.${hex}`;
+}
 async function geminiPost(body, maxRetries = 3) {
   const user = window._fbAuth && window._fbAuth.currentUser;
   if (!user) {
@@ -1900,12 +1914,15 @@ async function geminiPost(body, maxRetries = 3) {
       showToast(`⏳ Límite de IA — reintentando en ${wait/1000}s... (${attempt}/${maxRetries-1})`);
       await new Promise(r => setTimeout(r, wait));
     }
-    const token = await user.getIdToken();
+    const token  = await user.getIdToken();
+    const appSig = await _computeAppSig(user.uid);
     const res = await fetch(GEMINI_PROXY_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token
+        'Authorization': 'Bearer ' + token,
+        'X-App-Sig':     appSig,
+        'X-User-Id':     user.uid
       },
       body: JSON.stringify(body)
     });
@@ -3881,17 +3898,21 @@ try {
 const data = await geminiPost({
 contents: [{
 parts: [
-{ text: `Eres un verificador de tareas amigable. El usuario completó la tarea: "${taskName}". APRUEBA si la foto muestra el resultado (cuaderno, apuntes, pantalla con trabajo, dibujo, tarea escrita) o el proceso de hacerla, o cualquier cosa relacionada. Da el beneficio de la duda — un cuaderno con notas, una pantalla con un documento o una persona trabajando es evidencia válida. RECHAZA SOLO si la foto no tiene ninguna relación posible con "${taskName}" o es un screenshot de internet. Responde SOLO con: APROBADO: [razón breve] o RECHAZADO: [razón breve]` },
+{ text: `Analiza esta imagen y determina si el usuario completó la siguiente tarea: "${taskName}".${_tskPhotoContext ? ` El usuario describe: "${_tskPhotoContext}".` : ''} Responde ÚNICAMENTE con un JSON válido: {"completed": true, "confidence": 85, "reason": "explicación breve en español"}` },
 { inlineData: { mimeType: 'image/jpeg', data: _tskPhotoBase64 } }
 ]
-}]
+}],
+generationConfig: { maxOutputTokens: 120, temperature: 0.3 }
 });
 const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-const approved = text.toUpperCase().includes('APROBADO');
+let result;
+try { result = JSON.parse(text.replace(/```json|```/g, '').trim()); }
+catch(e) { const t = text.toLowerCase(); result = { completed: t.includes('aprobado') || t.includes('true') || t.includes('válido'), confidence: 50, reason: text.trim() }; }
+const approved = result.completed;
 _tskPhotoApproved = approved;
 if (aiResult) aiResult.className = `rutina-ai-result ${approved ? 'approved' : 'rejected'}`;
-if (aiText) aiText.textContent = text.replace(/^(APROBADO|RECHAZADO):/i, '').trim() || (approved ? '✅ Evidencia válida' : '❌ No válido');
-_aiDebugAddEntry({ source: 'Tarea (foto)', taskName: t ? t.name : 'tarea', context: _tskPhotoContext, approved, mensaje: text.replace(/^(APROBADO|RECHAZADO):/i,'').trim(), rawText: text });
+if (aiText) aiText.textContent = result.reason || (approved ? '✅ Evidencia válida' : '❌ No válido');
+_aiDebugAddEntry({ source: 'Tarea (foto)', taskName: t ? t.name : 'tarea', context: _tskPhotoContext, approved, confianza: result.confidence, mensaje: result.reason, rawText: text });
 if (confirm) {
 if (approved) {
 confirm.className = 'rutina-photo-confirm approved-btn';
@@ -4081,26 +4102,26 @@ continue;
 const json = await geminiPost({
 contents: [{
 parts: [
-{ text: `Verifica si la foto muestra evidencia real de la tarea: "${data.taskName}".${data.context ? ` El usuario describe: "${data.context}".` : ''} Aprueba si hay algo relacionado con la tarea (cuaderno, pantalla con trabajo, resultado tangible, persona trabajando). Rechaza solo si es screenshot de internet, meme o completamente irrelevante. Responde SOLO con JSON: {"aprobado": true|false, "mensaje": "razón breve en 10 palabras"}` },
+{ text: `Analiza esta imagen y determina si el usuario completó la siguiente tarea: "${data.taskName}".${data.context ? ` El usuario describe: "${data.context}".` : ''} Responde ÚNICAMENTE con un JSON válido: {"completed": true, "confidence": 85, "reason": "razón breve en español"}` },
 ...imageParts
 ]
 }],
-generationConfig: { maxOutputTokens: 80, temperature: 0.3 }
+generationConfig: { maxOutputTokens: 120, temperature: 0.3 }
 });
 const text = json.candidates?.[0]?.content?.parts?.[0]?.text || '';
 let result;
 try { result = JSON.parse(text.replace(/```json|```/g, '').trim()); }
-catch(e) { const t = text.toLowerCase(); result = { aprobado: t.includes('aprobado') || t.includes('true') || t.includes('válido') || t.includes('evidencia'), mensaje: 'Análisis completado.' }; }
-_tskBatchResults[taskId] = { approved: result.aprobado, message: result.mensaje || '' };
-_aiDebugAddEntry({ source: 'Tareas (batch)', taskName: data.taskName, context: data.context, approved: result.aprobado, confianza: result.confianza, mensaje: result.mensaje, detalles: result.detalles, rawText: text });
-if (result.aprobado) {
+catch(e) { const t = text.toLowerCase(); result = { completed: t.includes('aprobado') || t.includes('true') || t.includes('válido') || t.includes('evidencia'), confidence: 50, reason: 'Análisis completado.' }; }
+_tskBatchResults[taskId] = { approved: result.completed, message: result.reason || '' };
+_aiDebugAddEntry({ source: 'Tareas (batch)', taskName: data.taskName, context: data.context, approved: result.completed, confianza: result.confidence, mensaje: result.reason, rawText: text });
+if (result.completed) {
 approved++;
 tskMarkComplete(parseInt(taskId));
 delete _tskPendingPhotos[taskId];
 } else {
 rejected++;
 delete _tskPendingPhotos[taskId];
-showToast('❌ ' + (result.mensaje || 'Foto rechazada — intenta con otra evidencia'));
+showToast('❌ ' + (result.reason || 'Foto rechazada — intenta con otra evidencia'));
 }
 await new Promise(r => setTimeout(r, 4500));
 } catch(err) {

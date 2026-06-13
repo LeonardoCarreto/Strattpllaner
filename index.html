@@ -2450,7 +2450,7 @@ const db   = window._fbDb;
 const provider = new firebase.auth.GoogleAuthProvider();
 provider.setCustomParameters({ prompt: 'select_account' });
 showToast('🔄 Abriendo Google...');
-auth.signInWithPopup(provider).then(async (cred) => {
+auth.signInWithRedirect(provider).then(async (cred) => {
   const user = cred.user;
   window._fbCurrentUser = user;
   const snap = await db.collection('users').doc(user.uid).get();

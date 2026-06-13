@@ -2443,21 +2443,46 @@ setHelper('loginHelper', msg, 'error');
 shakeEl('pageLogin');
 }
 }
-function doGoogleSignIn() {
+async function doGoogleSignIn() {
 
 const auth = window._fbAuth;
-const db   = window._fbDb;
 const provider = new firebase.auth.GoogleAuthProvider();
 provider.setCustomParameters({ prompt: 'select_account' });
 showToast('🔄 Abriendo Google...');
-auth.signInWithRedirect(provider).catch((e) => {
+
+// 1) Intentamos POPUP (confiable aunque el authDomain sea distinto al dominio
+//    de la app; no depende de cookies de terceros como signInWithRedirect).
+try {
+  const result = await auth.signInWithPopup(provider);
+  if (result && result.user) {
+    await handleGoogleUser(result.user);
+  }
+  return;
+} catch (e) {
+  // Si el navegador bloqueó el popup, caemos a redirect como respaldo.
+  if (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment' || e.code === 'auth/cancelled-popup-request') {
+    try {
+      await auth.signInWithRedirect(provider);
+    } catch (e2) {
+      showToast('❌ Error Google: ' + (e2.message || e2.code));
+      console.error('Google redirect error:', e2);
+    }
+    return;
+  }
+  // El usuario cerró el popup: no es un error real, no molestamos.
+  if (e.code === 'auth/popup-closed-by-user') return;
   if (e.code === 'auth/account-exists-with-different-credential') {
     showToast('⚠️ Este correo ya está registrado con contraseña.');
-  } else {
-    showToast('❌ Error Google: ' + (e.message || e.code));
-    console.error('Google sign-in error:', e);
+    return;
   }
-});
+  if (e.code === 'auth/unauthorized-domain') {
+    showToast('⚠️ Dominio no autorizado en Firebase. Agrégalo en Authentication › Settings.');
+    console.error('Agrega este dominio en Firebase → Authentication → Settings → Authorized domains:', location.hostname);
+    return;
+  }
+  showToast('❌ Error Google: ' + (e.message || e.code));
+  console.error('Google sign-in error:', e);
+}
 }
 
 function showForgotPassword() {
@@ -2510,34 +2535,38 @@ if (regData.email) saveAccount();
 }, 650);
 }
 
+// Lógica compartida por el login con popup y por el respaldo de redirect.
+async function handleGoogleUser(user) {
+  const db = window._fbDb;
+  window._fbCurrentUser = user;
+  const snap = await db.collection('users').doc(user.uid).get();
+  if (snap.exists) {
+
+    regData.email = user.email;
+    restoreSaveData(snap.data());
+    applyAdminPrivileges();
+    showToast('¡Hola de nuevo, ' + (snap.data().displayName || user.displayName) + '! 👋');
+    setTimeout(() => enterAppFromSplash(), 900);
+  } else {
+
+    const displayName = user.displayName || user.email.split('@')[0];
+    const initData = { email: user.email, displayName, displayNameLower: displayName.toLowerCase(),
+      avatar: '😊', googleLinked: true, xp: 0, coins: 0, streakDays: 1, streakGoal: 100,
+      petName: 'Caballero', petTypeIdx: 0, petColorIdx: 0, petHat: null, petCollar: null, petWand: null, petHp: 60,
+      equippedBadgeIds: [], ownedBadgeIds: [], ownedThemeIds: ['t14','tascenso'], equippedThemeId: 'tascenso',
+      ownedAvatarIds: [], powerQtys: {}, savedAt: firebase.firestore.FieldValue.serverTimestamp() };
+    await db.collection('users').doc(user.uid).set(initData);
+    regData.email = user.email; regData.displayName = displayName;
+    applyAdminPrivileges();
+    showGoogleWelcome(displayName, '😊');
+  }
+}
+
 (async function initGoogleRedirect() {
   try {
     const result = await window._fbAuth.getRedirectResult();
     if (!result || !result.user) return;
-    const user = result.user;
-    const db = window._fbDb;
-    window._fbCurrentUser = user;
-    const snap = await db.collection('users').doc(user.uid).get();
-    if (snap.exists) {
-      
-      regData.email = user.email;
-      restoreSaveData(snap.data());
-      applyAdminPrivileges();
-      showToast('¡Hola de nuevo, ' + (snap.data().displayName || user.displayName) + '! 👋');
-      setTimeout(() => enterAppFromSplash(), 900);
-    } else {
-
-      const displayName = user.displayName || user.email.split('@')[0];
-      const initData = { email: user.email, displayName, displayNameLower: displayName.toLowerCase(),
-        avatar: '😊', googleLinked: true, xp: 0, coins: 0, streakDays: 1, streakGoal: 100,
-        petName: 'Caballero', petTypeIdx: 0, petColorIdx: 0, petHat: null, petCollar: null, petWand: null, petHp: 60,
-        equippedBadgeIds: [], ownedBadgeIds: [], ownedThemeIds: ['t14','tascenso'], equippedThemeId: 'tascenso',
-        ownedAvatarIds: [], powerQtys: {}, savedAt: firebase.firestore.FieldValue.serverTimestamp() };
-      await db.collection('users').doc(user.uid).set(initData);
-      regData.email = user.email; regData.displayName = displayName;
-      applyAdminPrivileges();
-      showGoogleWelcome(displayName, '😊');
-    }
+    await handleGoogleUser(result.user);
   } catch(e) {
     if (e.code && e.code !== 'auth/no-current-user') {
       console.warn('Google redirect result error:', e.code, e.message);

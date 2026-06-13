@@ -3,7 +3,7 @@
 const GEMINI_MODEL      = 'gemini-2.5-flash-lite';
 const RATE_LIMIT        = 10;                // max calls per IP per hour
 const MAX_BYTES         = 5 * 1024 * 1024;  // 5 MB
-const FIREBASE_PROJECT  = 'strattpllaner';
+const FIREBASE_PROJECT  = 'strattpllaner-a2bdf';
 const FIREBASE_JWK_URL  =
   'https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com';
 

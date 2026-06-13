@@ -11473,7 +11473,7 @@ window._showCelebrationScreen = function(xpGained, coinsGained, newStreak, allDo
   var _accentHex = getComputedStyle(document.documentElement).getPropertyValue('--teal').trim();
   var sparkleChars;
   
-  else if (_themeBody.includes('theme-fuego'))   sparkleChars = ['🔥','💥','✨','🌋','⚡','🟠','🔴'];
+  if      (_themeBody.includes('theme-fuego'))   sparkleChars = ['🔥','💥','✨','🌋','⚡','🟠','🔴'];
   else if (_themeBody.includes('theme-veneno'))  sparkleChars = ['☢️','✨','🌿','💚','🟢','⚡','🌱'];
   else if (_themeBody.includes('theme-cripta'))  sparkleChars = ['💜','✨','🔮','🌙','⚡','🫧','💫'];
   else if (_themeBody.includes('theme-abismo'))  sparkleChars = ['🔵','✨','🌊','💎','⚡','🩵','🌟'];

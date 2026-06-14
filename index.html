@@ -1194,7 +1194,12 @@ oninput="notasAutoSave()"></textarea>
 </div>
 <div class="panel" id="panel-social">
 <div class="panel-header"><div class="back-btn" onclick="closePanel('social')">←</div><div class="panel-title">💬 Social</div></div>
-<div class="panel-content">
+<div style="display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;" id="socialTopTabs">
+<div onclick="switchSocialTab(0)" id="socTabAmigos" style="flex:1;text-align:center;padding:10px;font-size:12px;font-weight:800;color:#fff;border-bottom:2px solid #fff;cursor:pointer;font-family:'Baloo Bhaijaan 2',sans-serif;letter-spacing:.5px;touch-action:manipulation;">👥 Amigos</div>
+<div onclick="switchSocialTab(1)" id="socTabVs" style="flex:1;text-align:center;padding:10px;font-size:12px;font-weight:800;color:rgba(255,255,255,.35);border-bottom:2px solid transparent;cursor:pointer;font-family:'Baloo Bhaijaan 2',sans-serif;letter-spacing:.5px;touch-action:manipulation;">⚔️ VS</div>
+<div onclick="switchSocialTab(2)" id="socTabRanking" style="flex:1;text-align:center;padding:10px;font-size:12px;font-weight:800;color:rgba(255,255,255,.35);border-bottom:2px solid transparent;cursor:pointer;font-family:'Baloo Bhaijaan 2',sans-serif;letter-spacing:.5px;touch-action:manipulation;">🏆 Ranking</div>
+</div>
+<div class="panel-content" id="socAmigosContent">
 <div class="soc-player-card" id="socPlayerCard">
 <div class="soc-player-avatar" id="socMyAvatar">🧑</div>
 <div class="soc-player-info">
@@ -1203,7 +1208,7 @@ oninput="notasAutoSave()"></textarea>
 </div>
 <button class="soc-copy-btn" onclick="copyMyTag()" title="Copiar código">📋</button>
 </div>
-<div class="soc-rnk-card" onclick="openPanel('ranking')">
+<div class="soc-rnk-card" onclick="switchSocialTab(2)">
 <div class="soc-rnk-card-bg"></div>
 <div class="soc-rnk-card-left">
 <div class="soc-rnk-card-icon">🏆</div>
@@ -1252,13 +1257,15 @@ oninput="notasAutoSave()"></textarea>
 </div>
 </div>
 </div>
+<div class="panel-content" id="socVsContent" style="display:none;">
+<div style="margin:auto;display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center;padding:60px 24px;color:rgba(255,255,255,.45);">
+<div style="font-size:52px;">⚔️</div>
+<div style="font-size:17px;font-weight:800;color:rgba(255,255,255,.7);font-family:'Baloo Bhaijaan 2',sans-serif;letter-spacing:1px;">VS</div>
+<div style="font-size:12px;line-height:1.5;max-width:220px;">Próximamente: compite cara a cara con tus amigos. 🔜</div>
 </div>
-<div class="panel" id="panel-ranking">
-<div class="rnk-new-header">
-<div class="back-btn" onclick="closePanel('ranking')">←</div>
-<div class="rnk-new-header-center">
-<div class="rnk-new-title">🏆 Ranking</div>
 </div>
+<div class="panel-content" id="socRankingContent" style="display:none;padding:0;gap:0;">
+<div style="display:flex;justify-content:flex-end;padding:8px 10px 0;">
 <button class="rnk-refresh-btn" onclick="window._rnkTab==='semanal'?loadRanking(true):loadRankingAllTime(true)" id="rnkRefreshBtn" title="Actualizar">↻</button>
 </div>
 <div class="rnk-tabs">
@@ -1345,6 +1352,7 @@ oninput="notasAutoSave()"></textarea>
 </div>
 <div class="rnk-my-pos-footer" id="rnkAtMyPosFooter" style="display:none;">
 <div class="rnk-my-pos-row" id="rnkAtMyPosRow"></div>
+</div>
 </div>
 </div>
 </div>
@@ -8227,7 +8235,7 @@ setTimeout(() => { btn.textContent = '📋'; btn.classList.remove('copied'); }, 
 const _origOpenPanel = window.openPanel;
 window.openPanel = function(name) {
 _origOpenPanel(name);
-if (name === 'social') loadSocialPanel();
+if (name === 'social') { loadSocialPanel(); if (typeof switchSocialTab === 'function') setTimeout(() => switchSocialTab(0), 0); }
 };
 async function loadSocialPanel() {
 const uid = myUid();
@@ -10404,6 +10412,17 @@ if(idx===0) renderRutina();
 else if(idx===1) renderAnalytics();
 else if(idx===2) renderGymbros();
 }
+function switchSocialTab(idx){
+const tabs=[['socTabAmigos','socAmigosContent'],['socTabVs','socVsContent'],['socTabRanking','socRankingContent']];
+const ON='#fff', OFF='rgba(255,255,255,.35)';
+tabs.forEach((t,i)=>{
+const tab=document.getElementById(t[0]); const content=document.getElementById(t[1]);
+if(tab){ tab.style.color=i===idx?ON:OFF; tab.style.borderBottomColor=i===idx?'#fff':'transparent'; }
+if(content) content.style.display=i===idx?'':'none';
+});
+if(idx===2){ window._rnkTab=window._rnkTab||'semanal'; setTimeout(()=>{ if(typeof switchRnkTab==='function') switchRnkTab(window._rnkTab, true); }, 60); }
+}
+window.switchSocialTab = switchSocialTab;
 async function renderGymbroComparison() {}
 async function renderGymbros() {
 const container = document.getElementById('rutinaGymbrosContent');

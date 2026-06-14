@@ -158,7 +158,7 @@ avatar: '😊',
 googleLinked: !!user.providerData.find(p => p.providerId === 'google.com'),
 xp: 0, coins: 0, streakDays: 1, streakGoal: 100,
 petName: 'Caballero', petTypeIdx: 0, petColorIdx: 0, petHat: null, petCollar: null, petWand: null, petHp: 60,
-equippedBadgeIds: [], ownedBadgeIds: [], ownedThemeIds: ['t14','tascenso'], equippedThemeId: 't14',
+equippedBadgeIds: [], ownedBadgeIds: [], ownedThemeIds: ['t14','tascenso'], equippedThemeId: 'tascenso',
 ownedAvatarIds: [], powerQtys: {},
 savedAt: firebase.firestore.FieldValue.serverTimestamp()
 };
@@ -2206,8 +2206,8 @@ t.equipped = t.id === data.equippedThemeId;
 });
 const themeIdx = SHOP_ITEMS.temas.findIndex(t => t.id === data.equippedThemeId);
 const themeMap = { t14:0, tascenso:1 };
-if (!data.equippedThemeId || !(data.equippedThemeId in themeMap)) data.equippedThemeId = 't14';
-const tIdx = themeMap[data.equippedThemeId] ?? 0;
+if (!data.equippedThemeId || !(data.equippedThemeId in themeMap)) data.equippedThemeId = 'tascenso';
+const tIdx = themeMap[data.equippedThemeId] ?? 1;
 THEMES.forEach((t, i) => {
 if (t.name === 'OG' || t.name === 'Ascenso') { t.unlocked = true; return; }
 if (t.luck) { t.unlocked = !!window._luckSkinOwned; return; }
@@ -2376,7 +2376,7 @@ xp: 0, coins: 0, streakDays: 1, streakGoal: 100,
 petName: 'Caballero', petTypeIdx: 0, petColorIdx: 0,
 petHat: null, petCollar: null, petWand: null, petHp: 60,
 equippedBadgeIds: [],
-ownedBadgeIds: [], ownedThemeIds: ['t14','tascenso'], equippedThemeId: 't14',
+ownedBadgeIds: [], ownedThemeIds: ['t14','tascenso'], equippedThemeId: 'tascenso',
 ownedAvatarIds: [], powerQtys: {},
 savedAt: firebase.firestore.FieldValue.serverTimestamp()
 };
@@ -2549,7 +2549,7 @@ async function handleGoogleUser(user) {
     const initData = { email: user.email, displayName, displayNameLower: displayName.toLowerCase(),
       avatar: '😊', googleLinked: true, xp: 0, coins: 0, streakDays: 1, streakGoal: 100,
       petName: 'Caballero', petTypeIdx: 0, petColorIdx: 0, petHat: null, petCollar: null, petWand: null, petHp: 60,
-      equippedBadgeIds: [], ownedBadgeIds: [], ownedThemeIds: ['t14','tascenso'], equippedThemeId: 't14',
+      equippedBadgeIds: [], ownedBadgeIds: [], ownedThemeIds: ['t14','tascenso'], equippedThemeId: 'tascenso',
       ownedAvatarIds: [], powerQtys: {}, savedAt: firebase.firestore.FieldValue.serverTimestamp() };
     await db.collection('users').doc(user.uid).set(initData);
     regData.email = user.email; regData.displayName = displayName;
@@ -5083,7 +5083,7 @@ if (removeBtn) removeBtn.style.display = 'block';
 const THEMES=[
 {name:'OG',      bg:'#06070a',bg2:'#0c0e14',accent:'#555555',mid:'#04050a',  unlocked:true },
 {name:'Ascenso', bg:'#909090',bg2:'#0E2240',accent:'#0E2240',mid:'#707070',  unlocked:true },];
-let activeThemeIdx=0;
+let activeThemeIdx=1;
 function buildThemeGrid(){
 const grid=document.getElementById('themeGrid');
 if(!grid)return;

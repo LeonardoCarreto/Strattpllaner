@@ -10520,7 +10520,7 @@ if (cv && typeof drawDiamondRadar === 'function') {
 const dpr = window.devicePixelRatio||1, size = 220;
 cv.style.width=size+'px'; cv.style.height=size+'px';
 cv.width=size*dpr; cv.height=size*dpr;
-const md = g.mData || {pierna:{meta:1,realizado:0},pecho:{meta:1,realizado:0},espalda:{meta:1,realizado:0},brazo:{meta:1,realizado:0}};
+const md = g.mData || {pierna:{meta:1,realizado:0},pecho:{meta:1,realizado:0},espalda:{meta:1,realizado:0},brazo:{meta:1,realizado:0},core:{meta:1,realizado:0}};
 drawDiamondRadar(cv, md, null);
 }
 });
@@ -10529,7 +10529,8 @@ const MUSCLE_DEFAULT = {
 pierna:  { meta: 8, realizado: 0 },
 pecho:   { meta: 4, realizado: 0 },
 espalda: { meta: 6, realizado: 0 },
-brazo:   { meta: 4, realizado: 0 }
+brazo:   { meta: 4, realizado: 0 },
+core:    { meta: 0, realizado: 0 }
 };
 function normalizeExName(s) {
 if (!s) return '';
@@ -10598,6 +10599,20 @@ pierna: [
 'glute bridge','glute kick','glute','gluteo',
 'patada de gluteo en polea','patada de gluteo','clamshell','bulgara',
 'gemelos','gemelo','aductores','aductor','pierna'
+],
+core: [
+'elevacion de piernas','elevacion piernas','leg raise','leg raises',
+'russian twist','russian twists','giro ruso',
+'rueda abdominal','ab wheel','ab roller',
+'dragon flag','bicycle crunch','crunch bicicleta',
+'mountain climbers','mountain climber','escaladores',
+'pallof press','woodchop','wood chop','lenador',
+'bird dog','dead bug',
+'hollow body','hollow hold','hollow',
+'v ups','v up','v-ups',
+'sit ups','sit up','situps','abdominales','abdominal',
+'crunches','crunch','plancha','plank','tablon',
+'oblicuos','oblicuo','abdomen','abs','core'
 ]
 };
 function muscleClassify(name) {
@@ -10663,7 +10678,7 @@ try {
 try{localStorage.setItem('mpr_'+wk,JSON.stringify(_mData));}catch(e){}
 }
 function syncMusclesFromRutina() {
-var counts={pierna:0,pecho:0,espalda:0,brazo:0};
+var counts={pierna:0,pecho:0,espalda:0,brazo:0,core:0};
 try {
   var rd=getRutinaData(),rc=getRutinaCompleted();
   rd.forEach(function(day,di){
@@ -10675,6 +10690,13 @@ try {
 if(_mData) Object.keys(counts).forEach(function(g){if(_mData[g])_mData[g].realizado=counts[g];});
 }
 var _radarGeo=null;
+var RADAR_AXES=[
+  {key:'pierna', label:'PIERNA', deg:-90},
+  {key:'pecho',  label:'PECHO',  deg:-18},
+  {key:'core',   label:'CORE',   deg:54},
+  {key:'espalda',label:'ESPALDA',deg:126},
+  {key:'brazo',  label:'BRAZO',  deg:198}
+];
 function drawDiamondRadar(canvas,data,prevData) {
 if(!canvas) return null;
 var ctx=canvas.getContext('2d');
@@ -10682,25 +10704,33 @@ var dpr=window.devicePixelRatio||1;
 var W=canvas.width/dpr, H=canvas.height/dpr;
 ctx.setTransform(dpr,0,0,dpr,0,0);
 ctx.clearRect(0,0,W,H);
-var padT=34,padR=56,padB=34,padL=44;
+var padT=30,padR=60,padB=36,padL=60;
 var cx=padL+(W-padL-padR)/2, cy=padT+(H-padT-padB)/2;
 var R=Math.min(W-padL-padR,H-padT-padB)/2;
 var MS=1.5, uR=R/MS;
-ctx.beginPath();
-ctx.moveTo(cx,cy-R);ctx.lineTo(cx+R,cy);ctx.lineTo(cx,cy+R);ctx.lineTo(cx-R,cy);
-ctx.closePath();ctx.fillStyle='rgba(8,16,28,0.55)';ctx.fill();
-[0.2,0.4,0.6,0.8,1.0].forEach(function(lv){
-  var r=lv*R;
+var AXES=RADAR_AXES;
+var rad=function(d){return d*Math.PI/180;};
+function ringPath(r){
   ctx.beginPath();
-  ctx.moveTo(cx,cy-r);ctx.lineTo(cx+r,cy);ctx.lineTo(cx,cy+r);ctx.lineTo(cx-r,cy);
+  AXES.forEach(function(ax,i){
+    var a=rad(ax.deg), x=cx+Math.cos(a)*r, y=cy+Math.sin(a)*r;
+    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  });
   ctx.closePath();
+}
+ringPath(R);
+ctx.fillStyle='rgba(8,16,28,0.55)';ctx.fill();
+[0.2,0.4,0.6,0.8,1.0].forEach(function(lv){
+  ringPath(lv*R);
   ctx.strokeStyle=lv===1?'rgba(255,255,255,.22)':'rgba(255,255,255,.1)';
   ctx.setLineDash(lv===1?[]:[3,4]);ctx.lineWidth=lv===1?1.5:1;ctx.stroke();
   ctx.setLineDash([]);
 });
 ctx.strokeStyle='rgba(255,255,255,.18)';ctx.lineWidth=1;
-ctx.beginPath();ctx.moveTo(cx,cy-R);ctx.lineTo(cx,cy+R);ctx.stroke();
-ctx.beginPath();ctx.moveTo(cx-R,cy);ctx.lineTo(cx+R,cy);ctx.stroke();
+AXES.forEach(function(ax){
+  var a=rad(ax.deg);
+  ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*R,cy+Math.sin(a)*R);ctx.stroke();
+});
 var fSz=Math.max(8,Math.round(W*0.03));
 [0.2,0.4,0.6,0.8,1.0].forEach(function(lv){
   ctx.fillStyle='rgba(255,255,255,.4)';
@@ -10708,54 +10738,35 @@ var fSz=Math.max(8,Math.round(W*0.03));
   ctx.textAlign='right';ctx.textBaseline='middle';
   ctx.fillText(Math.round(lv*100)+'%',cx-7,cy-lv*R);
 });
-if(prevData) {
-  var VP={
-    pierna:  Math.min(((prevData.pierna&&prevData.pierna.realizado)||0)/((prevData.pierna&&prevData.pierna.meta)||1),MS),
-    pecho:   Math.min(((prevData.pecho&&prevData.pecho.realizado)||0)/((prevData.pecho&&prevData.pecho.meta)||1),MS),
-    espalda: Math.min(((prevData.espalda&&prevData.espalda.realizado)||0)/((prevData.espalda&&prevData.espalda.meta)||1),MS),
-    brazo:   Math.min(((prevData.brazo&&prevData.brazo.realizado)||0)/((prevData.brazo&&prevData.brazo.meta)||1),MS)
-  };
-  var ppts={
-    pierna:  {x:cx,y:cy-VP.pierna*uR},
-    pecho:   {x:cx+VP.pecho*uR,y:cy},
-    espalda: {x:cx,y:cy+VP.espalda*uR},
-    brazo:   {x:cx-VP.brazo*uR,y:cy}
-  };
+function dataPts(src){
+  return AXES.map(function(ax){
+    var d=src&&src[ax.key];
+    var v=Math.min(((d&&d.realizado)||0)/((d&&d.meta)||1),MS);
+    var a=rad(ax.deg);
+    return {key:ax.key,x:cx+Math.cos(a)*v*uR,y:cy+Math.sin(a)*v*uR};
+  });
+}
+function polyFrom(pts){
   ctx.beginPath();
-  ctx.moveTo(ppts.pierna.x,ppts.pierna.y);
-  ctx.lineTo(ppts.pecho.x,ppts.pecho.y);
-  ctx.lineTo(ppts.espalda.x,ppts.espalda.y);
-  ctx.lineTo(ppts.brazo.x,ppts.brazo.y);
+  pts.forEach(function(p,i){if(i===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);});
   ctx.closePath();
+}
+if(prevData) {
+  var pPts=dataPts(prevData);
+  polyFrom(pPts);
   ctx.fillStyle='rgba(255,255,255,.06)';ctx.fill();
   ctx.setLineDash([4,4]);ctx.strokeStyle='rgba(255,255,255,.25)';ctx.lineWidth=1.5;ctx.stroke();
   ctx.setLineDash([]);
-  [ppts.pierna,ppts.pecho,ppts.espalda,ppts.brazo].forEach(function(p){
+  pPts.forEach(function(p){
     ctx.beginPath();ctx.arc(p.x,p.y,3,0,Math.PI*2);
     ctx.fillStyle='rgba(255,255,255,.3)';ctx.fill();
   });
 }
-var V={
-  pierna:  Math.min(((data.pierna&&data.pierna.realizado)||0)/((data.pierna&&data.pierna.meta)||1),MS),
-  pecho:   Math.min(((data.pecho&&data.pecho.realizado)||0)/((data.pecho&&data.pecho.meta)||1),MS),
-  espalda: Math.min(((data.espalda&&data.espalda.realizado)||0)/((data.espalda&&data.espalda.meta)||1),MS),
-  brazo:   Math.min(((data.brazo&&data.brazo.realizado)||0)/((data.brazo&&data.brazo.meta)||1),MS)
-};
-var pts={
-  pierna:  {x:cx,y:cy-V.pierna*uR},
-  pecho:   {x:cx+V.pecho*uR,y:cy},
-  espalda: {x:cx,y:cy+V.espalda*uR},
-  brazo:   {x:cx-V.brazo*uR,y:cy}
-};
-ctx.beginPath();
-ctx.moveTo(pts.pierna.x,pts.pierna.y);
-ctx.lineTo(pts.pecho.x,pts.pecho.y);
-ctx.lineTo(pts.espalda.x,pts.espalda.y);
-ctx.lineTo(pts.brazo.x,pts.brazo.y);
-ctx.closePath();
+var dPts=dataPts(data);
+polyFrom(dPts);
 ctx.fillStyle='rgba(94,170,168,.42)';ctx.fill();
 ctx.strokeStyle='#6edcd2';ctx.lineWidth=2;ctx.setLineDash([]);ctx.stroke();
-[pts.pierna,pts.pecho,pts.espalda,pts.brazo].forEach(function(p){
+dPts.forEach(function(p){
   ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);
   ctx.fillStyle='#6edcd2';ctx.fill();
   ctx.strokeStyle='rgba(255,255,255,.85)';ctx.lineWidth=1.5;ctx.stroke();
@@ -10763,22 +10774,24 @@ ctx.strokeStyle='#6edcd2';ctx.lineWidth=2;ctx.setLineDash([]);ctx.stroke();
 var lSz=Math.max(10,Math.round(W*0.033));
 ctx.font='bold '+lSz+'px Baloo Bhaijaan 2,sans-serif';
 ctx.fillStyle='#fff';
-ctx.textAlign='center';ctx.textBaseline='bottom';
-ctx.fillText('PIERNA',cx,cy-R-7);
-ctx.textBaseline='top';
-ctx.fillText('ESPALDA',cx,cy+R+7);
-ctx.textAlign='left';ctx.textBaseline='middle';
-ctx.fillText('PECHO',cx+R+7,cy);
-ctx.textAlign='right';
-ctx.fillText('BRAZO',cx-R-7,cy);
-return {pts:pts,uR:uR,cx:cx,cy:cy,R:R};
+AXES.forEach(function(ax){
+  var a=rad(ax.deg);
+  var lx=cx+Math.cos(a)*(R+10), ly=cy+Math.sin(a)*(R+10);
+  var ca=Math.cos(a), sa=Math.sin(a);
+  ctx.textAlign=ca>0.3?'left':ca<-0.3?'right':'center';
+  ctx.textBaseline=sa>0.3?'top':sa<-0.3?'bottom':'middle';
+  ctx.fillText(ax.label,lx,ly);
+});
+var ptsObj={};
+dPts.forEach(function(p){ptsObj[p.key]=p;});
+return {pts:ptsObj,uR:uR,cx:cx,cy:cy,R:R,axes:AXES};
 }
 function togglePrevWeek(){
 _showPrev=!_showPrev;
 renderAnalytics();
 }
 function calcMetasFromRutina() {
-var metas={pierna:0,pecho:0,espalda:0,brazo:0};
+var metas={pierna:0,pecho:0,espalda:0,brazo:0,core:0};
 try {
   var rd=getRutinaData();
   rd.forEach(function(day){
@@ -10793,7 +10806,7 @@ try {
     });
   });
 } catch(e){ console.error('[calcMetasFromRutina] error:',e); }
-console.log('Metas calculadas:',{pecho:metas.pecho,espalda:metas.espalda,brazo:metas.brazo,pierna:metas.pierna});
+console.log('Metas calculadas:',{pecho:metas.pecho,espalda:metas.espalda,brazo:metas.brazo,pierna:metas.pierna,core:metas.core});
 return metas;
 }
 function muscleAdjust(key,field,delta){
@@ -10806,18 +10819,20 @@ var container=document.getElementById('rutinaAnalyticsContent');
 if(!container) return;
 container.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:60px 20px;"><div style="width:36px;height:36px;border-radius:50%;border:3px solid rgba(110,220,210,.15);border-top-color:#6edcd2;animation:rutinaLoadSpin 0.8s linear infinite;"></div><div style="color:rgba(255,255,255,.3);font-size:12px;font-weight:700;letter-spacing:.5px;">Cargando Analytics...</div></div>';
 if(!_mData||!_mWeekKey||_mWeekKey!==muscleWeekKey()) await loadMuscleProgress();
+Object.keys(MUSCLE_DEFAULT).forEach(function(g){if(!_mData[g])_mData[g]={meta:0,realizado:0};});
 var metas=calcMetasFromRutina();
 Object.keys(metas).forEach(function(g){if(_mData[g]) _mData[g].meta=metas[g];});
 syncMusclesFromRutina();
 await saveMuscleProgress();
-var totalMeta=metas.pierna+metas.pecho+metas.espalda+metas.brazo;
+var totalMeta=metas.pierna+metas.pecho+metas.espalda+metas.brazo+metas.core;
 var hasPrev=!!_mDataPrev;
 var showingPrev=_showPrev&&hasPrev;
 var mInfo=[
   {key:'pierna', label:'Pierna', icon:'🦵', color:'#6edcd2', border:'rgba(110,220,210,.3)'},
   {key:'pecho',  label:'Pecho',  icon:'💪', color:'#a78bfa', border:'rgba(167,139,250,.3)'},
   {key:'espalda',label:'Espalda',icon:'🔙', color:'#60a5fa', border:'rgba(96,165,250,.3)'},
-  {key:'brazo',  label:'Brazo',  icon:'🏋️', color:'#fb923c', border:'rgba(251,146,60,.3)'}
+  {key:'brazo',  label:'Brazo',  icon:'🏋️', color:'#fb923c', border:'rgba(251,146,60,.3)'},
+  {key:'core',   label:'Core',   icon:'🔥', color:'#facc15', border:'rgba(250,204,21,.3)'}
 ];
 var chipHTML=mInfo.map(function(m){
   var d=_mData[m.key]||{meta:0,realizado:0};
@@ -10897,7 +10912,7 @@ if(canvas){
   canvas.style.width=size+'px';canvas.style.height=size+'px';
   canvas.width=size*dpr;canvas.height=size*dpr;
   _radarGeo=drawDiamondRadar(canvas,_mData,showingPrev?_mDataPrev:null);
-  var mLabels={pierna:'Pierna',pecho:'Pecho',espalda:'Espalda',brazo:'Brazo'};
+  var mLabels={pierna:'Pierna',pecho:'Pecho',espalda:'Espalda',brazo:'Brazo',core:'Core'};
   function showMuscleTip(key){
     if(!_mData||!_mData[key]) return;
     var d=_mData[key];
@@ -10929,9 +10944,17 @@ if(canvas){
     var touch=e.touches?e.touches[0]:e;
     var mx=touch.clientX-rect.left, my=touch.clientY-rect.top;
     var geo=_radarGeo,best=null,bestD=Infinity;
-    [{key:'pierna',pt:geo.pts.pierna},{key:'pecho',pt:geo.pts.pecho},{key:'espalda',pt:geo.pts.espalda},{key:'brazo',pt:geo.pts.brazo}]
-    .forEach(function(a){var dx=mx-a.pt.x,dy=my-a.pt.y,dist=Math.sqrt(dx*dx+dy*dy);if(dist<bestD){bestD=dist;best=a.key;}});
-    if(bestD>geo.R*0.5){var rx=mx-geo.cx,ry=my-geo.cy;best=Math.abs(ry)>Math.abs(rx)?(ry<0?'pierna':'espalda'):(rx>0?'pecho':'brazo');}
+    Object.keys(geo.pts).forEach(function(key){
+      var pt=geo.pts[key],dx=mx-pt.x,dy=my-pt.y,dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist<bestD){bestD=dist;best=key;}
+    });
+    if(bestD>geo.R*0.5 && geo.axes){
+      var ang=Math.atan2(my-geo.cy,mx-geo.cx)*180/Math.PI,bd=Infinity;
+      geo.axes.forEach(function(ax){
+        var diff=Math.abs(((ax.deg-ang+540)%360)-180);
+        if(diff<bd){bd=diff;best=ax.key;}
+      });
+    }
     if(best) showMuscleTip(best);
   }
   canvas.addEventListener('click',handleCanvasTap);

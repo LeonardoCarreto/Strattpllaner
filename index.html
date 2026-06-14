@@ -8510,10 +8510,6 @@ card.innerHTML = `
 <span class="soc-chip soc-chip-str">🔥 ${friend.streakDays}d</span>
 </div>
 </div>
-<div class="soc-friend-actions">
-<button class="soc-btn soc-btn-remove" title="Eliminar"
-onclick="socRemoveFriend('${friend.uid}','${escapeHtml(friend.displayName)}',event)">✕</button>
-</div>
 `;
 card.onclick = (e) => {
 if (!e.target.closest('button')) openFriendProfile(friend.uid, e);

@@ -8613,7 +8613,7 @@ const hero = document.createElement('div');
 hero.className = 'fp-hero';
 hero.innerHTML = `
 <div class="fp-avatar-wrap">
-<div class="fp-avatar-emoji">${f.avatar}</div>
+<img src="${streakCharSrc(f)}" alt="" style="width:100%;height:100%;object-fit:cover;object-position:top;" />
 </div>
 <div class="fp-name">${escapeHtml(f.displayName)}</div>
 <div class="fp-tag">🎮 ${escapeHtml(tag)}</div>

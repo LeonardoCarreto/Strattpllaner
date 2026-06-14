@@ -1,4 +1,4 @@
-const CACHE_NAME = 'strattpllaner-v22';
+const CACHE_NAME = 'strattpllaner-v23';
 
 // Archivos a cachear para uso offline
 const STATIC_ASSETS = [

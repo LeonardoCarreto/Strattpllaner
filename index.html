@@ -1200,7 +1200,8 @@ oninput="notasAutoSave()"></textarea>
 <div onclick="switchSocialTab(2)" id="socTabRanking" style="flex:1;text-align:center;padding:10px;font-size:12px;font-weight:800;color:rgba(255,255,255,.35);border-bottom:2px solid transparent;cursor:pointer;font-family:'Baloo Bhaijaan 2',sans-serif;letter-spacing:.5px;touch-action:manipulation;">🏆 Ranking</div>
 </div>
 <div class="panel-content" id="socAmigosContent">
-<div class="soc-player-card" id="socPlayerCard">
+<div class="soc-add-section" id="socUserAddCard" style="gap:12px;">
+<div class="soc-player-card" id="socPlayerCard" style="background:none;border:none;border-radius:0;padding:0;">
 <div class="soc-player-avatar" id="socMyAvatar">🧑</div>
 <div class="soc-player-info">
 <div class="soc-player-name" id="socMyName">—</div>
@@ -1208,25 +1209,7 @@ oninput="notasAutoSave()"></textarea>
 </div>
 <button class="soc-copy-btn" onclick="copyMyTag()" title="Copiar código">📋</button>
 </div>
-<div class="soc-rnk-card" onclick="switchSocialTab(2)">
-<div class="soc-rnk-card-bg"></div>
-<div class="soc-rnk-card-left">
-<div class="soc-rnk-card-icon">🏆</div>
-<div class="soc-rnk-card-text">
-<div class="soc-rnk-card-title">Ranking</div>
-<div class="soc-rnk-card-sub">Semanal · All Time</div>
-</div>
-</div>
-<div class="soc-rnk-card-right">
-<div class="soc-rnk-card-badge">
-<span class="soc-rnk-card-badge-ring"></span>
-<span class="soc-rnk-card-badge-num">1.º</span>
-</div>
-<div class="soc-rnk-card-badge-hint">Top 1</div>
-</div>
-<div class="soc-rnk-card-arrow">›</div>
-</div>
-<div class="soc-add-section">
+<div style="height:1px;background:rgba(255,255,255,.08);"></div>
 <div class="soc-add-label">➕ Agregar amigo por código</div>
 <div class="soc-add-row">
 <input class="soc-add-input" id="socAddInput" placeholder="Ej: Leo#4821" oninput="socSearchDebounce()" onkeydown="if(event.key==='Enter')socDoSearch()" maxlength="40" />

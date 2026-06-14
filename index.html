@@ -1226,16 +1226,6 @@ oninput="notasAutoSave()"></textarea>
 <span id="socFriendCount" style="color:rgba(255,255,255,.3);font-size:10px;font-weight:700;"></span>
 </div>
 <div id="socFriendsList"><div class="soc-empty">Cargando...</div></div>
-<div class="gymbro-section" id="gymBroSection" style="margin-top:10px;">
-<div class="gymbro-label">💪 GymBro</div>
-<div class="gymbro-row">
-<div class="gymbro-avatar">🏋️</div>
-<div class="gymbro-info">
-<div class="gymbro-name" style="color:rgba(255,255,255,.35);">Sin GymBro asignado</div>
-<div class="gymbro-sub">Asigna uno desde el perfil de un amigo</div>
-</div>
-</div>
-</div>
 </div>
 <div class="panel-content" id="socVsContent" style="display:none;">
 <div style="margin:auto;display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center;padding:60px 24px;color:rgba(255,255,255,.45);">
@@ -8521,8 +8511,6 @@ card.innerHTML = `
 </div>
 </div>
 <div class="soc-friend-actions">
-<button class="soc-btn soc-btn-chat" title="Ver perfil"
-onclick="openFriendProfile('${friend.uid}',event)" style="font-size:12px;font-weight:800;background:rgba(42,100,150,.4);">👤</button>
 <button class="soc-btn soc-btn-remove" title="Eliminar"
 onclick="socRemoveFriend('${friend.uid}','${escapeHtml(friend.displayName)}',event)">✕</button>
 </div>

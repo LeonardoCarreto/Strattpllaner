@@ -16,9 +16,26 @@
 <link rel="icon" type="image/png" href="icons/icon-192x192.png">
 <script>
   if ('serviceWorker' in navigator) {
+    // Auto-actualización: si llega una versión nueva del Service Worker, la
+    // página se recarga sola para tomar el código nuevo (evita quedarse con
+    // una copia vieja cacheada). Solo recarga si ya estaba controlada (no en
+    // la primera instalación) para no recargar de más.
+    const _hadController = !!navigator.serviceWorker.controller;
+    let _swReloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (_swReloaded || !_hadController) return;
+      _swReloaded = true;
+      location.reload();
+    });
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('sw.js')
-        .then(reg => console.log('[PWA] SW registrado:', reg.scope))
+        .then(reg => {
+          reg.update();
+          // Revisa actualizaciones cada vez que la app vuelve a primer plano.
+          document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') reg.update();
+          });
+        })
         .catch(err => console.warn('[PWA] SW error:', err));
     });
   }

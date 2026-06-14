@@ -1217,20 +1217,21 @@ oninput="notasAutoSave()"></textarea>
 <div onclick="switchSocialTab(2)" id="socTabRanking" style="flex:1;text-align:center;padding:10px;font-size:12px;font-weight:800;color:rgba(255,255,255,.35);border-bottom:2px solid transparent;cursor:pointer;font-family:'Baloo Bhaijaan 2',sans-serif;letter-spacing:.5px;touch-action:manipulation;">Ranking</div>
 </div>
 <div class="panel-content" id="socAmigosContent">
-<div class="soc-add-section" id="socUserAddCard" style="flex-direction:row;align-items:center;gap:8px;">
-<div id="socPlayerCard" style="display:flex;align-items:center;gap:8px;flex:1 1 0;min-width:0;">
-<div class="soc-player-avatar" id="socMyAvatar" style="font-size:26px;flex-shrink:0;">🧑</div>
+<div class="soc-add-section" id="socUserAddCard" style="flex-direction:row;align-items:center;gap:10px;">
+<img id="socMyAvatar" src="assets/racha/streak1.png" alt="" style="width:46px;height:46px;border-radius:12px;object-fit:cover;object-position:top;flex-shrink:0;background:rgba(255,255,255,.06);" />
 <div class="soc-player-info" style="flex:1;min-width:0;">
-<div class="soc-player-name" id="socMyName" style="font-size:13px;">—</div>
-<div class="soc-player-tag" id="socMyTag" onclick="copyMyTag()" title="Copiar código" style="font-size:10px;padding:2px 8px;margin-top:2px;max-width:100%;overflow:hidden;text-overflow:ellipsis;">Cargando...</div>
+<div class="soc-player-name" id="socMyName" style="font-size:15px;">—</div>
+<div class="soc-player-tag" id="socMyTag" onclick="copyMyTag()" title="Copiar código" style="font-size:11px;padding:2px 8px;margin-top:3px;max-width:100%;overflow:hidden;text-overflow:ellipsis;">Cargando...</div>
 </div>
+<button id="socAddToggle" onclick="toggleAddFriend()" title="Agregar amigo" style="width:38px;height:38px;flex-shrink:0;border-radius:50%;border:2px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#fff;font-size:24px;font-weight:300;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">+</button>
 </div>
-<div class="soc-add-row" style="flex:1 1 0;min-width:0;gap:6px;">
-<input class="soc-add-input" id="socAddInput" placeholder="Leo#4821" oninput="socSearchDebounce()" onkeydown="if(event.key==='Enter')socDoSearch()" maxlength="40" style="padding:7px 9px;font-size:12px;min-width:0;" />
-<button class="soc-add-search-btn" onclick="socDoSearch()" style="padding:0 11px;font-size:11px;min-width:0;flex-shrink:0;">Buscar</button>
-</div>
+<div id="socAddRow" style="display:none;margin-top:10px;">
+<div class="soc-add-row" style="gap:6px;">
+<input class="soc-add-input" id="socAddInput" placeholder="Código: Leo#4821" oninput="socSearchDebounce()" onkeydown="if(event.key==='Enter')socDoSearch()" maxlength="40" style="padding:8px 11px;font-size:12px;min-width:0;" />
+<button class="soc-add-search-btn" onclick="socDoSearch()" style="padding:0 14px;font-size:12px;flex-shrink:0;">Buscar</button>
 </div>
 <div id="socSearchResult" class="soc-search-result-wrap" style="margin-top:8px;"></div>
+</div>
 <div id="socPendingSection" style="display:none;">
 <div class="soc-section-label">
 <span>⏳ Solicitudes recibidas</span>
@@ -8230,7 +8231,7 @@ const nameEl  = document.getElementById('socMyName');
 const tagEl   = document.getElementById('socMyTag');
 const avatEl  = document.getElementById('socMyAvatar');
 if (nameEl)  nameEl.textContent  = myName();
-if (avatEl)  avatEl.textContent  = myAvatar();
+if (avatEl)  avatEl.src = streakCharSrc();
 if (tagEl) {
 if (!uid) {
 tagEl.textContent = 'Inicia sesión para ver tu código';
@@ -8513,13 +8514,16 @@ ownedBadgeIds: f.ownedBadgeIds || [],
 }));
 myFriends.sort((a, b) => (b.xp || 0) - (a.xp || 0));
 listEl.innerHTML = '';
-myFriends.forEach(friend => {
+myFriends.forEach((friend, idx) => {
 const tag  = makePlayerTag(friend.displayName, friend.uid);
+const rank = idx + 1;
+const rankColor = rank <= 3 ? '#f0c040' : 'rgba(255,255,255,.4)';
 const card = document.createElement('div');
 card.className = 'soc-friend-card';
 card.style.cursor = 'pointer';
 card.innerHTML = `
-<div class="soc-friend-avatar">${friend.avatar}</div>
+<div style="width:22px;text-align:center;font-weight:900;font-size:15px;font-family:'Baloo Bhaijaan 2',sans-serif;color:${rankColor};flex-shrink:0;">${rank}</div>
+<img class="soc-friend-avatar" src="${streakCharSrc(friend)}" alt="" style="width:40px;height:40px;border-radius:10px;object-fit:cover;object-position:top;flex-shrink:0;background:rgba(255,255,255,.06);" />
 <div class="soc-friend-info">
 <div class="soc-friend-name">${escapeHtml(friend.displayName)}</div>
 <div class="soc-friend-chips">
@@ -10405,6 +10409,22 @@ if(content) content.style.display=i===idx?'':'none';
 if(idx===2){ window._rnkTab=window._rnkTab||'semanal'; setTimeout(()=>{ if(typeof switchRnkTab==='function') switchRnkTab(window._rnkTab, true); }, 60); }
 }
 window.switchSocialTab = switchSocialTab;
+function streakCharSrc(data){
+// Personaje de racha. Por ahora solo existe la skin default.
+// TODO: cuando haya más skins/etapas, elegir según data.petTypeIdx / data.streakDays.
+return 'assets/racha/streak1.png';
+}
+window.streakCharSrc = streakCharSrc;
+function toggleAddFriend(){
+const row = document.getElementById('socAddRow');
+if (!row) return;
+const willOpen = (row.style.display === 'none' || !row.style.display);
+row.style.display = willOpen ? 'block' : 'none';
+const btn = document.getElementById('socAddToggle');
+if (btn) btn.textContent = willOpen ? '×' : '+';
+if (willOpen) setTimeout(() => document.getElementById('socAddInput')?.focus(), 60);
+}
+window.toggleAddFriend = toggleAddFriend;
 async function renderGymbroComparison() {}
 async function renderGymbros() {
 const container = document.getElementById('rutinaGymbrosContent');

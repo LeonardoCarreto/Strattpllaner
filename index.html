@@ -8,6 +8,12 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#06070a">
 <meta name="description" content="Strattpllaner - Tu app de productividad gamificada">
+<!-- Evitar que el navegador sirva una copia vieja del HTML -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<!-- Versión de la app (debe coincidir con CACHE_VERSION en sw.js) -->
+<meta name="app-version" content="1.0.1">
 <title>Strattpllaner</title>
 
 <link rel="manifest" href="manifest.json">
@@ -16,24 +22,33 @@
 <link rel="icon" type="image/png" href="icons/icon-192x192.png">
 <script>
   if ('serviceWorker' in navigator) {
-    // Auto-actualización: si llega una versión nueva del Service Worker, la
-    // página se recarga sola para tomar el código nuevo (evita quedarse con
-    // una copia vieja cacheada). Solo recarga si ya estaba controlada (no en
-    // la primera instalación) para no recargar de más.
+    // Auto-actualización: cuando se sube una versión nueva (cambia CACHE_VERSION
+    // en sw.js), el nuevo SW hace skipWaiting + clients.claim y la página se
+    // recarga sola para tomar el código nuevo. Solo recarga si ya estaba
+    // controlada (no en la primera instalación) para no recargar de más.
     const _hadController = !!navigator.serviceWorker.controller;
     let _swReloaded = false;
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (_swReloaded || !_hadController) return;
+    function _reloadForNewSW() {
+      if (_swReloaded) return;
       _swReloaded = true;
-      location.reload();
-    });
+      if (_hadController) window.location.reload();
+    }
+    navigator.serviceWorker.addEventListener('controllerchange', _reloadForNewSW);
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('sw.js')
         .then(reg => {
-          reg.update();
+          reg.update(); // busca una versión nueva al abrir
           // Revisa actualizaciones cada vez que la app vuelve a primer plano.
           document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible') reg.update();
+          });
+          // Si aparece un SW nuevo, recargar en cuanto quede activo.
+          reg.addEventListener('updatefound', () => {
+            const newSW = reg.installing;
+            if (!newSW) return;
+            newSW.addEventListener('statechange', () => {
+              if (newSW.state === 'activated') _reloadForNewSW();
+            });
           });
         })
         .catch(err => console.warn('[PWA] SW error:', err));

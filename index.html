@@ -10706,7 +10706,11 @@ var padT=32,padR=62,padB=38,padL=62;
 var cx=padL+(W-padL-padR)/2, cy=padT+(H-padT-padB)/2;
 var R=Math.min(W-padL-padR,H-padT-padB)/2;
 var MS=1.5, uR=R/MS;
-var AXES=RADAR_AXES;
+// Ejes dinámicos: solo grupos con meta>0, distribuidos equidistantes (1º arriba)
+var _active=RADAR_AXES.filter(function(ax){return data&&data[ax.key]&&data[ax.key].meta>0;});
+if(_active.length===0) return null;
+var _step=360/_active.length;
+var AXES=_active.map(function(ax,i){return {key:ax.key,label:ax.label,deg:-90+i*_step};});
 var rad=function(d){return d*Math.PI/180;};
 function ringPath(r){
   ctx.beginPath();
@@ -10887,69 +10891,23 @@ await saveMuscleProgress();
 var totalMeta=metas.pierna+metas.pecho+metas.espalda+metas.brazo+metas.core;
 var hasPrev=!!_mDataPrev;
 var showingPrev=_showPrev&&hasPrev;
-var mInfo=[
-  {key:'pierna', label:'Pierna', icon:'🦵', color:'#6edcd2', border:'rgba(110,220,210,.3)'},
-  {key:'pecho',  label:'Pecho',  icon:'💪', color:'#a78bfa', border:'rgba(167,139,250,.3)'},
-  {key:'espalda',label:'Espalda',icon:'🔙', color:'#60a5fa', border:'rgba(96,165,250,.3)'},
-  {key:'brazo',  label:'Brazo',  icon:'🏋️', color:'#fb923c', border:'rgba(251,146,60,.3)'},
-  {key:'core',   label:'Core',   icon:'🔥', color:'#facc15', border:'rgba(250,204,21,.3)'}
-];
-var chipHTML=mInfo.map(function(m){
-  var d=_mData[m.key]||{meta:0,realizado:0};
-  var noEx=d.meta===0;
-  var pct=noEx?0:Math.round((d.realizado/(d.meta||1))*100);
-  var barW=Math.min(100,pct);
-  var changeHTML='';
-  if(!noEx&&showingPrev&&_mDataPrev&&_mDataPrev[m.key]){
-    var pd=_mDataPrev[m.key];
-    var ppct=Math.round((pd.realizado/(pd.meta||1))*100);
-    var dd=pct-ppct;
-    if(dd>0) changeHTML='<span style="color:#4ade80;font-size:9px;font-weight:800;margin-left:4px;">↑ +'+dd+'%</span>';
-    else if(dd<0) changeHTML='<span style="color:#e8527a;font-size:9px;font-weight:800;margin-left:4px;">↓ '+dd+'%</span>';
-    else changeHTML='<span style="color:rgba(255,255,255,.4);font-size:9px;font-weight:800;margin-left:4px;">= 0%</span>';
-  }
-  var statHTML=noEx
-    ?'<span style="color:rgba(255,255,255,.28);font-size:10px;font-style:italic;font-weight:600;">Sin ejercicios</span>'
-    :'<span style="display:flex;align-items:center;"><span style="color:'+m.color+';font-size:11px;font-weight:800;">'+d.realizado+'/'+d.meta+'&nbsp;&nbsp;'+pct+'%</span>'+changeHTML+'</span>';
-  var barHTML=noEx
-    ?'<div style="height:5px;background:rgba(255,255,255,.04);border-radius:3px;"></div>'
-    :'<div style="height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;"><div style="height:100%;width:'+barW+'%;background:'+m.color+';border-radius:3px;transition:width .4s;"></div></div>';
-  return '<div style="background:#0d1117;border-radius:14px;padding:12px 14px;border:1px solid '+(noEx?'rgba(255,255,255,.06)':m.border)+';display:flex;align-items:center;gap:12px;margin-bottom:0;opacity:'+(noEx?'.55':'1')+';transition:opacity .3s;">'
-    +'<div style="font-size:22px;flex-shrink:0;">'+m.icon+'</div>'
-    +'<div style="flex:1;min-width:0;">'
-      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">'
-        +'<span style="color:#fff;font-size:12px;font-weight:800;">'+m.label+'</span>'
-        +statHTML
-      +'</div>'
-      +barHTML
-    +'</div>'
-    +'</div>';
-}).join('');
-var noRoutineBanner=totalMeta===0
-  ?'<div style="background:rgba(110,220,210,.05);border:1px dashed rgba(110,220,210,.25);border-radius:14px;padding:16px;text-align:center;">'
-    +'<div style="font-size:22px;margin-bottom:6px;">📋</div>'
-    +'<div style="color:rgba(255,255,255,.7);font-size:12px;font-weight:800;margin-bottom:4px;">Rutina no configurada</div>'
-    +'<div style="color:rgba(255,255,255,.4);font-size:11px;line-height:1.5;">Configura tu rutina semanal para ver<br>tu progreso muscular aquí.</div>'
-  +'</div>'
-  :'';
+var mInfo={
+  pierna: {label:'Pierna', icon:'🦵', color:'#6edcd2', border:'rgba(110,220,210,.3)'},
+  pecho:  {label:'Pecho',  icon:'💪', color:'#a78bfa', border:'rgba(167,139,250,.3)'},
+  espalda:{label:'Espalda',icon:'🔙', color:'#60a5fa', border:'rgba(96,165,250,.3)'},
+  brazo:  {label:'Brazo',  icon:'🏋️', color:'#fb923c', border:'rgba(251,146,60,.3)'},
+  core:   {label:'Core',   icon:'🔥', color:'#facc15', border:'rgba(250,204,21,.3)'}
+};
+// Grupos activos (meta>0), en el orden de los ejes del radar
+var activeKeys=RADAR_AXES.filter(function(ax){return _mData[ax.key]&&_mData[ax.key].meta>0;}).map(function(ax){return ax.key;});
+var activeCount=activeKeys.length;
 var prevBtnOff='background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.15);border-radius:10px;padding:6px 10px;color:rgba(255,255,255,.45);font-size:9px;font-weight:800;cursor:pointer;font-family:Baloo Bhaijaan 2,sans-serif;touch-action:manipulation;';
 var prevBtnOn='background:rgba(110,220,210,.1);border:1.5px solid rgba(110,220,210,.3);border-radius:10px;padding:6px 10px;color:#6edcd2;font-size:9px;font-weight:800;cursor:pointer;font-family:Baloo Bhaijaan 2,sans-serif;touch-action:manipulation;';
 var prevBtnHTML=hasPrev
   ?'<button onclick="togglePrevWeek()" style="'+(showingPrev?prevBtnOn:prevBtnOff)+'">◄ vs Anterior'+(showingPrev?' ✓':'')+'</button>'
   :'<button style="'+prevBtnOff+'opacity:.4;cursor:default;">◄ vs Anterior</button>';
-var discKeys=['pierna','pecho','espalda','brazo','core'];
-var discSum=0;
-discKeys.forEach(function(k){var d=_mData[k]||{meta:0,realizado:0};discSum+=(d.meta>0?Math.min(100,(d.realizado/d.meta)*100):0);});
-var discPct=Math.round(discSum/discKeys.length);
-var discColor=discPct===0?'rgba(255,255,255,0.2)':(discPct>=100?'#fbbf24':'#6edcd2');
-var discGlow=discPct>=100?'text-shadow:0 0 18px rgba(251,191,36,0.6);':'';
-var discHTML='<div style="text-align:center;margin:2px 0 -4px;">'
-  +'<div style="font-size:48px;font-weight:900;line-height:1;color:'+discColor+';'+discGlow+'font-family:Baloo Bhaijaan 2,cursive;">'+discPct+'%</div>'
-  +'<div style="font-size:11px;color:rgba(255,255,255,0.4);font-weight:700;margin-top:2px;">Disciplina semanal</div>'
-+'</div>';
-container.innerHTML=
-  '<div style="padding:16px;display:flex;flex-direction:column;gap:14px;">'
-  +'<div style="display:flex;align-items:center;justify-content:space-between;">'
+var headerHTML=
+  '<div style="display:flex;align-items:center;justify-content:space-between;">'
     +'<div>'
       +'<div style="color:#fff;font-size:16px;font-weight:900;font-family:Baloo Bhaijaan 2,cursive;">📊 Analytics</div>'
       +'<div style="color:rgba(255,255,255,.35);font-size:10px;font-weight:700;margin-top:2px;">Progreso muscular semanal</div>'
@@ -10958,24 +10916,80 @@ container.innerHTML=
       +prevBtnHTML
       +'<button onclick="renderAnalytics()" style="background:rgba(110,220,210,.1);border:1.5px solid rgba(110,220,210,.3);border-radius:10px;padding:6px 12px;color:#6edcd2;font-size:10px;font-weight:800;cursor:pointer;font-family:Baloo Bhaijaan 2,sans-serif;touch-action:manipulation;">↻ Sync</button>'
     +'</div>'
-  +'</div>'
-  +noRoutineBanner
-  +discHTML
-  +'<div style="background:#0a1420;border-radius:16px;border:1px solid rgba(110,220,210,0.08);box-shadow:inset 0 0 40px rgba(110,220,210,0.03);padding:10px;position:relative;">'
-    +'<canvas id="muscleRadarCanvas" style="display:block;width:100%;border-radius:8px;"></canvas>'
-    +'<div id="muscleTooltip" style="display:none;position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(8,18,32,.96);border:1.5px solid #6edcd2;border-radius:10px;padding:8px 14px;font-family:Baloo Bhaijaan 2,sans-serif;pointer-events:none;z-index:10;white-space:nowrap;">'
-      +'<div id="muscleTooltipTxt" style="color:#fff;font-size:12px;font-weight:800;text-align:center;"></div>'
-    +'</div>'
-  +'</div>'
-  +'<div style="display:flex;flex-direction:column;gap:8px;">'
-    +'<div style="color:rgba(255,255,255,.4);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">📈 Detalle</div>'
-    +chipHTML
-  +'</div>'
-  +'<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:12px 14px;margin-bottom:8px;">'
-    +'<div style="color:rgba(255,255,255,.4);font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">&#8505;&#65039; Cómo funciona</div>'
-    +'<div style="color:rgba(255,255,255,.5);font-size:11px;line-height:1.65;">Las metas se calculan automáticamente según los ejercicios que configuraste en tu rutina semanal. Los ejercicios completados se cuentan por grupo muscular. Se reinicia cada lunes.</div>'
-  +'</div>'
   +'</div>';
+var bodyHTML;
+if(activeCount<3){
+  // Mínimo 3 grupos para mostrar la gráfica
+  if(activeCount===0){
+    bodyHTML='<div style="text-align:center;background:rgba(255,255,255,0.03);border-radius:14px;padding:24px;color:rgba(255,255,255,0.5);font-size:13px;line-height:1.6;">'
+      +'<div style="font-size:32px;margin-bottom:10px;">🏋️</div>'
+      +'Configura tu rutina para ver tu progreso muscular. Los grupos musculares se detectan automáticamente de tus ejercicios.'
+    +'</div>';
+  } else {
+    var detectedHTML=activeKeys.map(function(k){return '<span style="color:#4ade80;font-weight:800;">'+mInfo[k].label+'</span>';}).join(', ');
+    var missingHTML=RADAR_AXES.filter(function(ax){return !(_mData[ax.key]&&_mData[ax.key].meta>0);}).map(function(ax){return '<span style="color:rgba(255,255,255,0.35);">'+mInfo[ax.key].label+'</span>';}).join(', ');
+    bodyHTML='<div style="text-align:center;background:rgba(255,255,255,0.03);border-radius:14px;padding:24px;color:rgba(255,255,255,0.5);font-size:13px;line-height:1.7;">'
+      +'<div style="font-size:30px;margin-bottom:12px;">📊</div>'
+      +'<div style="margin-bottom:14px;">Necesitas al menos <strong style="color:rgba(255,255,255,0.7);">3 grupos musculares</strong> en tu rutina para ver la gráfica de progreso.</div>'
+      +'<div style="margin-bottom:14px;">Grupos detectados: '+detectedHTML+' <span style="color:rgba(255,255,255,0.35);">('+activeCount+' de 3 mínimo)</span></div>'
+      +'<div>Agrega ejercicios de otros grupos musculares ('+missingHTML+') para activar tu gráfica.</div>'
+    +'</div>';
+  }
+} else {
+  // Disciplina semanal: promedio SOLO de los grupos activos
+  var discSum=0;
+  activeKeys.forEach(function(k){var d=_mData[k];discSum+=Math.min(100,(d.realizado/d.meta)*100);});
+  var discPct=Math.round(discSum/activeCount);
+  var discColor=discPct===0?'rgba(255,255,255,0.2)':(discPct>=100?'#fbbf24':'#6edcd2');
+  var discGlow=discPct>=100?'text-shadow:0 0 18px rgba(251,191,36,0.6);':'';
+  var discHTML='<div style="text-align:center;margin:2px 0 -4px;">'
+    +'<div style="font-size:48px;font-weight:900;line-height:1;color:'+discColor+';'+discGlow+'font-family:Baloo Bhaijaan 2,cursive;">'+discPct+'%</div>'
+    +'<div style="font-size:11px;color:rgba(255,255,255,0.4);font-weight:700;margin-top:2px;">Disciplina semanal</div>'
+  +'</div>';
+  // Chips de detalle: solo grupos activos, en el mismo orden que los ejes
+  var chipHTML=activeKeys.map(function(key){
+    var m=mInfo[key], d=_mData[key];
+    var pct=Math.round((d.realizado/(d.meta||1))*100);
+    var barW=Math.min(100,pct);
+    var changeHTML='';
+    if(showingPrev&&_mDataPrev&&_mDataPrev[key]){
+      var pd=_mDataPrev[key];
+      var ppct=Math.round((pd.realizado/(pd.meta||1))*100);
+      var dd=pct-ppct;
+      if(dd>0) changeHTML='<span style="color:#4ade80;font-size:9px;font-weight:800;margin-left:4px;">↑ +'+dd+'%</span>';
+      else if(dd<0) changeHTML='<span style="color:#e8527a;font-size:9px;font-weight:800;margin-left:4px;">↓ '+dd+'%</span>';
+      else changeHTML='<span style="color:rgba(255,255,255,.4);font-size:9px;font-weight:800;margin-left:4px;">= 0%</span>';
+    }
+    var statHTML='<span style="display:flex;align-items:center;"><span style="color:'+m.color+';font-size:11px;font-weight:800;">'+d.realizado+'/'+d.meta+'&nbsp;&nbsp;'+pct+'%</span>'+changeHTML+'</span>';
+    var barHTML='<div style="height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;"><div style="height:100%;width:'+barW+'%;background:'+m.color+';border-radius:3px;transition:width .4s;"></div></div>';
+    return '<div style="background:#0d1117;border-radius:14px;padding:12px 14px;border:1px solid '+m.border+';display:flex;align-items:center;gap:12px;margin-bottom:0;transition:opacity .3s;">'
+      +'<div style="font-size:22px;flex-shrink:0;">'+m.icon+'</div>'
+      +'<div style="flex:1;min-width:0;">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">'
+          +'<span style="color:#fff;font-size:12px;font-weight:800;">'+m.label+'</span>'
+          +statHTML
+        +'</div>'
+        +barHTML
+      +'</div>'
+      +'</div>';
+  }).join('');
+  bodyHTML=discHTML
+    +'<div style="background:#0a1420;border-radius:16px;border:1px solid rgba(110,220,210,0.08);box-shadow:inset 0 0 40px rgba(110,220,210,0.03);padding:10px;position:relative;">'
+      +'<canvas id="muscleRadarCanvas" style="display:block;width:100%;border-radius:8px;"></canvas>'
+      +'<div id="muscleTooltip" style="display:none;position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(8,18,32,.96);border:1.5px solid #6edcd2;border-radius:10px;padding:8px 14px;font-family:Baloo Bhaijaan 2,sans-serif;pointer-events:none;z-index:10;white-space:nowrap;">'
+        +'<div id="muscleTooltipTxt" style="color:#fff;font-size:12px;font-weight:800;text-align:center;"></div>'
+      +'</div>'
+    +'</div>'
+    +'<div style="display:flex;flex-direction:column;gap:8px;">'
+      +'<div style="color:rgba(255,255,255,.4);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">📈 Detalle</div>'
+      +chipHTML
+    +'</div>'
+    +'<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:12px 14px;margin-bottom:8px;">'
+      +'<div style="color:rgba(255,255,255,.4);font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">&#8505;&#65039; Cómo funciona</div>'
+      +'<div style="color:rgba(255,255,255,.5);font-size:11px;line-height:1.65;">Las metas se calculan automáticamente según los ejercicios que configuraste en tu rutina semanal. Los ejercicios completados se cuentan por grupo muscular. Se reinicia cada lunes.</div>'
+    +'</div>';
+}
+container.innerHTML='<div style="padding:16px;display:flex;flex-direction:column;gap:14px;">'+headerHTML+bodyHTML+'</div>';
 var canvas=document.getElementById('muscleRadarCanvas');
 if(canvas){
   var dpr=window.devicePixelRatio||1;

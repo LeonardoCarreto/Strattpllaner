@@ -10729,17 +10729,23 @@ function polyPath(pts){
   pts.forEach(function(p,i){if(i===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);});
   ctx.closePath();
 }
-function frame(prog){
+// Estados que requieren animación continua
+var allZero=AXES.every(function(ax){return valFor(data,ax)===0;});
+var hasGold=AXES.some(function(ax){return valFor(data,ax)>=1;});
+function frame(prog,now){
+  now=now||0;
   ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.clearRect(0,0,W,H);
-  // Fondo radial sutil (profundidad hacia el centro)
-  var bg=ctx.createRadialGradient(cx,cy,0,cx,cy,R);
-  bg.addColorStop(0,'rgba(110,220,210,0.03)');
-  bg.addColorStop(1,'rgba(110,220,210,0)');
-  ringPath(R);ctx.fillStyle=bg;ctx.fill();
-  // Anillos de referencia: punteados muy sutiles
+  // Fondo "escenario": radial oscuro profundo que cubre todo el canvas
+  var bgR=Math.max(Math.hypot(cx,cy),Math.hypot(W-cx,cy),Math.hypot(cx,H-cy),Math.hypot(W-cx,H-cy));
+  var bg=ctx.createRadialGradient(cx,cy,0,cx,cy,bgR);
+  bg.addColorStop(0,'rgba(13,27,42,0.9)');
+  bg.addColorStop(0.5,'rgba(10,20,35,0.95)');
+  bg.addColorStop(1,'rgba(6,7,10,1)');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  // Anillos de referencia: puntos redondos muy sutiles (dotted)
   ctx.save();
-  ctx.setLineDash([5,5]);ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=1;
+  ctx.setLineDash([1.5,6]);ctx.lineCap='round';ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=1;
   [0.2,0.4,0.6,0.8,1.0].forEach(function(lv){ringPath(lv*R);ctx.stroke();});
   ctx.restore();
   // Ejes: sólidos apenas perceptibles
@@ -10758,30 +10764,58 @@ function frame(prog){
     ctx.setLineDash([4,4]);ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=1.5;ctx.stroke();
     ctx.restore();
   }
-  // Semana actual: relleno con degradado radial
-  var dPts=ptsFor(data,prog);
-  polyPath(dPts);
-  var fg=ctx.createRadialGradient(cx,cy,0,cx,cy,R);
-  fg.addColorStop(0,'rgba(110,220,210,0.35)');
-  fg.addColorStop(1,'rgba(110,220,210,0.08)');
-  ctx.fillStyle=fg;ctx.fill();
-  // Borde con glow
-  ctx.save();
-  polyPath(dPts);
-  ctx.shadowBlur=12;ctx.shadowColor='rgba(110,220,210,0.5)';
-  ctx.strokeStyle='#6edcd2';ctx.lineWidth=2.5;ctx.setLineDash([]);ctx.lineJoin='round';ctx.stroke();
-  ctx.restore();
-  // Puntos en cada vértice con glow sutil + borde blanco
-  dPts.forEach(function(p){
+  if(allZero){
+    // Estado vacío: polígono mínimo que "respira" (4%–7%) para invitar a llenarlo
+    var breath=(0.055+0.015*Math.sin(now/2000*Math.PI*2))*prog;
+    var zPts=AXES.map(function(ax){var a=rad(ax.deg);return {x:cx+Math.cos(a)*breath*uR,y:cy+Math.sin(a)*breath*uR};});
+    polyPath(zPts);
+    ctx.fillStyle='rgba(110,220,210,0.06)';ctx.fill();
+    ctx.setLineDash([]);ctx.strokeStyle='rgba(110,220,210,0.15)';ctx.lineWidth=1.5;ctx.lineJoin='round';ctx.stroke();
+  } else {
+    // Semana actual: relleno con degradado radial
+    var dPts=AXES.map(function(ax){
+      var base=valFor(data,ax),a=rad(ax.deg),v=base*prog;
+      return {key:ax.key,base:base,x:cx+Math.cos(a)*v*uR,y:cy+Math.sin(a)*v*uR};
+    });
+    polyPath(dPts);
+    var fg=ctx.createRadialGradient(cx,cy,0,cx,cy,R);
+    fg.addColorStop(0,'rgba(110,220,210,0.35)');
+    fg.addColorStop(1,'rgba(110,220,210,0.08)');
+    ctx.fillStyle=fg;ctx.fill();
+    // Borde con glow
     ctx.save();
-    ctx.shadowBlur=8;ctx.shadowColor='rgba(110,220,210,0.6)';
-    ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);
-    ctx.fillStyle='#6edcd2';ctx.fill();
+    polyPath(dPts);
+    ctx.shadowBlur=12;ctx.shadowColor='rgba(110,220,210,0.5)';
+    ctx.strokeStyle='#6edcd2';ctx.lineWidth=2.5;ctx.setLineDash([]);ctx.lineJoin='round';ctx.stroke();
     ctx.restore();
-    ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);
-    ctx.lineWidth=1.5;ctx.strokeStyle='rgba(255,255,255,0.9)';ctx.stroke();
-  });
-  // Labels de grupos musculares
+    // Puntos: cian normal; dorado con pulso + anillo si el grupo está al 100%+
+    var goldPulse=Math.sin(now/1500*Math.PI*2)*0.5+0.5;
+    dPts.forEach(function(p){
+      if(p.base>=1){
+        ctx.save();
+        ctx.beginPath();ctx.arc(p.x,p.y,9+3*goldPulse,0,Math.PI*2);
+        ctx.strokeStyle='rgba(251,191,36,0.2)';ctx.lineWidth=1;ctx.stroke();
+        ctx.restore();
+        var rDot=5+2*goldPulse;
+        ctx.save();
+        ctx.shadowBlur=14;ctx.shadowColor='rgba(251,191,36,0.6)';
+        ctx.beginPath();ctx.arc(p.x,p.y,rDot,0,Math.PI*2);
+        ctx.fillStyle='#fbbf24';ctx.fill();
+        ctx.restore();
+        ctx.beginPath();ctx.arc(p.x,p.y,rDot,0,Math.PI*2);
+        ctx.lineWidth=1.5;ctx.strokeStyle='rgba(255,255,255,0.9)';ctx.stroke();
+      } else {
+        ctx.save();
+        ctx.shadowBlur=8;ctx.shadowColor='rgba(110,220,210,0.6)';
+        ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);
+        ctx.fillStyle='#6edcd2';ctx.fill();
+        ctx.restore();
+        ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);
+        ctx.lineWidth=1.5;ctx.strokeStyle='rgba(255,255,255,0.9)';ctx.stroke();
+      }
+    });
+  }
+  // Labels de grupos musculares (siempre)
   ctx.fillStyle='rgba(255,255,255,0.85)';
   ctx.font='800 11px Baloo Bhaijaan 2,sans-serif';
   if('letterSpacing' in ctx) ctx.letterSpacing='1px';
@@ -10795,17 +10829,18 @@ function frame(prog){
   });
   if('letterSpacing' in ctx) ctx.letterSpacing='0px';
 }
-// Animación de entrada: el polígono crece de 0% a su valor real (~600ms, ease-out)
+// Animación: entrada (~600ms ease-out) + pulsos continuos si hay estado vacío o grupos al 100%
 if(canvas._radarAnim) cancelAnimationFrame(canvas._radarAnim);
 var dur=600,t0=null;
 var ease=function(t){return 1-Math.pow(1-t,3);};
-function step(ts){
+var needsLoop=allZero||hasGold;
+function loop(ts){
   if(t0==null)t0=ts;
   var t=Math.min(1,(ts-t0)/dur);
-  frame(ease(t));
-  if(t<1){canvas._radarAnim=requestAnimationFrame(step);}else{canvas._radarAnim=null;}
+  frame(ease(t),ts);
+  if(t<1||needsLoop){canvas._radarAnim=requestAnimationFrame(loop);}else{canvas._radarAnim=null;}
 }
-canvas._radarAnim=requestAnimationFrame(step);
+canvas._radarAnim=requestAnimationFrame(loop);
 // Geometría a valor completo (para tooltips/toques desde el primer momento)
 var ptsObj={};
 ptsFor(data,1).forEach(function(p){ptsObj[p.key]=p;});
@@ -10902,6 +10937,16 @@ var prevBtnOn='background:rgba(110,220,210,.1);border:1.5px solid rgba(110,220,2
 var prevBtnHTML=hasPrev
   ?'<button onclick="togglePrevWeek()" style="'+(showingPrev?prevBtnOn:prevBtnOff)+'">◄ vs Anterior'+(showingPrev?' ✓':'')+'</button>'
   :'<button style="'+prevBtnOff+'opacity:.4;cursor:default;">◄ vs Anterior</button>';
+var discKeys=['pierna','pecho','espalda','brazo','core'];
+var discSum=0;
+discKeys.forEach(function(k){var d=_mData[k]||{meta:0,realizado:0};discSum+=(d.meta>0?Math.min(100,(d.realizado/d.meta)*100):0);});
+var discPct=Math.round(discSum/discKeys.length);
+var discColor=discPct===0?'rgba(255,255,255,0.2)':(discPct>=100?'#fbbf24':'#6edcd2');
+var discGlow=discPct>=100?'text-shadow:0 0 18px rgba(251,191,36,0.6);':'';
+var discHTML='<div style="text-align:center;margin:2px 0 -4px;">'
+  +'<div style="font-size:48px;font-weight:900;line-height:1;color:'+discColor+';'+discGlow+'font-family:Baloo Bhaijaan 2,cursive;">'+discPct+'%</div>'
+  +'<div style="font-size:11px;color:rgba(255,255,255,0.4);font-weight:700;margin-top:2px;">Disciplina semanal</div>'
++'</div>';
 container.innerHTML=
   '<div style="padding:16px;display:flex;flex-direction:column;gap:14px;">'
   +'<div style="display:flex;align-items:center;justify-content:space-between;">'
@@ -10915,7 +10960,8 @@ container.innerHTML=
     +'</div>'
   +'</div>'
   +noRoutineBanner
-  +'<div style="background:#0a1420;border-radius:18px;border:1px solid rgba(110,220,210,.15);padding:10px;position:relative;">'
+  +discHTML
+  +'<div style="background:#0a1420;border-radius:16px;border:1px solid rgba(110,220,210,0.08);box-shadow:inset 0 0 40px rgba(110,220,210,0.03);padding:10px;position:relative;">'
     +'<canvas id="muscleRadarCanvas" style="display:block;width:100%;border-radius:8px;"></canvas>'
     +'<div id="muscleTooltip" style="display:none;position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(8,18,32,.96);border:1.5px solid #6edcd2;border-radius:10px;padding:8px 14px;font-family:Baloo Bhaijaan 2,sans-serif;pointer-events:none;z-index:10;white-space:nowrap;">'
       +'<div id="muscleTooltipTxt" style="color:#fff;font-size:12px;font-weight:800;text-align:center;"></div>'

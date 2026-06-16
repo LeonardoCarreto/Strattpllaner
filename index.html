@@ -8,6 +8,12 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#06070a">
 <meta name="description" content="Strattpllaner - Tu app de productividad gamificada">
+<!-- Evitar que el navegador sirva una copia vieja del HTML -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<!-- Versión de la app (debe coincidir con CACHE_VERSION en sw.js) -->
+<meta name="app-version" content="1.0.1">
 <title>Strattpllaner</title>
 
 <link rel="manifest" href="manifest.json">
@@ -16,24 +22,33 @@
 <link rel="icon" type="image/png" href="icons/icon-192x192.png">
 <script>
   if ('serviceWorker' in navigator) {
-    // Auto-actualización: si llega una versión nueva del Service Worker, la
-    // página se recarga sola para tomar el código nuevo (evita quedarse con
-    // una copia vieja cacheada). Solo recarga si ya estaba controlada (no en
-    // la primera instalación) para no recargar de más.
+    // Auto-actualización: cuando se sube una versión nueva (cambia CACHE_VERSION
+    // en sw.js), el nuevo SW hace skipWaiting + clients.claim y la página se
+    // recarga sola para tomar el código nuevo. Solo recarga si ya estaba
+    // controlada (no en la primera instalación) para no recargar de más.
     const _hadController = !!navigator.serviceWorker.controller;
     let _swReloaded = false;
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (_swReloaded || !_hadController) return;
+    function _reloadForNewSW() {
+      if (_swReloaded) return;
       _swReloaded = true;
-      location.reload();
-    });
+      if (_hadController) window.location.reload();
+    }
+    navigator.serviceWorker.addEventListener('controllerchange', _reloadForNewSW);
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('sw.js')
         .then(reg => {
-          reg.update();
+          reg.update(); // busca una versión nueva al abrir
           // Revisa actualizaciones cada vez que la app vuelve a primer plano.
           document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible') reg.update();
+          });
+          // Si aparece un SW nuevo, recargar en cuanto quede activo.
+          reg.addEventListener('updatefound', () => {
+            const newSW = reg.installing;
+            if (!newSW) return;
+            newSW.addEventListener('statechange', () => {
+              if (newSW.state === 'activated') _reloadForNewSW();
+            });
           });
         })
         .catch(err => console.warn('[PWA] SW error:', err));
@@ -10707,13 +10722,15 @@ if(!canvas) return null;
 var ctx=canvas.getContext('2d');
 var dpr=window.devicePixelRatio||1;
 var W=canvas.width/dpr, H=canvas.height/dpr;
-ctx.setTransform(dpr,0,0,dpr,0,0);
-ctx.clearRect(0,0,W,H);
-var padT=30,padR=60,padB=36,padL=60;
+var padT=32,padR=62,padB=38,padL=62;
 var cx=padL+(W-padL-padR)/2, cy=padT+(H-padT-padB)/2;
 var R=Math.min(W-padL-padR,H-padT-padB)/2;
 var MS=1.5, uR=R/MS;
-var AXES=RADAR_AXES;
+// Ejes dinámicos: solo grupos con meta>0, distribuidos equidistantes (1º arriba)
+var _active=RADAR_AXES.filter(function(ax){return data&&data[ax.key]&&data[ax.key].meta>0;});
+if(_active.length===0) return null;
+var _step=360/_active.length;
+var AXES=_active.map(function(ax,i){return {key:ax.key,label:ax.label,deg:-90+i*_step};});
 var rad=function(d){return d*Math.PI/180;};
 function ringPath(r){
   ctx.beginPath();
@@ -10723,72 +10740,134 @@ function ringPath(r){
   });
   ctx.closePath();
 }
-ringPath(R);
-ctx.fillStyle='rgba(8,16,28,0.55)';ctx.fill();
-[0.2,0.4,0.6,0.8,1.0].forEach(function(lv){
-  ringPath(lv*R);
-  ctx.strokeStyle=lv===1?'rgba(255,255,255,.22)':'rgba(255,255,255,.1)';
-  ctx.setLineDash(lv===1?[]:[3,4]);ctx.lineWidth=lv===1?1.5:1;ctx.stroke();
-  ctx.setLineDash([]);
-});
-ctx.strokeStyle='rgba(255,255,255,.18)';ctx.lineWidth=1;
-AXES.forEach(function(ax){
-  var a=rad(ax.deg);
-  ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*R,cy+Math.sin(a)*R);ctx.stroke();
-});
-var fSz=Math.max(8,Math.round(W*0.03));
-[0.2,0.4,0.6,0.8,1.0].forEach(function(lv){
-  ctx.fillStyle='rgba(255,255,255,.4)';
-  ctx.font='bold '+fSz+'px Baloo Bhaijaan 2,sans-serif';
-  ctx.textAlign='right';ctx.textBaseline='middle';
-  ctx.fillText(Math.round(lv*100)+'%',cx-7,cy-lv*R);
-});
-function dataPts(src){
+function valFor(src,ax){var d=src&&src[ax.key];return Math.min(((d&&d.realizado)||0)/((d&&d.meta)||1),MS);}
+function ptsFor(src,prog){
   return AXES.map(function(ax){
-    var d=src&&src[ax.key];
-    var v=Math.min(((d&&d.realizado)||0)/((d&&d.meta)||1),MS);
+    var v=valFor(src,ax)*(prog==null?1:prog);
     var a=rad(ax.deg);
     return {key:ax.key,x:cx+Math.cos(a)*v*uR,y:cy+Math.sin(a)*v*uR};
   });
 }
-function polyFrom(pts){
+function polyPath(pts){
   ctx.beginPath();
   pts.forEach(function(p,i){if(i===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);});
   ctx.closePath();
 }
-if(prevData) {
-  var pPts=dataPts(prevData);
-  polyFrom(pPts);
-  ctx.fillStyle='rgba(255,255,255,.06)';ctx.fill();
-  ctx.setLineDash([4,4]);ctx.strokeStyle='rgba(255,255,255,.25)';ctx.lineWidth=1.5;ctx.stroke();
-  ctx.setLineDash([]);
-  pPts.forEach(function(p){
-    ctx.beginPath();ctx.arc(p.x,p.y,3,0,Math.PI*2);
-    ctx.fillStyle='rgba(255,255,255,.3)';ctx.fill();
+// Estados que requieren animación continua
+var allZero=AXES.every(function(ax){return valFor(data,ax)===0;});
+var hasGold=AXES.some(function(ax){return valFor(data,ax)>=1;});
+function frame(prog,now){
+  now=now||0;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+  // Fondo "escenario": radial oscuro profundo que cubre todo el canvas
+  var bgR=Math.max(Math.hypot(cx,cy),Math.hypot(W-cx,cy),Math.hypot(cx,H-cy),Math.hypot(W-cx,H-cy));
+  var bg=ctx.createRadialGradient(cx,cy,0,cx,cy,bgR);
+  bg.addColorStop(0,'rgba(13,27,42,0.9)');
+  bg.addColorStop(0.5,'rgba(10,20,35,0.95)');
+  bg.addColorStop(1,'rgba(6,7,10,1)');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  // Anillos de referencia: puntos redondos muy sutiles (dotted)
+  ctx.save();
+  ctx.setLineDash([1.5,6]);ctx.lineCap='round';ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=1;
+  [0.2,0.4,0.6,0.8,1.0].forEach(function(lv){ringPath(lv*R);ctx.stroke();});
+  ctx.restore();
+  // Ejes: sólidos apenas perceptibles
+  ctx.strokeStyle='rgba(255,255,255,0.06)';ctx.lineWidth=1;ctx.setLineDash([]);
+  AXES.forEach(function(ax){var a=rad(ax.deg);ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*R,cy+Math.sin(a)*R);ctx.stroke();});
+  // Porcentajes: solo eje vertical superior, sin 0%
+  ctx.fillStyle='rgba(255,255,255,0.25)';
+  ctx.font='600 9px Baloo Bhaijaan 2,sans-serif';
+  ctx.textAlign='right';ctx.textBaseline='middle';
+  [0.2,0.4,0.6,0.8,1.0].forEach(function(lv){ctx.fillText(Math.round(lv*100)+'%',cx-8,cy-lv*R);});
+  // Semana anterior: detrás, relleno tenue y borde punteado, sin puntos
+  if(prevData){
+    polyPath(ptsFor(prevData,1));
+    ctx.fillStyle='rgba(255,255,255,0.03)';ctx.fill();
+    ctx.save();
+    ctx.setLineDash([4,4]);ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.restore();
+  }
+  if(allZero){
+    // Estado vacío: polígono mínimo que "respira" (4%–7%) para invitar a llenarlo
+    var breath=(0.055+0.015*Math.sin(now/2000*Math.PI*2))*prog;
+    var zPts=AXES.map(function(ax){var a=rad(ax.deg);return {x:cx+Math.cos(a)*breath*uR,y:cy+Math.sin(a)*breath*uR};});
+    polyPath(zPts);
+    ctx.fillStyle='rgba(110,220,210,0.06)';ctx.fill();
+    ctx.setLineDash([]);ctx.strokeStyle='rgba(110,220,210,0.15)';ctx.lineWidth=1.5;ctx.lineJoin='round';ctx.stroke();
+  } else {
+    // Semana actual: relleno con degradado radial
+    var dPts=AXES.map(function(ax){
+      var base=valFor(data,ax),a=rad(ax.deg),v=base*prog;
+      return {key:ax.key,base:base,x:cx+Math.cos(a)*v*uR,y:cy+Math.sin(a)*v*uR};
+    });
+    polyPath(dPts);
+    var fg=ctx.createRadialGradient(cx,cy,0,cx,cy,R);
+    fg.addColorStop(0,'rgba(110,220,210,0.35)');
+    fg.addColorStop(1,'rgba(110,220,210,0.08)');
+    ctx.fillStyle=fg;ctx.fill();
+    // Borde con glow
+    ctx.save();
+    polyPath(dPts);
+    ctx.shadowBlur=12;ctx.shadowColor='rgba(110,220,210,0.5)';
+    ctx.strokeStyle='#6edcd2';ctx.lineWidth=2.5;ctx.setLineDash([]);ctx.lineJoin='round';ctx.stroke();
+    ctx.restore();
+    // Puntos: cian normal; dorado con pulso + anillo si el grupo está al 100%+
+    var goldPulse=Math.sin(now/1500*Math.PI*2)*0.5+0.5;
+    dPts.forEach(function(p){
+      if(p.base>=1){
+        ctx.save();
+        ctx.beginPath();ctx.arc(p.x,p.y,9+3*goldPulse,0,Math.PI*2);
+        ctx.strokeStyle='rgba(251,191,36,0.2)';ctx.lineWidth=1;ctx.stroke();
+        ctx.restore();
+        var rDot=5+2*goldPulse;
+        ctx.save();
+        ctx.shadowBlur=14;ctx.shadowColor='rgba(251,191,36,0.6)';
+        ctx.beginPath();ctx.arc(p.x,p.y,rDot,0,Math.PI*2);
+        ctx.fillStyle='#fbbf24';ctx.fill();
+        ctx.restore();
+        ctx.beginPath();ctx.arc(p.x,p.y,rDot,0,Math.PI*2);
+        ctx.lineWidth=1.5;ctx.strokeStyle='rgba(255,255,255,0.9)';ctx.stroke();
+      } else {
+        ctx.save();
+        ctx.shadowBlur=8;ctx.shadowColor='rgba(110,220,210,0.6)';
+        ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);
+        ctx.fillStyle='#6edcd2';ctx.fill();
+        ctx.restore();
+        ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);
+        ctx.lineWidth=1.5;ctx.strokeStyle='rgba(255,255,255,0.9)';ctx.stroke();
+      }
+    });
+  }
+  // Labels de grupos musculares (siempre)
+  ctx.fillStyle='rgba(255,255,255,0.85)';
+  ctx.font='800 11px Baloo Bhaijaan 2,sans-serif';
+  if('letterSpacing' in ctx) ctx.letterSpacing='1px';
+  AXES.forEach(function(ax){
+    var a=rad(ax.deg);
+    var lx=cx+Math.cos(a)*(R+12), ly=cy+Math.sin(a)*(R+12);
+    var ca=Math.cos(a),sa=Math.sin(a);
+    ctx.textAlign=ca>0.3?'left':ca<-0.3?'right':'center';
+    ctx.textBaseline=sa>0.3?'top':sa<-0.3?'bottom':'middle';
+    ctx.fillText(ax.label,lx,ly);
   });
+  if('letterSpacing' in ctx) ctx.letterSpacing='0px';
 }
-var dPts=dataPts(data);
-polyFrom(dPts);
-ctx.fillStyle='rgba(94,170,168,.42)';ctx.fill();
-ctx.strokeStyle='#6edcd2';ctx.lineWidth=2;ctx.setLineDash([]);ctx.stroke();
-dPts.forEach(function(p){
-  ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);
-  ctx.fillStyle='#6edcd2';ctx.fill();
-  ctx.strokeStyle='rgba(255,255,255,.85)';ctx.lineWidth=1.5;ctx.stroke();
-});
-var lSz=Math.max(10,Math.round(W*0.033));
-ctx.font='bold '+lSz+'px Baloo Bhaijaan 2,sans-serif';
-ctx.fillStyle='#fff';
-AXES.forEach(function(ax){
-  var a=rad(ax.deg);
-  var lx=cx+Math.cos(a)*(R+10), ly=cy+Math.sin(a)*(R+10);
-  var ca=Math.cos(a), sa=Math.sin(a);
-  ctx.textAlign=ca>0.3?'left':ca<-0.3?'right':'center';
-  ctx.textBaseline=sa>0.3?'top':sa<-0.3?'bottom':'middle';
-  ctx.fillText(ax.label,lx,ly);
-});
+// Animación: entrada (~600ms ease-out) + pulsos continuos si hay estado vacío o grupos al 100%
+if(canvas._radarAnim) cancelAnimationFrame(canvas._radarAnim);
+var dur=600,t0=null;
+var ease=function(t){return 1-Math.pow(1-t,3);};
+var needsLoop=allZero||hasGold;
+function loop(ts){
+  if(t0==null)t0=ts;
+  var t=Math.min(1,(ts-t0)/dur);
+  frame(ease(t),ts);
+  if(t<1||needsLoop){canvas._radarAnim=requestAnimationFrame(loop);}else{canvas._radarAnim=null;}
+}
+canvas._radarAnim=requestAnimationFrame(loop);
+// Geometría a valor completo (para tooltips/toques desde el primer momento)
 var ptsObj={};
-dPts.forEach(function(p){ptsObj[p.key]=p;});
+ptsFor(data,1).forEach(function(p){ptsObj[p.key]=p;});
 return {pts:ptsObj,uR:uR,cx:cx,cy:cy,R:R,axes:AXES};
 }
 function togglePrevWeek(){
@@ -10832,59 +10911,23 @@ await saveMuscleProgress();
 var totalMeta=metas.pierna+metas.pecho+metas.espalda+metas.brazo+metas.core;
 var hasPrev=!!_mDataPrev;
 var showingPrev=_showPrev&&hasPrev;
-var mInfo=[
-  {key:'pierna', label:'Pierna', icon:'🦵', color:'#6edcd2', border:'rgba(110,220,210,.3)'},
-  {key:'pecho',  label:'Pecho',  icon:'💪', color:'#a78bfa', border:'rgba(167,139,250,.3)'},
-  {key:'espalda',label:'Espalda',icon:'🔙', color:'#60a5fa', border:'rgba(96,165,250,.3)'},
-  {key:'brazo',  label:'Brazo',  icon:'🏋️', color:'#fb923c', border:'rgba(251,146,60,.3)'},
-  {key:'core',   label:'Core',   icon:'🔥', color:'#facc15', border:'rgba(250,204,21,.3)'}
-];
-var chipHTML=mInfo.map(function(m){
-  var d=_mData[m.key]||{meta:0,realizado:0};
-  var noEx=d.meta===0;
-  var pct=noEx?0:Math.round((d.realizado/(d.meta||1))*100);
-  var barW=Math.min(100,pct);
-  var changeHTML='';
-  if(!noEx&&showingPrev&&_mDataPrev&&_mDataPrev[m.key]){
-    var pd=_mDataPrev[m.key];
-    var ppct=Math.round((pd.realizado/(pd.meta||1))*100);
-    var dd=pct-ppct;
-    if(dd>0) changeHTML='<span style="color:#4ade80;font-size:9px;font-weight:800;margin-left:4px;">↑ +'+dd+'%</span>';
-    else if(dd<0) changeHTML='<span style="color:#e8527a;font-size:9px;font-weight:800;margin-left:4px;">↓ '+dd+'%</span>';
-    else changeHTML='<span style="color:rgba(255,255,255,.4);font-size:9px;font-weight:800;margin-left:4px;">= 0%</span>';
-  }
-  var statHTML=noEx
-    ?'<span style="color:rgba(255,255,255,.28);font-size:10px;font-style:italic;font-weight:600;">Sin ejercicios</span>'
-    :'<span style="display:flex;align-items:center;"><span style="color:'+m.color+';font-size:11px;font-weight:800;">'+d.realizado+'/'+d.meta+'&nbsp;&nbsp;'+pct+'%</span>'+changeHTML+'</span>';
-  var barHTML=noEx
-    ?'<div style="height:5px;background:rgba(255,255,255,.04);border-radius:3px;"></div>'
-    :'<div style="height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;"><div style="height:100%;width:'+barW+'%;background:'+m.color+';border-radius:3px;transition:width .4s;"></div></div>';
-  return '<div style="background:#0d1117;border-radius:14px;padding:12px 14px;border:1px solid '+(noEx?'rgba(255,255,255,.06)':m.border)+';display:flex;align-items:center;gap:12px;margin-bottom:0;opacity:'+(noEx?'.55':'1')+';transition:opacity .3s;">'
-    +'<div style="font-size:22px;flex-shrink:0;">'+m.icon+'</div>'
-    +'<div style="flex:1;min-width:0;">'
-      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">'
-        +'<span style="color:#fff;font-size:12px;font-weight:800;">'+m.label+'</span>'
-        +statHTML
-      +'</div>'
-      +barHTML
-    +'</div>'
-    +'</div>';
-}).join('');
-var noRoutineBanner=totalMeta===0
-  ?'<div style="background:rgba(110,220,210,.05);border:1px dashed rgba(110,220,210,.25);border-radius:14px;padding:16px;text-align:center;">'
-    +'<div style="font-size:22px;margin-bottom:6px;">📋</div>'
-    +'<div style="color:rgba(255,255,255,.7);font-size:12px;font-weight:800;margin-bottom:4px;">Rutina no configurada</div>'
-    +'<div style="color:rgba(255,255,255,.4);font-size:11px;line-height:1.5;">Configura tu rutina semanal para ver<br>tu progreso muscular aquí.</div>'
-  +'</div>'
-  :'';
+var mInfo={
+  pierna: {label:'Pierna', icon:'🦵', color:'#6edcd2', border:'rgba(110,220,210,.3)'},
+  pecho:  {label:'Pecho',  icon:'💪', color:'#a78bfa', border:'rgba(167,139,250,.3)'},
+  espalda:{label:'Espalda',icon:'🔙', color:'#60a5fa', border:'rgba(96,165,250,.3)'},
+  brazo:  {label:'Brazo',  icon:'🏋️', color:'#fb923c', border:'rgba(251,146,60,.3)'},
+  core:   {label:'Core',   icon:'🔥', color:'#facc15', border:'rgba(250,204,21,.3)'}
+};
+// Grupos activos (meta>0), en el orden de los ejes del radar
+var activeKeys=RADAR_AXES.filter(function(ax){return _mData[ax.key]&&_mData[ax.key].meta>0;}).map(function(ax){return ax.key;});
+var activeCount=activeKeys.length;
 var prevBtnOff='background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.15);border-radius:10px;padding:6px 10px;color:rgba(255,255,255,.45);font-size:9px;font-weight:800;cursor:pointer;font-family:Baloo Bhaijaan 2,sans-serif;touch-action:manipulation;';
 var prevBtnOn='background:rgba(110,220,210,.1);border:1.5px solid rgba(110,220,210,.3);border-radius:10px;padding:6px 10px;color:#6edcd2;font-size:9px;font-weight:800;cursor:pointer;font-family:Baloo Bhaijaan 2,sans-serif;touch-action:manipulation;';
 var prevBtnHTML=hasPrev
   ?'<button onclick="togglePrevWeek()" style="'+(showingPrev?prevBtnOn:prevBtnOff)+'">◄ vs Anterior'+(showingPrev?' ✓':'')+'</button>'
   :'<button style="'+prevBtnOff+'opacity:.4;cursor:default;">◄ vs Anterior</button>';
-container.innerHTML=
-  '<div style="padding:16px;display:flex;flex-direction:column;gap:14px;">'
-  +'<div style="display:flex;align-items:center;justify-content:space-between;">'
+var headerHTML=
+  '<div style="display:flex;align-items:center;justify-content:space-between;">'
     +'<div>'
       +'<div style="color:#fff;font-size:16px;font-weight:900;font-family:Baloo Bhaijaan 2,cursive;">📊 Analytics</div>'
       +'<div style="color:rgba(255,255,255,.35);font-size:10px;font-weight:700;margin-top:2px;">Progreso muscular semanal</div>'
@@ -10893,23 +10936,80 @@ container.innerHTML=
       +prevBtnHTML
       +'<button onclick="renderAnalytics()" style="background:rgba(110,220,210,.1);border:1.5px solid rgba(110,220,210,.3);border-radius:10px;padding:6px 12px;color:#6edcd2;font-size:10px;font-weight:800;cursor:pointer;font-family:Baloo Bhaijaan 2,sans-serif;touch-action:manipulation;">↻ Sync</button>'
     +'</div>'
-  +'</div>'
-  +noRoutineBanner
-  +'<div style="background:#0a1420;border-radius:18px;border:1px solid rgba(110,220,210,.15);padding:10px;position:relative;">'
-    +'<canvas id="muscleRadarCanvas" style="display:block;width:100%;border-radius:8px;"></canvas>'
-    +'<div id="muscleTooltip" style="display:none;position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(8,18,32,.96);border:1.5px solid #6edcd2;border-radius:10px;padding:8px 14px;font-family:Baloo Bhaijaan 2,sans-serif;pointer-events:none;z-index:10;white-space:nowrap;">'
-      +'<div id="muscleTooltipTxt" style="color:#fff;font-size:12px;font-weight:800;text-align:center;"></div>'
-    +'</div>'
-  +'</div>'
-  +'<div style="display:flex;flex-direction:column;gap:8px;">'
-    +'<div style="color:rgba(255,255,255,.4);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">📈 Detalle</div>'
-    +chipHTML
-  +'</div>'
-  +'<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:12px 14px;margin-bottom:8px;">'
-    +'<div style="color:rgba(255,255,255,.4);font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">&#8505;&#65039; Cómo funciona</div>'
-    +'<div style="color:rgba(255,255,255,.5);font-size:11px;line-height:1.65;">Las metas se calculan automáticamente según los ejercicios que configuraste en tu rutina semanal. Los ejercicios completados se cuentan por grupo muscular. Se reinicia cada lunes.</div>'
-  +'</div>'
   +'</div>';
+var bodyHTML;
+if(activeCount<3){
+  // Mínimo 3 grupos para mostrar la gráfica
+  if(activeCount===0){
+    bodyHTML='<div style="text-align:center;background:rgba(255,255,255,0.03);border-radius:14px;padding:24px;color:rgba(255,255,255,0.5);font-size:13px;line-height:1.6;">'
+      +'<div style="font-size:32px;margin-bottom:10px;">🏋️</div>'
+      +'Configura tu rutina para ver tu progreso muscular. Los grupos musculares se detectan automáticamente de tus ejercicios.'
+    +'</div>';
+  } else {
+    var detectedHTML=activeKeys.map(function(k){return '<span style="color:#4ade80;font-weight:800;">'+mInfo[k].label+'</span>';}).join(', ');
+    var missingHTML=RADAR_AXES.filter(function(ax){return !(_mData[ax.key]&&_mData[ax.key].meta>0);}).map(function(ax){return '<span style="color:rgba(255,255,255,0.35);">'+mInfo[ax.key].label+'</span>';}).join(', ');
+    bodyHTML='<div style="text-align:center;background:rgba(255,255,255,0.03);border-radius:14px;padding:24px;color:rgba(255,255,255,0.5);font-size:13px;line-height:1.7;">'
+      +'<div style="font-size:30px;margin-bottom:12px;">📊</div>'
+      +'<div style="margin-bottom:14px;">Necesitas al menos <strong style="color:rgba(255,255,255,0.7);">3 grupos musculares</strong> en tu rutina para ver la gráfica de progreso.</div>'
+      +'<div style="margin-bottom:14px;">Grupos detectados: '+detectedHTML+' <span style="color:rgba(255,255,255,0.35);">('+activeCount+' de 3 mínimo)</span></div>'
+      +'<div>Agrega ejercicios de otros grupos musculares ('+missingHTML+') para activar tu gráfica.</div>'
+    +'</div>';
+  }
+} else {
+  // Disciplina semanal: promedio SOLO de los grupos activos
+  var discSum=0;
+  activeKeys.forEach(function(k){var d=_mData[k];discSum+=Math.min(100,(d.realizado/d.meta)*100);});
+  var discPct=Math.round(discSum/activeCount);
+  var discColor=discPct===0?'rgba(255,255,255,0.2)':(discPct>=100?'#fbbf24':'#6edcd2');
+  var discGlow=discPct>=100?'text-shadow:0 0 18px rgba(251,191,36,0.6);':'';
+  var discHTML='<div style="text-align:center;margin:2px 0 -4px;">'
+    +'<div style="font-size:48px;font-weight:900;line-height:1;color:'+discColor+';'+discGlow+'font-family:Baloo Bhaijaan 2,cursive;">'+discPct+'%</div>'
+    +'<div style="font-size:11px;color:rgba(255,255,255,0.4);font-weight:700;margin-top:2px;">Disciplina semanal</div>'
+  +'</div>';
+  // Chips de detalle: solo grupos activos, en el mismo orden que los ejes
+  var chipHTML=activeKeys.map(function(key){
+    var m=mInfo[key], d=_mData[key];
+    var pct=Math.round((d.realizado/(d.meta||1))*100);
+    var barW=Math.min(100,pct);
+    var changeHTML='';
+    if(showingPrev&&_mDataPrev&&_mDataPrev[key]){
+      var pd=_mDataPrev[key];
+      var ppct=Math.round((pd.realizado/(pd.meta||1))*100);
+      var dd=pct-ppct;
+      if(dd>0) changeHTML='<span style="color:#4ade80;font-size:9px;font-weight:800;margin-left:4px;">↑ +'+dd+'%</span>';
+      else if(dd<0) changeHTML='<span style="color:#e8527a;font-size:9px;font-weight:800;margin-left:4px;">↓ '+dd+'%</span>';
+      else changeHTML='<span style="color:rgba(255,255,255,.4);font-size:9px;font-weight:800;margin-left:4px;">= 0%</span>';
+    }
+    var statHTML='<span style="display:flex;align-items:center;"><span style="color:'+m.color+';font-size:11px;font-weight:800;">'+d.realizado+'/'+d.meta+'&nbsp;&nbsp;'+pct+'%</span>'+changeHTML+'</span>';
+    var barHTML='<div style="height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;"><div style="height:100%;width:'+barW+'%;background:'+m.color+';border-radius:3px;transition:width .4s;"></div></div>';
+    return '<div style="background:#0d1117;border-radius:14px;padding:12px 14px;border:1px solid '+m.border+';display:flex;align-items:center;gap:12px;margin-bottom:0;transition:opacity .3s;">'
+      +'<div style="font-size:22px;flex-shrink:0;">'+m.icon+'</div>'
+      +'<div style="flex:1;min-width:0;">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">'
+          +'<span style="color:#fff;font-size:12px;font-weight:800;">'+m.label+'</span>'
+          +statHTML
+        +'</div>'
+        +barHTML
+      +'</div>'
+      +'</div>';
+  }).join('');
+  bodyHTML=discHTML
+    +'<div style="background:#0a1420;border-radius:16px;border:1px solid rgba(110,220,210,0.08);box-shadow:inset 0 0 40px rgba(110,220,210,0.03);padding:10px;position:relative;">'
+      +'<canvas id="muscleRadarCanvas" style="display:block;width:100%;border-radius:8px;"></canvas>'
+      +'<div id="muscleTooltip" style="display:none;position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(8,18,32,.96);border:1.5px solid #6edcd2;border-radius:10px;padding:8px 14px;font-family:Baloo Bhaijaan 2,sans-serif;pointer-events:none;z-index:10;white-space:nowrap;">'
+        +'<div id="muscleTooltipTxt" style="color:#fff;font-size:12px;font-weight:800;text-align:center;"></div>'
+      +'</div>'
+    +'</div>'
+    +'<div style="display:flex;flex-direction:column;gap:8px;">'
+      +'<div style="color:rgba(255,255,255,.4);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">📈 Detalle</div>'
+      +chipHTML
+    +'</div>'
+    +'<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:12px 14px;margin-bottom:8px;">'
+      +'<div style="color:rgba(255,255,255,.4);font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">&#8505;&#65039; Cómo funciona</div>'
+      +'<div style="color:rgba(255,255,255,.5);font-size:11px;line-height:1.65;">Las metas se calculan automáticamente según los ejercicios que configuraste en tu rutina semanal. Los ejercicios completados se cuentan por grupo muscular. Se reinicia cada lunes.</div>'
+    +'</div>';
+}
+container.innerHTML='<div style="padding:16px;display:flex;flex-direction:column;gap:14px;">'+headerHTML+bodyHTML+'</div>';
 var canvas=document.getElementById('muscleRadarCanvas');
 if(canvas){
   var dpr=window.devicePixelRatio||1;

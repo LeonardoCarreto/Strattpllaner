@@ -1261,11 +1261,7 @@ oninput="notasAutoSave()"></textarea>
 <div id="socFriendsList"><div class="soc-empty">Cargando...</div></div>
 </div>
 <div class="panel-content" id="socVsContent" style="display:none;">
-<div style="margin:auto;display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center;padding:60px 24px;color:rgba(255,255,255,.45);">
-<div style="font-size:52px;">⚔️</div>
-<div style="font-size:17px;font-weight:800;color:rgba(255,255,255,.7);font-family:'Baloo Bhaijaan 2',sans-serif;letter-spacing:1px;">VS</div>
-<div style="font-size:12px;line-height:1.5;max-width:220px;">Próximamente: compite cara a cara con tus amigos. 🔜</div>
-</div>
+<div id="vsContent"></div>
 </div>
 <div class="panel-content" id="socRankingContent" style="display:none;padding:0;gap:0;">
 <div style="display:flex;justify-content:flex-end;padding:8px 10px 0;">
@@ -11950,5 +11946,130 @@ document.querySelectorAll('.menu-simple-tile').forEach(t=>{
     setTimeout(()=>this.classList.remove('glow'),400);
   },{passive:true});
 });
-</script></body>
+</script><script>
+/* ===== Pestaña VS / Rivalidad ===== */
+function vsDayKey(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function vsCompletionStats(items){
+  // items: array de tareas/hábitos, cada uno con doneDates[]
+  var today = new Date();
+  var dow = (today.getDay()+6)%7; // 0=Lunes
+  var monday = new Date(today); monday.setDate(today.getDate()-dow); monday.setHours(0,0,0,0);
+  var n = (items||[]).length;
+  var days = [], sum=0, counted=0;
+  for(var i=0;i<7;i++){
+    var d = new Date(monday); d.setDate(monday.getDate()+i);
+    var key = vsDayKey(d);
+    var future = d.setHours(0,0,0,0) > today.setHours(0,0,0,0);
+    today = new Date();
+    var done = 0;
+    (items||[]).forEach(function(it){ if((it.doneDates||[]).indexOf(key)>=0) done++; });
+    var pct = n>0 ? Math.round(done/n*100) : 0;
+    if(future){ days.push(null); } else { days.push(pct); sum+=pct; counted++; }
+  }
+  return { pct: counted>0 ? Math.round(sum/counted) : 0, days: days };
+}
+function vsMyItems(){
+  var t = (typeof tskData!=='undefined' && tskData) ? tskData : [];
+  var h = (typeof habitData!=='undefined' && habitData) ? habitData : [];
+  return [].concat(t, h);
+}
+function vsRivalItems(doc){
+  var t = doc.tskData || [];
+  var h = (doc.habitData && doc.habitData.pos) ? doc.habitData.pos : (Array.isArray(doc.habitData)?doc.habitData:[]);
+  return [].concat(t, h);
+}
+function renderVsTab(){
+  var cont = document.getElementById('vsContent');
+  if(!cont) return;
+  var friends = (typeof myFriends!=='undefined' && myFriends) ? myFriends : [];
+  if(!friends.length){
+    cont.innerHTML = '<div style="padding:60px 24px;text-align:center;color:rgba(255,255,255,.4);"><div style="font-size:48px;">⚔️</div><div style="font-size:14px;font-weight:800;margin-top:10px;color:rgba(255,255,255,.65);">Agrega amigos para retarlos</div><div style="font-size:12px;margin-top:4px;line-height:1.5;">Ve a la pestaña Amigos y agrega a alguien por su código.</div></div>';
+    return;
+  }
+  if(!window._vsRivalUid || !friends.find(function(f){return f.uid===window._vsRivalUid;})) window._vsRivalUid = friends[0].uid;
+  var chips = friends.map(function(f){
+    var on = f.uid===window._vsRivalUid;
+    return '<button onclick="vsSelectRival(\''+f.uid+'\')" style="flex-shrink:0;padding:6px 13px;border-radius:20px;border:1.5px solid '+(on?'var(--teal)':'rgba(255,255,255,.12)')+';background:'+(on?'rgba(42,100,150,.3)':'rgba(255,255,255,.04)')+';color:'+(on?'#fff':'rgba(255,255,255,.5)')+';font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;">'+escapeHtml(f.displayName)+'</button>';
+  }).join('');
+  cont.innerHTML = '<div style="color:rgba(255,255,255,.4);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;padding:12px 14px 2px;">Elige a tu rival</div>'
+    + '<div style="display:flex;gap:8px;overflow-x:auto;padding:6px 14px 6px;">'+chips+'</div>'
+    + '<div id="vsArena" style="padding:8px 14px 28px;"><div style="text-align:center;color:rgba(255,255,255,.3);padding:50px 0;font-size:12px;">Cargando rivalidad...</div></div>';
+  vsLoadArena();
+}
+function vsSelectRival(uid){ window._vsRivalUid = uid; renderVsTab(); }
+window.vsSelectRival = vsSelectRival;
+async function vsLoadArena(){
+  var arena = document.getElementById('vsArena');
+  if(!arena) return;
+  var rivalUid = window._vsRivalUid;
+  var meStats = vsCompletionStats(vsMyItems());
+  var rivalDoc = null;
+  try { rivalDoc = await fbGet('users/'+rivalUid); } catch(e){}
+  if(document.getElementById('vsArena') !== arena) return; // cambió de rival mientras cargaba
+  var rv = rivalDoc || {};
+  var rivalStats = vsCompletionStats(vsRivalItems(rv));
+  var rivalFriend = (typeof myFriends!=='undefined'&&myFriends?myFriends:[]).find(function(f){return f.uid===rivalUid;}) || {};
+  var rivalName = rivalFriend.displayName || rv.displayName || 'Rival';
+  var meName = (typeof regData!=='undefined' && regData.displayName) ? regData.displayName : 'Tú';
+  var meWins = meStats.pct >= rivalStats.pct;
+  arena.innerHTML = vsArenaHTML(meName, meStats, rivalName, rivalStats, meWins);
+  setTimeout(function(){ var c=document.getElementById('vsRadarCanvas'); if(c) drawVsRadar(c, meStats.days, rivalStats.days); }, 40);
+}
+function vsArenaHTML(meName, me, rivalName, rival, meWins){
+  var crown = '<div style="font-size:26px;line-height:1;margin-bottom:-4px;filter:drop-shadow(0 2px 4px rgba(240,192,64,.5));">👑</div>';
+  var spacer = '<div style="height:26px;"></div>';
+  var total = (me.pct + rival.pct) || 1;
+  var meShare = Math.round(me.pct/total*100);
+  return ''
+  + '<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:6px;margin-top:4px;">'
+  +   '<div style="flex:1;text-align:center;min-width:0;">'
+  +     (meWins?crown:spacer)
+  +     '<img src="assets/racha/fighter-l.png" alt="" style="width:100%;max-width:118px;height:auto;filter:drop-shadow(0 5px 10px rgba(0,0,0,.45));">'
+  +     '<div style="color:#fff;font-size:13px;font-weight:800;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escapeHtml(meName)+'</div>'
+  +     '<div style="font-size:28px;font-weight:900;color:'+(meWins?'#f0c040':'#fff')+';font-family:\'Baloo Bhaijaan 2\',cursive;line-height:1;">'+me.pct+'%</div>'
+  +   '</div>'
+  +   '<div style="flex-shrink:0;font-size:24px;font-weight:900;color:rgba(255,255,255,.45);font-family:\'Baloo Bhaijaan 2\',cursive;padding-bottom:38px;">VS</div>'
+  +   '<div style="flex:1;text-align:center;min-width:0;">'
+  +     (!meWins?crown:spacer)
+  +     '<img src="assets/racha/fighter-r.png" alt="" style="width:100%;max-width:118px;height:auto;filter:drop-shadow(0 5px 10px rgba(0,0,0,.45));">'
+  +     '<div style="color:#fff;font-size:13px;font-weight:800;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escapeHtml(rivalName)+'</div>'
+  +     '<div style="font-size:28px;font-weight:900;color:'+(!meWins?'#f0c040':'#fff')+';font-family:\'Baloo Bhaijaan 2\',cursive;line-height:1;">'+rival.pct+'%</div>'
+  +   '</div>'
+  + '</div>'
+  + '<div style="margin-top:16px;">'
+  +   '<div style="text-align:center;color:rgba(255,255,255,.4);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;">Más cerca de la corona 👑</div>'
+  +   '<div style="height:16px;border-radius:9px;overflow:hidden;display:flex;background:linear-gradient(90deg,#e8527a,#f0789a);border:1px solid rgba(255,255,255,.08);">'
+  +     '<div style="width:'+meShare+'%;background:linear-gradient(90deg,#3a85c4,#5aa0d8);transition:width .6s cubic-bezier(.34,1.2,.64,1);"></div>'
+  +   '</div>'
+  + '</div>'
+  + '<div style="margin-top:20px;">'
+  +   '<div style="text-align:center;color:rgba(255,255,255,.4);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Tareas y hábitos por día</div>'
+  +   '<canvas id="vsRadarCanvas" width="300" height="300" style="display:block;width:100%;max-width:300px;margin:0 auto;"></canvas>'
+  +   '<div style="display:flex;justify-content:center;gap:18px;margin-top:4px;font-size:11px;font-weight:800;">'
+  +     '<span style="color:#5aa0d8;">● '+escapeHtml(meName)+'</span><span style="color:#f0789a;">● '+escapeHtml(rivalName)+'</span>'
+  +   '</div>'
+  + '</div>';
+}
+function drawVsRadar(canvas, a, b){
+  var ctx = canvas.getContext('2d'); var W=canvas.width, H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  var cx=W/2, cy=H/2, R=Math.min(W,H)/2-36, N=7;
+  var labels=['L','M','M','J','V','S','D'];
+  function ang(i){ return -Math.PI/2 + i*2*Math.PI/N; }
+  ctx.strokeStyle='rgba(255,255,255,.08)'; ctx.lineWidth=1;
+  [0.25,0.5,0.75,1].forEach(function(r){ ctx.beginPath(); for(var i=0;i<=N;i++){var x=cx+Math.cos(ang(i))*R*r, y=cy+Math.sin(ang(i))*R*r; i?ctx.lineTo(x,y):ctx.moveTo(x,y);} ctx.stroke(); });
+  ctx.fillStyle='rgba(255,255,255,.45)'; ctx.font='12px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  for(var i=0;i<N;i++){ var x=cx+Math.cos(ang(i))*R, y=cy+Math.sin(ang(i))*R; ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(x,y); ctx.stroke(); var lx=cx+Math.cos(ang(i))*(R+18), ly=cy+Math.sin(ang(i))*(R+18); ctx.fillText(labels[i], lx, ly); }
+  function poly(vals, stroke, fill){ ctx.beginPath(); for(var i=0;i<N;i++){ var v=Math.max(0,Math.min(100,vals[i]||0))/100; var x=cx+Math.cos(ang(i))*R*v, y=cy+Math.sin(ang(i))*R*v; i?ctx.lineTo(x,y):ctx.moveTo(x,y);} ctx.closePath(); ctx.fillStyle=fill; ctx.fill(); ctx.strokeStyle=stroke; ctx.lineWidth=2.5; ctx.stroke(); for(var i=0;i<N;i++){ var v=Math.max(0,Math.min(100,vals[i]||0))/100; var x=cx+Math.cos(ang(i))*R*v, y=cy+Math.sin(ang(i))*R*v; ctx.beginPath(); ctx.arc(x,y,3,0,Math.PI*2); ctx.fillStyle=stroke; ctx.fill(); } }
+  poly(a.map(function(v){return v==null?0:v;}), '#5aa0d8', 'rgba(58,133,196,.28)');
+  poly(b.map(function(v){return v==null?0:v;}), '#f0789a', 'rgba(232,82,122,.24)');
+}
+/* Enganchar VS al cambiar de pestaña Social */
+(function(){
+  var _orig = window.switchSocialTab;
+  window.switchSocialTab = function(idx){ if(typeof _orig==='function') _orig(idx); if(idx===1) renderVsTab(); };
+})();
+
+</script>
+</body>
 </html>

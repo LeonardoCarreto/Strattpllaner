@@ -12124,7 +12124,7 @@ window.renderNewShop = renderNewShop;
 
 </script>
 <style id="shopRedesignCSS">
-.shop-hero-banner{position:relative;min-height:172px;border-radius:0 0 22px 22px;overflow:hidden;margin-bottom:14px;display:flex;align-items:flex-end;padding:18px;transition:opacity .4s ease;}
+.shop-hero-banner{position:relative;min-height:150px;border-radius:0 0 22px 22px;overflow:hidden;margin-bottom:14px;display:flex;align-items:flex-end;padding:18px;transition:opacity .4s ease;}
 .shop-hero-art{position:absolute;right:-6px;top:50%;transform:translateY(-50%);font-size:120px;opacity:.85;filter:drop-shadow(0 8px 20px rgba(0,0,0,.4));pointer-events:none;line-height:1;}
 .shop-hero-text{position:relative;z-index:2;max-width:64%;}
 .shop-hero-title{color:#fff;font-size:25px;font-weight:900;font-family:'Baloo Bhaijaan 2',cursive;line-height:1.05;text-shadow:0 2px 8px rgba(0,0,0,.55);}
@@ -12135,7 +12135,7 @@ window.renderNewShop = renderNewShop;
 .scc-chip{flex-shrink:0;padding:8px 14px;border-radius:12px;border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:rgba(255,255,255,.55);font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap;}
 .scc-chip.active{background:var(--teal);border-color:var(--teal);color:#fff;box-shadow:0 3px 12px rgba(42,100,150,.45);}
 .shop-section-title{color:#fff;font-size:15px;font-weight:800;padding:4px 14px 10px;font-family:'Baloo Bhaijaan 2',cursive;}
-.shop-items-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:0 14px;}
+.shop-items-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;padding:0 14px;}
 .shop-items-grid.list{grid-template-columns:1fr;gap:0;padding:0;}
 @keyframes shopGridIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
 .shop-item-card{background:var(--navy-mid);border-radius:16px;overflow:hidden;border:1.5px solid rgba(255,255,255,.07);cursor:pointer;transition:transform .2s,box-shadow .2s;position:relative;display:flex;flex-direction:column;}
@@ -12144,7 +12144,7 @@ window.renderNewShop = renderNewShop;
 .shop-item-card.r-raro{border-color:rgba(58,133,196,.6);}
 .shop-item-card.r-epico{border-color:rgba(167,139,250,.65);}
 .shop-item-card.r-legendario{border-color:rgba(240,192,64,.7);box-shadow:0 0 16px rgba(240,192,64,.22);}
-.shop-item-art{width:100%;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;font-size:60px;position:relative;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(0,0,0,.25));}
+.shop-item-art{width:100%;aspect-ratio:1/1;max-height:190px;display:flex;align-items:center;justify-content:center;font-size:54px;position:relative;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(0,0,0,.25));}
 .shop-item-art img{width:100%;height:100%;object-fit:cover;}
 .shop-badge-new{position:absolute;top:8px;left:8px;background:var(--teal);color:#fff;font-size:9px;font-weight:900;padding:3px 8px;border-radius:8px;z-index:2;letter-spacing:.3px;}
 .shop-badge-rarity{position:absolute;top:8px;right:8px;font-size:8px;font-weight:900;padding:3px 7px;border-radius:8px;z-index:2;text-transform:uppercase;letter-spacing:.4px;}

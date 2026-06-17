@@ -12109,17 +12109,18 @@ function renderShopHero(){
   if(window._shopHeroIdx===undefined) window._shopHeroIdx = Math.floor(Date.now()/86400000) % cols.length;
   var ai = window._shopHeroIdx % cols.length;
   var col = cols[ai];
-  el.style.background = col.gradient; el.style.opacity='0';
-  el.style.border = col.og ? '2px solid rgba(240,192,64,.55)' : '';
+  el.style.opacity='0'; el.style.border='';
   var _dn=cols.map(function(c,i){return '<span class="shop-hero-dot'+(i===ai?' active':'')+'"></span>';}).join('');
   var artHTML, btnHTML;
   if(col.og){
+    el.classList.add('shop-hero-og'); el.style.background='';
     artHTML = '<div style="position:absolute;right:24px;top:50%;transform:translateY(-50%);width:92px;height:92px;display:flex;align-items:center;justify-content:center;z-index:1;"><div class="og-badge-glow"></div><span class="og-badge-text" style="font-size:54px;">OG</span></div>';
     var og=window._shopItemRef('badges','b11'); var owned=og&&og.owned;
     btnHTML = owned
-      ? '<button class="shop-hero-btn" style="background:rgba(94,220,138,.25);color:#5edc8a;cursor:default;">✓ Reclamado</button>'
-      : '<button class="shop-hero-btn" style="background:linear-gradient(90deg,#ffd700,#fff7c0,#ffd700);background-size:220% 100%;color:#1a1500;animation:ogClaimBtn 2.4s linear infinite;" onclick="claimOG()">🎁 Reclamar gratis</button>';
+      ? '<button class="shop-hero-btn" style="background:rgba(94,220,138,.9);color:#0c2a16;cursor:default;">✓ Reclamado</button>'
+      : '<button class="shop-hero-btn" onclick="claimOG()">🎁 Reclamar gratis</button>';
   } else {
+    el.classList.remove('shop-hero-og'); el.style.background = col.gradient;
     artHTML = '<div class="shop-hero-art">'+col.art+'</div>';
     btnHTML = '<button class="shop-hero-btn" onclick="shopShowCollection(\''+col.cat+'\')">Ver colección</button>';
   }
@@ -12150,6 +12151,8 @@ window.renderNewShop = renderNewShop;
 <style id="shopRedesignCSS">
 .shop-hero-banner{position:relative;min-height:150px;border-radius:0 0 22px 22px;overflow:hidden;margin-bottom:14px;display:flex;align-items:flex-end;padding:18px;transition:opacity .4s ease;}
 .shop-hero-art{position:absolute;right:-6px;top:50%;transform:translateY(-50%);font-size:120px;opacity:.85;filter:drop-shadow(0 8px 20px rgba(0,0,0,.4));pointer-events:none;line-height:1;}
+.shop-hero-og{background:linear-gradient(115deg,#ff0080,#ff8c00,#ffe100,#00ff88,#00c8ff,#a855f7,#ff0080);background-size:300% 100%;animation:ogShift 5s linear infinite;}
+.shop-hero-og::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.75) 0%,rgba(0,0,0,.32) 55%,rgba(0,0,0,0) 100%);z-index:0;pointer-events:none;}
 .shop-hero-text{position:relative;z-index:2;max-width:64%;}
 .shop-hero-title{color:#fff;font-size:25px;font-weight:900;font-family:'Baloo Bhaijaan 2',cursive;line-height:1.05;text-shadow:0 2px 8px rgba(0,0,0,.55);}
 .shop-hero-sub{color:rgba(255,255,255,.82);font-size:11px;font-weight:600;margin-top:5px;text-shadow:0 1px 4px rgba(0,0,0,.5);}

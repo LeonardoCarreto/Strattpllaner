@@ -12008,7 +12008,7 @@ function renderShopGrid(cat){
   window._shopCat = cat;
   var pairs=[], titleTxt='Fondos', prefix='';
   if(cat==='fondos'){ titleTxt='Fondos'; (SHOP_ITEMS.temas||[]).forEach(function(it){ pairs.push({item:it,cat:'temas'}); }); }
-  else if(cat==='badges'){ titleTxt='Insignias'; (SHOP_ITEMS.badges||[]).forEach(function(it){ if(it.id!=='b11' && shopBadgeBuyable(it)) pairs.push({item:it,cat:'badges'}); }); }
+  else if(cat==='badges'){ titleTxt='Insignias'; var _bs=(SHOP_ITEMS.badges||[]).filter(function(it){ return it.id!=='b11' && shopBadgeBuyable(it); }); var _rk={'común':0,'poco común':1,'raro':2,'épico':3,'legendario':4,'mítico':5,'secreto':6}; _bs.sort(function(a,b){ return (_rk[shopRarityOf(b)]||0)-(_rk[shopRarityOf(a)]||0); }); _bs.forEach(function(it){ pairs.push({item:it,cat:'badges'}); }); }
   else if(cat==='poderes'){ titleTxt='Poderes'; (SHOP_ITEMS.poderes||[]).forEach(function(it){ pairs.push({item:it,cat:'poderes'}); }); }
   var html = prefix + pairs.map(function(p){ return renderShopItemCard(p.item,p.cat); }).join('');
   if(!html) html='<div style="grid-column:1/-1;color:rgba(255,255,255,.3);text-align:center;padding:30px;">Nada por aquí aún</div>';

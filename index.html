@@ -390,6 +390,9 @@ if (window._hideAppLoader) window._hideAppLoader();
 #panel-racha .streak-day-box.active .sdb-day{
   color:#e8590c !important;
 }
+#panel-racha .streak-day-box .sdb-emoji{position:relative;}
+#panel-racha .streak-day-box .sdb-num{position:absolute;top:56%;left:50%;transform:translate(-50%,-50%);font-size:13px;font-weight:900;color:#5b6470;z-index:2;line-height:1;text-shadow:0 1px 1px rgba(255,255,255,.6);}
+#panel-racha .streak-day-box.active .sdb-num{color:#fff;text-shadow:0 1px 2px rgba(150,45,0,.65);}
 
 .sdb-fire-on{
   font-size: 18px;
@@ -2980,7 +2983,9 @@ DAYS_SHORT.forEach((day, i) => {
   const _emojiHtml = _active
     ? `<span class="sdb-fire-on">${_sEmoji}</span>`
     : `<span class="sdb-fire-off">🔥</span>`;
-  box.innerHTML = `<div class="sdb-emoji">${_emojiHtml}</div><div class="sdb-day">${day}</div><div class="sdb-done">${_active ? '✓' : ''}</div>`;
+  const _proj = streakDays + (i - _dow) + 1;
+  const _numHtml = _proj >= 1 ? `<span class="sdb-num">${_proj}</span>` : '';
+  box.innerHTML = `<div class="sdb-emoji">${_emojiHtml}${_numHtml}</div><div class="sdb-day">${day}</div>`;
   wr.appendChild(box);
 });
 }

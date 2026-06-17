@@ -1620,10 +1620,9 @@ touch-action:manipulation;
 <strong id="shopCoinBig" style="display:none;">0</strong>
 <div id="shopHeroBanner" class="shop-hero-banner"></div>
 <div class="shop-category-chips" id="shopCategoryChips">
-<button class="scc-chip active" onclick="filterShopCategory('all')">📦 Novedades</button>
-<button class="scc-chip" onclick="filterShopCategory('popular')">⭐ Más populares</button>
-<button class="scc-chip" onclick="filterShopCategory('exclusive')">💎 Exclusivos</button>
-<button class="scc-chip" onclick="filterShopCategory('rewards')">🎁 Recompensas</button>
+<button class="scc-chip active" onclick="filterShopCategory('fondos')">🎨 Fondos</button>
+<button class="scc-chip" onclick="filterShopCategory('badges')">🏅 Badges</button>
+<button class="scc-chip" onclick="filterShopCategory('poderes')">⚡ Poderes</button>
 </div>
 <div class="shop-section" id="shopSectionMain">
 <div class="shop-section-title" id="shopGridTitle">Novedades</div>
@@ -5671,9 +5670,6 @@ avatares: [
 { id:'a18', name:'Astronauta VIP',desc:'Primera clase al infinito',      emoji:'👨‍🚀', price:300, owned:false },
 { id:'a19', name:'Fantasma',      desc:'Aquí pero no está',              emoji:'👻',   price:95,  owned:false },
 { id:'a20', name:'Diablo',        desc:'El más temible',                 emoji:'😈',   price:250, owned:false },
-{ id:'a_esqueleto_igneo', name:'Esqueleto Ígneo', desc:'Arde con poder infernal', emoji:'💀🔥', price:1200, owned:false, new:true, rarity:'épico' },
-{ id:'a_caballero_naufrago', name:'Caballero Náufrago', desc:'Sobreviviente de mil batallas', emoji:'⚔️🌊', price:1500, owned:false, new:true, rarity:'épico' },
-{ id:'a_guardian_astral', name:'Guardián Astral', desc:'Protector del cosmos', emoji:'🔮✨', price:2000, owned:false, new:true, rarity:'legendario' },
 ],
 poderes: [
 { id:'p1', name:'Escudo de Racha',  desc:'Protege tu racha 1 día si la rompes', emoji:'🛡️', price:450, qty:0, maxQty:5 },
@@ -12013,74 +12009,48 @@ function drawVsRadar(canvas, a, b){
 <script>
 /* ===== Tienda rediseñada (Featured Shop) — solo UI, no toca compra ===== */
 const FEATURED_SHOP = {
-  rotationDays: 3,
   collections: [
-    { id:'destacada', name:'Colección Destacada', subtitle:'"Contenido nuevo seleccionado para ti."', gradient:'linear-gradient(135deg,#243447,#0c0e14)', art:'✨', items:['a_esqueleto_igneo','a_caballero_naufrago','a_guardian_astral'] },
-    { id:'fuego', name:'Colección Ígnea', subtitle:'"Arde más que todos."', gradient:'linear-gradient(135deg,#1a0500,#8B1A00)', art:'🔥', items:['a_esqueleto_igneo','a6','a14'] },
-    { id:'astral', name:'Colección Astral', subtitle:'"Protector del cosmos."', gradient:'linear-gradient(135deg,#0a0a2e,#3b2b8b)', art:'🔮', items:['a_guardian_astral','a8','a4'] },
+    { id:'fondos', cat:'fondos', name:'Fondos', subtitle:'"Personaliza tu mundo."', gradient:'linear-gradient(135deg,#243447,#0c0e14)', art:'🎨' },
+    { id:'badges', cat:'badges', name:'Insignias', subtitle:'"Presume tus logros."', gradient:'linear-gradient(135deg,#3a2a05,#9a6a10)', art:'🏅' },
+    { id:'poderes', cat:'poderes', name:'Poderes', subtitle:'"Gana la ventaja."', gradient:'linear-gradient(135deg,#08291a,#1a5c30)', art:'⚡' },
   ]
 };
 window._shopItemRef = function(cat, id){ var a=(SHOP_ITEMS[cat]||[]); for(var i=0;i<a.length;i++){ if(a[i].id===id) return a[i]; } return null; };
-function shopRarityOf(item){
-  if(item.rarity) return item.rarity;
-  var p = item.price||0;
-  if(p>=1000) return 'legendario';
-  if(p>=280) return 'épico';
-  if(p>=160) return 'raro';
-  return 'común';
-}
+function shopRarityOf(item){ if(item.rarity) return item.rarity; var p=item.price||0; if(p>=1000) return 'legendario'; if(p>=280) return 'épico'; if(p>=160) return 'raro'; return 'común'; }
 function shopRarKey(r){ return r==='común'?'comun':(r==='épico'?'epico':r); }
-function shopBuyables(){
-  var out=[];
-  (SHOP_ITEMS.avatares||[]).forEach(function(it){ out.push({item:it,cat:'avatares'}); });
-  (SHOP_ITEMS.temas||[]).forEach(function(it){ out.push({item:it,cat:'temas'}); });
-  (SHOP_ITEMS.badges||[]).forEach(function(it){ if((it.price||0)>0 && !it.og && !it.ceo && !it.gang && !it.mystery && !it.gymbro && !it.luck && !it.top1 && !it.streakRequired) out.push({item:it,cat:'badges'}); });
-  return out;
+function shopBadgeBuyable(b){ return (b.price||0)>0 && !b.og && !b.ceo && !b.gang && !b.mystery && !b.gymbro && !b.luck && !b.top1 && !b.streakRequired; }
+function shopItemArt(item, cat){
+  if(cat==='temas') return '<div style="position:absolute;inset:0;background:'+(item.preview||'#222')+';"></div><div style="position:absolute;bottom:8px;left:8px;right:8px;height:30px;border-radius:8px;background:rgba(0,0,0,.35);backdrop-filter:blur(2px);"></div>';
+  if(cat==='badges') return '<span style="font-size:56px;line-height:1;">'+(item.emoji||'🏅')+'</span>';
+  if(cat==='poderes') return '<span style="font-size:52px;line-height:1;">'+(item.emoji||'⚡')+'</span>';
+  return '<span>'+(item.emoji||'❓')+'</span>';
 }
-function shopItemArt(item){ return item.img ? '<img src="'+item.img+'" alt="">' : '<span>'+(item.emoji||'❓')+'</span>'; }
 function renderShopItemCard(item, cat){
   var rar = shopRarityOf(item), rk = shopRarKey(rar);
-  var owned = (cat==='temas') ? (item.owned||item.equipped) : item.owned;
-  var priceHTML = owned
-    ? '<span class="shop-item-price owned">✓ Tuyo</span>'
-    : (item.price===0 ? '<span class="shop-item-price">✓ Gratis</span>' : '<span class="shop-item-price"><span class="coin-custom" style="width:14px;height:14px;"></span> '+item.price+'</span>');
+  var owned = (cat==='temas') ? (item.owned||item.equipped) : (cat==='poderes' ? false : item.owned);
+  var price;
+  if(cat==='poderes'){ price = '<span class="shop-item-price"><span class="coin-custom" style="width:14px;height:14px;"></span> '+item.price+(item.qty>0?' · <span style="color:var(--green);font-size:10px;">x'+item.qty+'</span>':'')+'</span>'; }
+  else if(owned){ price = '<span class="shop-item-price owned">✓ Tuyo</span>'; }
+  else if(item.price===0){ price = '<span class="shop-item-price">✓ Gratis</span>'; }
+  else { price = '<span class="shop-item-price"><span class="coin-custom" style="width:14px;height:14px;"></span> '+item.price+'</span>'; }
   return '<div class="shop-item-card r-'+rk+'" onclick="openShopModal(window._shopItemRef(\''+cat+'\',\''+item.id+'\'),\''+cat+'\')">'
     + (item.new?'<div class="shop-badge-new">Nuevo</div>':'')
     + '<div class="shop-badge-rarity rb-'+rk+'">'+rar+'</div>'
-    + '<div class="shop-item-art">'+shopItemArt(item)+'</div>'
-    + '<div class="shop-item-footer"><div class="shop-item-name">'+escapeHtml(item.name)+'</div>'+priceHTML+'</div>'
+    + '<div class="shop-item-art">'+shopItemArt(item,cat)+'</div>'
+    + '<div class="shop-item-footer"><div class="shop-item-name">'+escapeHtml(item.name)+'</div>'+price+'</div>'
     + '</div>';
-}
-function shopPowerListHTML(){
-  var rows = (SHOP_ITEMS.poderes||[]).map(function(p){
-    var have = p.qty>0 ? ' · <span style="color:var(--green)">Tienes '+p.qty+'</span>' : '';
-    return '<div onclick="openShopModal(window._shopItemRef(\'poderes\',\''+p.id+'\'),\'poderes\')" style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid rgba(255,255,255,.06);cursor:pointer;">'
-      + '<div style="width:42px;height:42px;border-radius:11px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">'+(p.emoji||'⚡')+'</div>'
-      + '<div style="flex:1;min-width:0;"><div style="color:#fff;font-size:13px;font-weight:800;font-family:\'Baloo Bhaijaan 2\',cursive;">'+escapeHtml(p.name)+'</div><div style="color:rgba(255,255,255,.4);font-size:10px;margin-top:2px;line-height:1.4;">'+escapeHtml(p.desc)+have+'</div></div>'
-      + '<div style="flex-shrink:0;display:flex;align-items:center;gap:4px;color:var(--yellow);font-size:13px;font-weight:800;font-family:\'Baloo Bhaijaan 2\',cursive;"><span class="coin-custom" style="width:15px;height:15px;"></span>'+p.price+'</div>'
-      + '</div>';
-  }).join('');
-  return '<div style="background:#0d1117;border:1.5px solid rgba(255,255,255,.08);border-radius:16px;overflow:hidden;margin:0 14px;">'+rows+'</div>';
 }
 function renderShopGrid(cat){
   var grid = document.getElementById('shopGrid'); var title = document.getElementById('shopGridTitle');
   if(!grid) return;
+  if(cat!=='fondos'&&cat!=='badges'&&cat!=='poderes') cat='fondos';
   window._shopCat = cat;
-  var html='', isList=false, titleTxt='Novedades';
-  if(cat==='rewards'){ titleTxt='Recompensas'; isList=true; html = shopPowerListHTML(); }
-  else if(cat && cat.indexOf('collection:')===0){
-    var col = FEATURED_SHOP.collections.find(function(c){return c.id===cat.split(':')[1];});
-    titleTxt = col?col.name:'Colección';
-    var picked=[]; (col?col.items:[]).forEach(function(id){ ['avatares','temas','badges'].forEach(function(c){ var it=window._shopItemRef(c,id); if(it) picked.push({item:it,cat:c}); }); });
-    html = picked.map(function(p){ return renderShopItemCard(p.item,p.cat); }).join('') || '<div style="grid-column:1/-1;color:rgba(255,255,255,.3);text-align:center;padding:30px;">Colección vacía</div>';
-  } else {
-    var arr = shopBuyables();
-    if(cat==='popular'){ titleTxt='Más populares'; arr.sort(function(a,b){return (b.item.price||0)-(a.item.price||0);}); }
-    else if(cat==='exclusive'){ titleTxt='Exclusivos'; arr=arr.filter(function(p){var r=shopRarityOf(p.item);return r==='épico'||r==='legendario';}); arr.sort(function(a,b){return (b.item.price||0)-(a.item.price||0);}); }
-    else { titleTxt='Novedades'; arr.sort(function(a,b){ var an=a.item.new?1:0, bn=b.item.new?1:0; if(an!==bn) return bn-an; return (b.item.price||0)-(a.item.price||0); }); }
-    html = arr.map(function(p){ return renderShopItemCard(p.item,p.cat); }).join('');
-  }
-  grid.className = 'shop-items-grid'+(isList?' list':'');
+  var pairs=[], titleTxt='Fondos';
+  if(cat==='fondos'){ titleTxt='Fondos'; (SHOP_ITEMS.temas||[]).forEach(function(it){ pairs.push({item:it,cat:'temas'}); }); }
+  else if(cat==='badges'){ titleTxt='Insignias'; (SHOP_ITEMS.badges||[]).forEach(function(it){ if(shopBadgeBuyable(it)) pairs.push({item:it,cat:'badges'}); }); }
+  else if(cat==='poderes'){ titleTxt='Poderes'; (SHOP_ITEMS.poderes||[]).forEach(function(it){ pairs.push({item:it,cat:'poderes'}); }); }
+  var html = pairs.map(function(p){ return renderShopItemCard(p.item,p.cat); }).join('') || '<div style="grid-column:1/-1;color:rgba(255,255,255,.3);text-align:center;padding:30px;">Nada por aquí aún</div>';
+  grid.className = 'shop-items-grid';
   grid.style.animation='none'; grid.offsetHeight; grid.style.animation='shopGridIn .28s ease';
   grid.innerHTML = html;
   if(title) title.textContent = titleTxt;
@@ -12088,31 +12058,29 @@ function renderShopGrid(cat){
 function filterShopCategory(cat){
   var chips=document.querySelectorAll('#shopCategoryChips .scc-chip');
   chips.forEach(function(c){ c.classList.remove('active'); });
-  var map={all:0,popular:1,exclusive:2,rewards:3};
+  var map={fondos:0,badges:1,poderes:2};
   if(map[cat]!==undefined && chips[map[cat]]) chips[map[cat]].classList.add('active');
   renderShopGrid(cat);
 }
 window.filterShopCategory = filterShopCategory;
-function shopShowCollection(id){
-  renderShopGrid('collection:'+id);
-  document.querySelectorAll('#shopCategoryChips .scc-chip').forEach(function(c){ c.classList.remove('active'); });
+function shopShowCollection(cat){
+  filterShopCategory(cat);
   try{ document.getElementById('shopSectionMain').scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){}
 }
 window.shopShowCollection = shopShowCollection;
 function renderShopHero(){
   var el = document.getElementById('shopHeroBanner'); if(!el) return;
   var cols = FEATURED_SHOP.collections;
-  if(window._shopHeroIdx===undefined) window._shopHeroIdx = Math.floor(Date.now()/86400000/FEATURED_SHOP.rotationDays) % cols.length;
+  if(window._shopHeroIdx===undefined) window._shopHeroIdx = Math.floor(Date.now()/86400000) % cols.length;
   var col = cols[window._shopHeroIdx % cols.length];
-  el.style.background = col.gradient;
-  el.style.opacity='0';
+  el.style.background = col.gradient; el.style.opacity='0';
   el.innerHTML = '<div class="shop-hero-art">'+col.art+'</div>'
-    + '<div class="shop-hero-text"><div class="shop-hero-title">'+escapeHtml(col.name)+'</div><div class="shop-hero-sub">'+escapeHtml(col.subtitle)+'</div><button class="shop-hero-btn" onclick="shopShowCollection(\''+col.id+'\')">Ver colección</button></div>';
+    + '<div class="shop-hero-text"><div class="shop-hero-title">'+escapeHtml(col.name)+'</div><div class="shop-hero-sub">'+escapeHtml(col.subtitle)+'</div><button class="shop-hero-btn" onclick="shopShowCollection(\''+col.cat+'\')">Ver colección</button></div>';
   setTimeout(function(){ if(el) el.style.opacity='1'; }, 40);
 }
 function renderNewShop(){
   renderShopHero();
-  filterShopCategory((window._shopCat && window._shopCat.indexOf('collection:')!==0) ? window._shopCat : 'all');
+  filterShopCategory(window._shopCat || 'fondos');
   if(window._shopHeroTimer) clearInterval(window._shopHeroTimer);
   window._shopHeroTimer = setInterval(function(){
     if(!document.getElementById('shopHeroBanner') || (typeof currentPanel!=='undefined' && currentPanel!=='tienda')){ clearInterval(window._shopHeroTimer); window._shopHeroTimer=null; return; }

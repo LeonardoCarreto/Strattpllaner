@@ -12017,6 +12017,31 @@ const FEATURED_SHOP = {
 };
 window._shopItemRef = function(cat, id){ var a=(SHOP_ITEMS[cat]||[]); for(var i=0;i<a.length;i++){ if(a[i].id===id) return a[i]; } return null; };
 window.shopBadgeInfo = function(id){ var b=window._shopItemRef('badges',id); if(b && typeof showToast==='function') showToast('🏆 '+b.name+': '+b.desc); };
+function claimOG(){
+  var og = window._shopItemRef('badges','b11'); if(!og) return;
+  if(og.owned){ if(typeof showToast==='function') showToast('Ya tienes el badge OG ✓'); return; }
+  og.owned = true;
+  try{ if(typeof xp!=='undefined'){ xp += 15; if(typeof updateXP==='function') updateXP(); } }catch(e){}
+  try{ if(typeof saveAccount==='function') saveAccount(); }catch(e){}
+  try{ if(typeof launchConfetti==='function') launchConfetti(window.innerWidth/2, window.innerHeight/2, {count:40,dist:200,dur:2.2}); }catch(e){}
+  if(typeof showToast==='function') showToast('🎉 ¡Badge OG reclamado!');
+  renderShopGrid('badges');
+}
+window.claimOG = claimOG;
+function shopOGClaimCard(){
+  var og = window._shopItemRef('badges','b11'); var owned = og && og.owned;
+  var btn = owned
+    ? '<div style="margin-top:9px;display:inline-block;background:rgba(94,220,138,.2);color:var(--green);font-size:12px;font-weight:900;padding:7px 16px;border-radius:18px;">✓ Reclamado</div>'
+    : '<div style="margin-top:9px;display:inline-block;background:linear-gradient(90deg,#ffd700,#fff7c0,#ffd700);background-size:220% 100%;color:#1a1500;font-size:12.5px;font-weight:900;padding:9px 20px;border-radius:18px;box-shadow:0 4px 14px rgba(240,192,64,.4);animation:ogClaimBtn 2.4s linear infinite;">🎁 Reclamar gratis</div>';
+  return '<div class="shop-og-claim"'+(owned?'':' onclick="claimOG()" style="cursor:pointer;"')+'>'
+    + '<div class="shop-og-shine"></div>'
+    + '<div class="shop-og-badge"><div class="og-badge-glow"></div><span class="og-badge-text" style="font-size:42px;">OG</span></div>'
+    + '<div style="flex:1;min-width:0;position:relative;z-index:2;">'
+    +   '<div style="color:#fff;font-size:17px;font-weight:900;font-family:\'Baloo Bhaijaan 2\',cursive;letter-spacing:.5px;">Badge OG</div>'
+    +   '<div style="color:rgba(255,255,255,.62);font-size:11px;margin-top:3px;line-height:1.45;">Exclusivo de los primeros usuarios. '+(owned?'¡Ya es tuyo!':'¡Reclámalo gratis ahora!')+'</div>'
+    +   btn
+    + '</div></div>';
+}
 function shopRarityOf(item){ if(item.rarity) return item.rarity; var p=item.price||0; if(p>=15000) return 'mítico'; if(p>=1000) return 'legendario'; if(p>=280) return 'épico'; if(p>=160) return 'raro'; return 'común'; }
 function shopRarKey(r){ return r==='común'?'comun':(r==='épico'?'epico':(r==='mítico'?'mitico':r)); }
 function shopBadgeBuyable(b){ return !b.ceo && !b.gang && !b.gymbro && !b.luck && !b.top1 && !b.streakRequired; }
@@ -12049,11 +12074,12 @@ function renderShopGrid(cat){
   if(!grid) return;
   if(cat!=='fondos'&&cat!=='badges'&&cat!=='poderes') cat='fondos';
   window._shopCat = cat;
-  var pairs=[], titleTxt='Fondos';
+  var pairs=[], titleTxt='Fondos', prefix='';
   if(cat==='fondos'){ titleTxt='Fondos'; (SHOP_ITEMS.temas||[]).forEach(function(it){ pairs.push({item:it,cat:'temas'}); }); }
-  else if(cat==='badges'){ titleTxt='Insignias'; (SHOP_ITEMS.badges||[]).forEach(function(it){ if(shopBadgeBuyable(it)) pairs.push({item:it,cat:'badges'}); }); }
+  else if(cat==='badges'){ titleTxt='Insignias'; prefix=shopOGClaimCard(); (SHOP_ITEMS.badges||[]).forEach(function(it){ if(it.id!=='b11' && shopBadgeBuyable(it)) pairs.push({item:it,cat:'badges'}); }); }
   else if(cat==='poderes'){ titleTxt='Poderes'; (SHOP_ITEMS.poderes||[]).forEach(function(it){ pairs.push({item:it,cat:'poderes'}); }); }
-  var html = pairs.map(function(p){ return renderShopItemCard(p.item,p.cat); }).join('') || '<div style="grid-column:1/-1;color:rgba(255,255,255,.3);text-align:center;padding:30px;">Nada por aquí aún</div>';
+  var html = prefix + pairs.map(function(p){ return renderShopItemCard(p.item,p.cat); }).join('');
+  if(!html) html='<div style="grid-column:1/-1;color:rgba(255,255,255,.3);text-align:center;padding:30px;">Nada por aquí aún</div>';
   grid.className = 'shop-items-grid';
   grid.style.animation='none'; grid.offsetHeight; grid.style.animation='shopGridIn .28s ease';
   grid.innerHTML = html;
@@ -12114,6 +12140,10 @@ window.renderNewShop = renderNewShop;
 .shop-item-card:hover{transform:translateY(-4px);box-shadow:0 12px 30px rgba(0,0,0,.4);}
 .shop-item-card.r-comun{border-color:rgba(150,160,170,.4);}
 .shop-item-card.shop-locked .shop-item-art{opacity:.5;}
+.shop-og-claim{grid-column:1/-1;position:relative;overflow:hidden;border-radius:18px;padding:18px;display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,#2a1f44,#0c0e14);border:2px solid #f0c040;box-shadow:0 0 26px rgba(240,192,64,.32);margin-bottom:4px;}
+.shop-og-badge{position:relative;width:74px;height:74px;display:flex;align-items:center;justify-content:center;flex-shrink:0;z-index:2;}
+.shop-og-shine{position:absolute;inset:0;background:linear-gradient(115deg,transparent 38%,rgba(255,255,255,.16) 50%,transparent 62%);transform:translateX(-130%);animation:shopShine 3s ease-in-out infinite;pointer-events:none;z-index:1;}
+@keyframes ogClaimBtn{to{background-position:220% 0;}}
 .shop-item-card.r-raro{border-color:rgba(58,133,196,.6);}
 .shop-item-card.r-epico{border-color:rgba(167,139,250,.65);}
 .shop-item-card.r-legendario{border-color:rgba(240,192,64,.85);animation:shopLegGlow 2s ease-in-out infinite;}

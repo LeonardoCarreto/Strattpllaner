@@ -793,7 +793,8 @@ Enviar instrucciones <span class="splash-btn-icon">📨</span>
     <div style="display:flex;align-items:center;gap:6px;">
       <div class="tasks-below-title">📌 Tareas <span id="tasksHomeCount" style="background:rgba(0,212,255,.25);color:#00d4ff;border-radius:20px;padding:1px 7px;font-size:10px;display:none;"></span></div>
     </div>
-    <div style="display:flex;gap:5px;align-items:center;">
+    <div style="display:flex;gap:6px;align-items:center;">
+      <div onclick="toggleAIDebug()" title="Ver análisis IA" style="width:26px;height:26px;border-radius:50%;background:#1a1a2e;border:1.5px solid #3a85c4;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">🤖</div>
       <div class="tasks-add-btn" onclick="openAddTaskModalFromHome()">+</div>
     </div>
   </div>
@@ -11215,7 +11216,7 @@ function _aiDebugAddEntry(entry) {
   </div>
 </div>
 
-<button id="ai-debug-trigger" onclick="toggleAIDebug()" style="position:fixed;bottom:90px;right:14px;z-index:9997;width:44px;height:44px;border-radius:50%;background:#1a1a2e;border:2px solid #3a85c4;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.5);transition:transform .2s;" title="Ver análisis IA">🤖</button>
+<button id="ai-debug-trigger" onclick="toggleAIDebug()" style="display:none;position:fixed;bottom:90px;right:14px;z-index:9997;width:44px;height:44px;border-radius:50%;background:#1a1a2e;border:2px solid #3a85c4;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.5);transition:transform .2s;" title="Ver análisis IA">🤖</button>
 
 <script id="sfx-system">
 

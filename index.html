@@ -5594,15 +5594,15 @@ badges: [
 { id:'b2',  name:'Disciplinado', desc:'7 días de racha consecutiva',        emoji:'📐', price:0,   owned:false, og:false, ceo:false },
 { id:'b3',  name:'Constante',    desc:'Completa 20 tareas en total',        emoji:'🔄', price:0,   owned:false, og:false, ceo:false },
 { id:'b4',  name:'Apasionado',   desc:'Usa la app 5 días seguidos',         emoji:'❤️‍🔥', price:0,  owned:false, og:false, ceo:false },
-{ id:'b5',  name:'Estrella',     desc:'Alcanza 200 XP',                     emoji:'⭐', price:0,   owned:false, og:false, ceo:false },
-{ id:'b6',  name:'Genio',        desc:'Completa todas las secciones',       emoji:'🧠', price:0,   owned:false, og:false, ceo:false },
+{ id:'b5',  name:'Estrella',     desc:'Alcanza 200 XP',                     emoji:'⭐', price:0, rarity:'poco común',   owned:false, og:false, ceo:false },
+{ id:'b6',  name:'Genio',        desc:'Completa todas las secciones',       emoji:'🧠', price:0, rarity:'poco común',   owned:false, og:false, ceo:false },
 { id:'b7',  name:'Prodigio',     desc:'Alcanza el nivel 10',                emoji:'🚀', price:280,  owned:false, og:false, ceo:false },
-{ id:'b8',  name:'GOAT',         desc:'30 días de racha legendaria',        emoji:'🐐', price:450,  owned:false, og:false, ceo:false },
-{ id:'b9',  name:'Leyenda',      desc:'500 XP acumulados',                  emoji:'🏆', price:600,  owned:false, og:false, ceo:false },
+{ id:'b8',  name:'GOAT',         desc:'30 días de racha legendaria',        emoji:'🐐', price:3000, rarity:'mítico',  owned:false, og:false, ceo:false },
+{ id:'b9',  name:'Leyenda',      desc:'500 XP acumulados',                  emoji:'🏆', price:1200, rarity:'legendario',  owned:false, og:false, ceo:false },
 { id:'b10', name:'Irreal',       desc:'El badge casi imposible de obtener', emoji:'👁️', price:1500, owned:false, og:false, ceo:false },
 { id:'b11', name:'OG',           desc:'Exclusivo para los primeros usuarios', emoji:'OG', price:500, owned:false, og:true,  ceo:false, gang:false },
 { id:'b12', name:'CEO',          desc:'Inalcanzable. Solo existe en las leyendas.', emoji:'CEO', price:0, owned:false, og:false, ceo:true, gang:false },
-{ id:'b14', name:'Obsesión',     desc:'Para los obsesionados con el progreso.', emoji:'🩸', price:100000, owned:false, og:false, ceo:false, gang:false, mystery:true },
+{ id:'b14', name:'Obsesión',     desc:'Para los obsesionados con el progreso.', emoji:'🩸', price:100000, rarity:'secreto', owned:false, og:false, ceo:false, gang:false, mystery:true },
 { id:'b15', name:'Duo?',         desc:'100 días de racha. ¿Quién te acompaña?', emoji:'🦉', price:0, owned:false, og:false, ceo:false, gang:false, streakRequired:100 },
 { id:'b16', name:'GymBros',      desc:'Asigna a alguien como tu GymBro.', emoji:'💪', price:0, owned:false, og:false, ceo:false, gang:false, gymbro:true },
 { id:'b17', name:'Luck', desc:'Obtenido en la Ruleta de la Suerte.', emoji:'🍀', price:0, owned:false, og:false, ceo:false, gang:false, luck:true, roulette:true },
@@ -11958,7 +11958,7 @@ function shopOGClaimCard(){
 function renderOGPromo(){ var el=document.getElementById('shopOGPromo'); if(!el) return; el.innerHTML = shopOGClaimCard(); }
 window.renderOGPromo=renderOGPromo;
 function shopRarityOf(item){ if(item.rarity) return item.rarity; var p=item.price||0; if(p>=15000) return 'mítico'; if(p>=1000) return 'legendario'; if(p>=280) return 'épico'; if(p>=160) return 'raro'; return 'común'; }
-function shopRarKey(r){ return r==='común'?'comun':(r==='épico'?'epico':(r==='mítico'?'mitico':r)); }
+function shopRarKey(r){ return r==='común'?'comun':(r==='épico'?'epico':(r==='mítico'?'mitico':(r==='poco común'?'pococomun':(r==='secreto'?'secreto':r)))); }
 function shopBadgeBuyable(b){ return !b.ceo && !b.gang && !b.gymbro && !b.luck && !b.top1 && !b.streakRequired; }
 function shopBadgeVisual(item){
   if(item.ceo) return '<div class="profile-active-badge ceo-active" style="display:inline-flex;"><span class="ceo-badge-text" style="font-size:17px;letter-spacing:1px;">CEO</span></div>';
@@ -11973,6 +11973,8 @@ function shopBadgeVisual(item){
     var h=0,id=item.id||''; for(var k=0;k<id.length;k++) h+=id.charCodeAt(k); var c=P[h%P.length];
     return '<div class="profile-active-badge" style="display:inline-flex;background:'+c[1]+';border:1.5px solid '+c[2]+';box-shadow:0 0 10px '+c[1]+';"><span style="font-size:12.5px;font-weight:800;color:'+c[0]+';">'+(item.emoji||'')+' '+escapeHtml(item.name)+'</span></div>';
   }
+  if(rar==='mítico') return '<div class="profile-active-badge shop-badge-mythic" style="display:inline-flex;"><span style="font-size:13px;font-weight:900;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.55);">'+(item.emoji||'')+' '+escapeHtml(item.name)+'</span></div>';
+  if(rar==='poco común') return '<div class="profile-active-badge" style="display:inline-flex;background:rgba(125,211,252,.16);border:1.5px solid #7dd3fc;box-shadow:0 0 9px rgba(125,211,252,.4);"><span style="font-size:12.5px;font-weight:800;color:#bae6fd;">'+(item.emoji||'')+' '+escapeHtml(item.name)+'</span></div>';
   return '<div class="profile-active-badge" style="display:inline-flex;max-width:100px;overflow:hidden;white-space:nowrap;"><span style="font-size:12.5px;font-weight:800;">'+(item.emoji||'🏅')+' '+escapeHtml(item.name)+'</span></div>';
 }
 function shopItemArt(item, cat){
@@ -12100,9 +12102,13 @@ window.renderNewShop = renderNewShop;
 .shop-item-card{background:var(--navy-mid);border-radius:16px;overflow:hidden;border:1.5px solid rgba(255,255,255,.07);cursor:pointer;transition:transform .2s,box-shadow .2s;position:relative;display:flex;flex-direction:column;}
 .shop-item-card:hover{transform:translateY(-4px);box-shadow:0 12px 30px rgba(0,0,0,.4);}
 .shop-item-card.r-comun{border-color:rgba(150,160,170,.4);}
+.shop-item-card.r-pococomun{border-color:rgba(125,211,252,.6);}
+.shop-item-card.r-secreto{border-color:#c01818;box-shadow:0 0 14px rgba(200,20,20,.4);animation:shopObsesion 1.8s ease-in-out infinite;}
 .shop-item-card.shop-locked .shop-item-art{opacity:.5;}
 .shop-badge-legend{background:linear-gradient(90deg,rgba(240,192,64,.22),rgba(255,225,120,.5),rgba(240,192,64,.22)) !important;background-size:200% 100% !important;border:1.5px solid #f0c040 !important;box-shadow:0 0 12px rgba(240,192,64,.55) !important;animation:shopLegendChip 2.4s linear infinite;}
 @keyframes shopLegendChip{to{background-position:200% 0;}}
+.shop-badge-mythic{background:linear-gradient(90deg,#ff3c78,#b450ff,#ff8a20,#ff3c78) !important;background-size:300% 100% !important;border:1.5px solid #d46bff !important;box-shadow:0 0 14px rgba(180,80,255,.6) !important;animation:shopMythicChip 3s linear infinite;}
+@keyframes shopMythicChip{to{background-position:300% 0;}}
 .shop-badge-obsesion{background:linear-gradient(135deg,#2a0000,#7a0a0a) !important;border:1.5px solid #c01818 !important;animation:shopObsesion 1.8s ease-in-out infinite;}
 @keyframes shopObsesion{0%,100%{box-shadow:0 0 10px rgba(200,20,20,.5);}50%{box-shadow:0 0 22px rgba(255,30,30,.9);}}
 .shop-og-claim{position:relative;overflow:hidden;border-radius:18px;padding:16px 18px;display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,#2a1f44,#0c0e14);border:2px solid #f0c040;box-shadow:0 0 26px rgba(240,192,64,.32);margin-bottom:12px;}
@@ -12124,6 +12130,8 @@ window.renderNewShop = renderNewShop;
 .shop-badge-new{position:absolute;top:8px;left:8px;background:var(--teal);color:#fff;font-size:9px;font-weight:900;padding:3px 8px;border-radius:8px;z-index:2;letter-spacing:.3px;}
 .shop-badge-rarity{position:absolute;top:8px;right:8px;font-size:8px;font-weight:900;padding:3px 7px;border-radius:8px;z-index:2;text-transform:uppercase;letter-spacing:.4px;}
 .rb-comun{background:rgba(150,160,170,.28);color:#cdd5dd;}
+.rb-pococomun{background:rgba(125,211,252,.25);color:#7dd3fc;}
+.rb-secreto{background:rgba(200,20,20,.3);color:#ff6b6b;}
 .rb-raro{background:rgba(58,133,196,.3);color:#9fd0f5;}
 .rb-epico{background:rgba(167,139,250,.3);color:#d6c8ff;}
 .rb-legendario{background:rgba(240,192,64,.3);color:#ffd980;}

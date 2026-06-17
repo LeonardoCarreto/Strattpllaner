@@ -2314,7 +2314,7 @@ const el = document.getElementById(id); if(el) el.textContent = regData.displayN
 const el = document.getElementById(id); if(el) el.textContent = regData.avatar;
 });
 launchConfetti(window.innerWidth/2, window.innerHeight/2);
-showToast('¡Bienvenido, ' + regData.displayName + '! 🎉');
+showToast('¡Bienvenido, ' + escapeHtml(regData.displayName) + '! 🎉');
 applyAdminPrivileges();
 } catch(e) {
 let msg = 'Error al crear cuenta';
@@ -2461,7 +2461,7 @@ async function handleGoogleUser(user) {
     regData.email = user.email;
     restoreSaveData(snap.data());
     applyAdminPrivileges();
-    showToast('¡Hola de nuevo, ' + (snap.data().displayName || user.displayName) + '! 👋');
+    showToast('¡Hola de nuevo, ' + escapeHtml(snap.data().displayName || user.displayName) + '! 👋');
     setTimeout(() => enterAppFromSplash(), 900);
   } else {
 
@@ -6753,7 +6753,7 @@ card.innerHTML = `
 <div class="rutina-ex-icon" style="${ex.sport ? 'background:rgba(42,170,100,.12);' : ''}">${ex.icon || '🏋️'}</div>
 <div class="rutina-ex-info">
 <div class="rutina-ex-name${isDone?' crossed':''}">
-  ${ex.name}
+  ${escapeHtml(ex.name)}
   ${ex.sport ? '<span style="background:rgba(42,170,100,.2);color:#2adb80;border-radius:6px;padding:1px 5px;font-size:8px;font-weight:800;margin-left:4px;vertical-align:middle;">DEPORTE</span>' : ''}
 </div>
 <div class="rutina-ex-detail">${ex.sport ? '🕐 ' : ''}${ex.series}</div>
@@ -8131,7 +8131,7 @@ function copyMyTag() {
 const tag = getMyTag();
 if (!tag) { showToast('⚠️ Inicia sesión primero'); return; }
 navigator.clipboard?.writeText(tag).catch(() => {});
-showToast(`📋 Código copiado: ${tag}`);
+showToast(`📋 Código copiado: ${escapeHtml(tag)}`);
 const btn = document.getElementById('socPlayerCard')?.querySelector('.soc-copy-btn');
 if (btn) {
 btn.textContent = '✓';
@@ -8156,7 +8156,7 @@ if (!uid) {
 tagEl.textContent = 'Inicia sesión para ver tu código';
 } else {
 const tag = getMyTag();
-tagEl.innerHTML = `🎮 ${tag}`;
+tagEl.textContent = `🎮 ${tag}`;
 tagEl.title = 'Toca para copiar';
 tagEl.onclick = copyMyTag;
 }
@@ -8286,7 +8286,7 @@ uid:    toUid,
 sentAt: serverTimestamp()
 });
 if (btn) { btn.className = 'soc-req-btn sent'; btn.textContent = '⏳ Solicitud enviada'; btn.disabled = true; }
-showToast(`📨 ¡Solicitud enviada a ${toName}!`);
+showToast(`📨 ¡Solicitud enviada a ${escapeHtml(toName)}!`);
 } catch(e) {
 console.error('sendRequest error:', e);
 if (btn) { btn.disabled = false; btn.textContent = '➕ Agregar amigo'; }
@@ -10395,7 +10395,7 @@ const pctColor = p => p>=80?'#4ade80':p>=50?'#fbbf24':'#f87171';
 const cards = gymbros.map((g,i) => {
 const c = pctColor(g.pct);
 const act = g.hasThisWeek ? 'Esta semana' : 'Sin actividad reciente';
-return '<div onclick="showGymbrosDetail('+i+')" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:background .15s;" onmouseenter="this.style.background=\'rgba(255,255,255,.08)\'" onmouseleave="this.style.background=\'rgba(255,255,255,.04)\'">'+streakAvImg(40, g)+'<div style="flex:1;min-width:0;"><div style="color:#fff;font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+g.displayName+'</div><div style="color:rgba(255,255,255,.35);font-size:10px;margin-top:2px;">Última actividad: '+act+'</div></div><div style="color:'+c+';font-size:18px;font-weight:900;flex-shrink:0;">'+g.pct+'%<span style="font-size:12px;margin-left:2px;">💪</span></div></div>';
+return '<div onclick="showGymbrosDetail('+i+')" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:background .15s;" onmouseenter="this.style.background=\'rgba(255,255,255,.08)\'" onmouseleave="this.style.background=\'rgba(255,255,255,.04)\'">'+streakAvImg(40, g)+'<div style="flex:1;min-width:0;"><div style="color:#fff;font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escapeHtml(g.displayName)+'</div><div style="color:rgba(255,255,255,.35);font-size:10px;margin-top:2px;">Última actividad: '+act+'</div></div><div style="color:'+c+';font-size:18px;font-weight:900;flex-shrink:0;">'+g.pct+'%<span style="font-size:12px;margin-left:2px;">💪</span></div></div>';
 }).join('');
 container.innerHTML = '<div style="padding:12px;display:flex;flex-direction:column;gap:8px;"><div style="color:rgba(255,255,255,.4);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Amigos entrenando — semana actual</div>'+cards+'</div>';
 } catch(e) {
@@ -10417,7 +10417,7 @@ try { rutinaArr = JSON.parse(g.rutinaData); } catch(e) {}
 const dayBlocks = rutinaArr.map(d => {
 if (d.rest) return '<div style="background:rgba(255,255,255,.03);border-radius:10px;padding:10px 12px;"><div style="color:rgba(255,255,255,.4);font-size:11px;font-weight:800;">'+(d.label||d.day)+'</div><div style="color:rgba(255,255,255,.25);font-size:12px;margin-top:4px;">🛌 Descanso</div></div>';
 if (!d.exercises || !d.exercises.length) return '';
-const exList = d.exercises.map(ex => '<div style="display:flex;align-items:center;gap:8px;padding:3px 0;"><span style="font-size:11px;opacity:.45;">⬜</span><span style="color:rgba(255,255,255,.8);font-size:12px;">'+(ex.name||ex)+'</span></div>').join('');
+const exList = d.exercises.map(ex => '<div style="display:flex;align-items:center;gap:8px;padding:3px 0;"><span style="font-size:11px;opacity:.45;">⬜</span><span style="color:rgba(255,255,255,.8);font-size:12px;">'+escapeHtml(ex.name||ex)+'</span></div>').join('');
 return '<div style="background:rgba(255,255,255,.03);border-radius:10px;padding:10px 12px;"><div style="color:rgba(255,255,255,.55);font-size:11px;font-weight:800;margin-bottom:6px;">'+(d.label||d.day)+'</div>'+exList+'</div>';
 }).filter(Boolean).join('');
 const cvId = 'gbRadar'+Date.now();
@@ -10426,7 +10426,7 @@ container.innerHTML =
 +'<div style="display:flex;align-items:center;gap:10px;">'
 +'<div onclick="renderGymbros()" style="background:rgba(255,255,255,.08);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:800;cursor:pointer;color:rgba(255,255,255,.7);flex-shrink:0;touch-action:manipulation;">← Volver</div>'
 +''+streakAvImg(40, g)+''
-+'<div style="flex:1;min-width:0;"><div style="color:#fff;font-size:15px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+g.displayName+'</div></div>'
++'<div style="flex:1;min-width:0;"><div style="color:#fff;font-size:15px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escapeHtml(g.displayName)+'</div></div>'
 +'<div style="color:'+c+';font-size:22px;font-weight:900;flex-shrink:0;">'+g.pct+'%</div>'
 +'</div>'
 +'<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:14px;">'
@@ -11072,16 +11072,16 @@ function _aiDebugAddEntry(entry) {
     </div>
     <div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:4px;">
       <span style="color:rgba(255,255,255,.35);font-size:9px;font-weight:700;text-transform:uppercase;min-width:40px;padding-top:1px;">Tarea</span>
-      <span style="color:rgba(255,255,255,.8);font-weight:700;flex:1;">${entry.taskName || entry.exName || '—'}</span>
+      <span style="color:rgba(255,255,255,.8);font-weight:700;flex:1;">${escapeHtml(entry.taskName || entry.exName || '—')}</span>
     </div>
-    ${entry.context ? `<div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:4px;"><span style="color:rgba(255,255,255,.35);font-size:9px;font-weight:700;text-transform:uppercase;min-width:40px;padding-top:1px;">Desc.</span><span style="color:rgba(255,255,255,.5);flex:1;font-style:italic;">"${entry.context}"</span></div>` : ''}
+    ${entry.context ? `<div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:4px;"><span style="color:rgba(255,255,255,.35);font-size:9px;font-weight:700;text-transform:uppercase;min-width:40px;padding-top:1px;">Desc.</span><span style="color:rgba(255,255,255,.5);flex:1;font-style:italic;">"${escapeHtml(entry.context)}"</span></div>` : ''}
     <div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:${entry.detalles ? '4px' : '0'};">
       <span style="color:rgba(255,255,255,.35);font-size:9px;font-weight:700;text-transform:uppercase;min-width:40px;padding-top:1px;">IA dijo</span>
-      <span style="color:#fff;font-weight:700;flex:1;">${entry.mensaje || entry.rawText || '—'}</span>
+      <span style="color:#fff;font-weight:700;flex:1;">${escapeHtml(entry.mensaje || entry.rawText || '—')}</span>
     </div>
-    ${entry.detalles ? `<div style="display:flex;align-items:flex-start;gap:6px;"><span style="color:rgba(255,255,255,.35);font-size:9px;font-weight:700;text-transform:uppercase;min-width:40px;padding-top:1px;">Detalle</span><span style="color:rgba(255,255,255,.5);flex:1;">${entry.detalles}</span></div>` : ''}
+    ${entry.detalles ? `<div style="display:flex;align-items:flex-start;gap:6px;"><span style="color:rgba(255,255,255,.35);font-size:9px;font-weight:700;text-transform:uppercase;min-width:40px;padding-top:1px;">Detalle</span><span style="color:rgba(255,255,255,.5);flex:1;">${escapeHtml(entry.detalles)}</span></div>` : ''}
     ${entry.rawText && !entry.mensaje ? '' : entry.rawText ? `<details style="margin-top:6px;"><summary style="color:rgba(255,255,255,.25);font-size:9px;cursor:pointer;">Ver respuesta cruda</summary><pre style="color:rgba(255,255,255,.4);font-size:9px;margin-top:4px;white-space:pre-wrap;word-break:break-all;background:rgba(255,255,255,.04);padding:6px;border-radius:6px;overflow:auto;max-height:120px;">${entry.rawText.replace(/</g,'&lt;')}</pre></details>` : ''}
-    ${entry.error ? `<div style="color:#e8527a;font-size:10px;margin-top:4px;font-weight:700;">Error: ${entry.errorMsg || 'desconocido'}</div>` : ''}
+    ${entry.error ? `<div style="color:#e8527a;font-size:10px;margin-top:4px;font-weight:700;">Error: ${escapeHtml(entry.errorMsg || 'desconocido')}</div>` : ''}
   `;
   log.prepend(card);
   _aiDebugUpdateStats();

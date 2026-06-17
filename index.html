@@ -12108,20 +12108,28 @@ function renderShopHero(){
   if(window._shopHeroIdx===undefined) window._shopHeroIdx = Math.floor(Date.now()/86400000) % cols.length;
   var col = cols[window._shopHeroIdx % cols.length];
   el.style.background = col.gradient; el.style.opacity='0';
+  var _dn=cols.map(function(c,i){return '<span class="shop-hero-dot'+(i===(window._shopHeroIdx%cols.length)?' active':'')+'"></span>';}).join('');
   el.innerHTML = '<div class="shop-hero-art">'+col.art+'</div>'
-    + '<div class="shop-hero-text"><div class="shop-hero-title">'+escapeHtml(col.name)+'</div><div class="shop-hero-sub">'+escapeHtml(col.subtitle)+'</div><button class="shop-hero-btn" onclick="shopShowCollection(\''+col.cat+'\')">Ver colección</button></div>';
+    + '<button class="shop-hero-nav left" onclick="shopHeroNav(-1,event)">‹</button><button class="shop-hero-nav right" onclick="shopHeroNav(1,event)">›</button>'
+    + '<div class="shop-hero-text"><div class="shop-hero-title">'+escapeHtml(col.name)+'</div><div class="shop-hero-sub">'+escapeHtml(col.subtitle)+'</div><button class="shop-hero-btn" onclick="shopShowCollection(\''+col.cat+'\')">Ver colección</button></div>'
+    + '<div class="shop-hero-dots">'+_dn+'</div>';
   setTimeout(function(){ if(el) el.style.opacity='1'; }, 40);
 }
+function shopStartHeroTimer(){
+  if(window._shopHeroTimer) clearInterval(window._shopHeroTimer);
+  window._shopHeroTimer = setInterval(function(){
+    if(!document.getElementById('shopHeroBanner') || (typeof currentPanel!=='undefined' && currentPanel!=='tienda')){ clearInterval(window._shopHeroTimer); window._shopHeroTimer=null; return; }
+    window._shopHeroIdx = ((window._shopHeroIdx||0)+1) % FEATURED_SHOP.collections.length;
+    renderShopHero();
+  }, 30000);
+}
+function shopHeroNav(d, e){ if(e){ e.stopPropagation(); } var L=FEATURED_SHOP.collections.length; if(window._shopHeroIdx===undefined) window._shopHeroIdx=0; window._shopHeroIdx=(window._shopHeroIdx+d+L)%L; renderShopHero(); shopStartHeroTimer(); }
+window.shopHeroNav = shopHeroNav;
 function renderNewShop(){
   renderShopHero();
   renderOGPromo();
   filterShopCategory(window._shopCat || 'fondos');
-  if(window._shopHeroTimer) clearInterval(window._shopHeroTimer);
-  window._shopHeroTimer = setInterval(function(){
-    if(!document.getElementById('shopHeroBanner') || (typeof currentPanel!=='undefined' && currentPanel!=='tienda')){ clearInterval(window._shopHeroTimer); window._shopHeroTimer=null; return; }
-    window._shopHeroIdx = (window._shopHeroIdx+1) % FEATURED_SHOP.collections.length;
-    renderShopHero();
-  }, 30000);
+  shopStartHeroTimer();
 }
 window.renderNewShop = renderNewShop;
 
@@ -12133,6 +12141,13 @@ window.renderNewShop = renderNewShop;
 .shop-hero-title{color:#fff;font-size:25px;font-weight:900;font-family:'Baloo Bhaijaan 2',cursive;line-height:1.05;text-shadow:0 2px 8px rgba(0,0,0,.55);}
 .shop-hero-sub{color:rgba(255,255,255,.82);font-size:11px;font-weight:600;margin-top:5px;text-shadow:0 1px 4px rgba(0,0,0,.5);}
 .shop-hero-btn{margin-top:13px;background:#fff;color:#111;border:none;border-radius:20px;padding:9px 20px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(0,0,0,.35);}
+.shop-hero-nav{position:absolute;top:50%;transform:translateY(-50%);z-index:5;width:30px;height:30px;border-radius:50%;border:1.5px solid rgba(255,255,255,.25);background:rgba(0,0,0,.4);color:#fff;font-size:20px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0 0 2px;backdrop-filter:blur(3px);transition:background .15s;}
+.shop-hero-nav:hover{background:rgba(0,0,0,.6);}
+.shop-hero-nav.left{left:8px;}
+.shop-hero-nav.right{right:8px;}
+.shop-hero-dots{position:absolute;bottom:9px;left:0;right:0;display:flex;justify-content:center;gap:6px;z-index:5;}
+.shop-hero-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.4);transition:all .25s;}
+.shop-hero-dot.active{background:#fff;width:18px;border-radius:4px;}
 .shop-category-chips{display:flex;gap:8px;padding:0 14px 14px;overflow-x:auto;scrollbar-width:none;}
 .shop-category-chips::-webkit-scrollbar{display:none;}
 .scc-chip{flex-shrink:0;padding:8px 14px;border-radius:12px;border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:rgba(255,255,255,.55);font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap;}

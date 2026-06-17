@@ -1616,24 +1616,20 @@ touch-action:manipulation;
 </div>
 </div>
 </div>
-<div class="panel-content" style="gap:12px;">
-<div class="shop-coin-header">
-<div class="shop-coin-left">
-<div class="shop-coin-big"><span class="coin-custom"></span></div>
-<div class="shop-coin-info">
-<strong id="shopCoinBig">0</strong>
-<span>Strattcoin disponibles</span>
+<div class="panel-content" id="shopMainContent" style="padding:0;gap:0;overflow-y:auto;">
+<strong id="shopCoinBig" style="display:none;">0</strong>
+<div id="shopHeroBanner" class="shop-hero-banner"></div>
+<div class="shop-category-chips" id="shopCategoryChips">
+<button class="scc-chip active" onclick="filterShopCategory('all')">📦 Novedades</button>
+<button class="scc-chip" onclick="filterShopCategory('popular')">⭐ Más populares</button>
+<button class="scc-chip" onclick="filterShopCategory('exclusive')">💎 Exclusivos</button>
+<button class="scc-chip" onclick="filterShopCategory('rewards')">🎁 Recompensas</button>
 </div>
+<div class="shop-section" id="shopSectionMain">
+<div class="shop-section-title" id="shopGridTitle">Novedades</div>
+<div class="shop-items-grid" id="shopGrid"></div>
 </div>
-<button class="shop-earn-btn" onclick="showEarnInfo()">¿Cómo ganar?</button>
-</div>
-<div class="shop-tabs" id="shopTabs">
-<div class="shop-tab active" onclick="switchShopTab(0,this)"><span class="st-icon">🎨</span>Temas</div>
-<div class="shop-tab" onclick="switchShopTab(1,this)"><span class="st-icon">🧑‍🎤</span>Avatares</div>
-<div class="shop-tab" onclick="switchShopTab(2,this)"><span class="st-icon">⚡</span>Poderes</div>
-<div class="shop-tab" onclick="switchShopTab(3,this)"><span class="st-icon">🏅</span>Badges</div>
-</div>
-<div id="shopTabContent"></div>
+<div style="height:28px;"></div>
 </div>
 </div>
 <div class="panel" id="panel-ruleta">
@@ -5675,6 +5671,9 @@ avatares: [
 { id:'a18', name:'Astronauta VIP',desc:'Primera clase al infinito',      emoji:'👨‍🚀', price:300, owned:false },
 { id:'a19', name:'Fantasma',      desc:'Aquí pero no está',              emoji:'👻',   price:95,  owned:false },
 { id:'a20', name:'Diablo',        desc:'El más temible',                 emoji:'😈',   price:250, owned:false },
+{ id:'a_esqueleto_igneo', name:'Esqueleto Ígneo', desc:'Arde con poder infernal', emoji:'💀🔥', price:1200, owned:false, new:true, rarity:'épico' },
+{ id:'a_caballero_naufrago', name:'Caballero Náufrago', desc:'Sobreviviente de mil batallas', emoji:'⚔️🌊', price:1500, owned:false, new:true, rarity:'épico' },
+{ id:'a_guardian_astral', name:'Guardián Astral', desc:'Protector del cosmos', emoji:'🔮✨', price:2000, owned:false, new:true, rarity:'legendario' },
 ],
 poderes: [
 { id:'p1', name:'Escudo de Racha',  desc:'Protege tu racha 1 día si la rompes', emoji:'🛡️', price:450, qty:0, maxQty:5 },
@@ -5722,7 +5721,9 @@ el.classList.add('active');
 renderShopTab(idx);
 }
 function renderShopTab(idx) {
+if (typeof renderNewShop === 'function' && document.getElementById('shopGrid')) { try { renderNewShop(); } catch(e){} return; }
 const container = document.getElementById('shopTabContent');
+if (!container) return;
 container.innerHTML = '';
 const tabs = ['temas','avatares','poderes','badges'];
 const key  = tabs[idx];
@@ -12009,5 +12010,152 @@ function drawVsRadar(canvas, a, b){
 })();
 
 </script>
+<script>
+/* ===== Tienda rediseñada (Featured Shop) — solo UI, no toca compra ===== */
+const FEATURED_SHOP = {
+  rotationDays: 3,
+  collections: [
+    { id:'destacada', name:'Colección Destacada', subtitle:'"Contenido nuevo seleccionado para ti."', gradient:'linear-gradient(135deg,#243447,#0c0e14)', art:'✨', items:['a_esqueleto_igneo','a_caballero_naufrago','a_guardian_astral'] },
+    { id:'fuego', name:'Colección Ígnea', subtitle:'"Arde más que todos."', gradient:'linear-gradient(135deg,#1a0500,#8B1A00)', art:'🔥', items:['a_esqueleto_igneo','a6','a14'] },
+    { id:'astral', name:'Colección Astral', subtitle:'"Protector del cosmos."', gradient:'linear-gradient(135deg,#0a0a2e,#3b2b8b)', art:'🔮', items:['a_guardian_astral','a8','a4'] },
+  ]
+};
+window._shopItemRef = function(cat, id){ var a=(SHOP_ITEMS[cat]||[]); for(var i=0;i<a.length;i++){ if(a[i].id===id) return a[i]; } return null; };
+function shopRarityOf(item){
+  if(item.rarity) return item.rarity;
+  var p = item.price||0;
+  if(p>=1000) return 'legendario';
+  if(p>=280) return 'épico';
+  if(p>=160) return 'raro';
+  return 'común';
+}
+function shopRarKey(r){ return r==='común'?'comun':(r==='épico'?'epico':r); }
+function shopBuyables(){
+  var out=[];
+  (SHOP_ITEMS.avatares||[]).forEach(function(it){ out.push({item:it,cat:'avatares'}); });
+  (SHOP_ITEMS.temas||[]).forEach(function(it){ out.push({item:it,cat:'temas'}); });
+  (SHOP_ITEMS.badges||[]).forEach(function(it){ if((it.price||0)>0 && !it.og && !it.ceo && !it.gang && !it.mystery && !it.gymbro && !it.luck && !it.top1 && !it.streakRequired) out.push({item:it,cat:'badges'}); });
+  return out;
+}
+function shopItemArt(item){ return item.img ? '<img src="'+item.img+'" alt="">' : '<span>'+(item.emoji||'❓')+'</span>'; }
+function renderShopItemCard(item, cat){
+  var rar = shopRarityOf(item), rk = shopRarKey(rar);
+  var owned = (cat==='temas') ? (item.owned||item.equipped) : item.owned;
+  var priceHTML = owned
+    ? '<span class="shop-item-price owned">✓ Tuyo</span>'
+    : (item.price===0 ? '<span class="shop-item-price">✓ Gratis</span>' : '<span class="shop-item-price"><span class="coin-custom" style="width:14px;height:14px;"></span> '+item.price+'</span>');
+  return '<div class="shop-item-card r-'+rk+'" onclick="openShopModal(window._shopItemRef(\''+cat+'\',\''+item.id+'\'),\''+cat+'\')">'
+    + (item.new?'<div class="shop-badge-new">Nuevo</div>':'')
+    + '<div class="shop-badge-rarity rb-'+rk+'">'+rar+'</div>'
+    + '<div class="shop-item-art">'+shopItemArt(item)+'</div>'
+    + '<div class="shop-item-footer"><div class="shop-item-name">'+escapeHtml(item.name)+'</div>'+priceHTML+'</div>'
+    + '</div>';
+}
+function shopPowerListHTML(){
+  var rows = (SHOP_ITEMS.poderes||[]).map(function(p){
+    var have = p.qty>0 ? ' · <span style="color:var(--green)">Tienes '+p.qty+'</span>' : '';
+    return '<div onclick="openShopModal(window._shopItemRef(\'poderes\',\''+p.id+'\'),\'poderes\')" style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid rgba(255,255,255,.06);cursor:pointer;">'
+      + '<div style="width:42px;height:42px;border-radius:11px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">'+(p.emoji||'⚡')+'</div>'
+      + '<div style="flex:1;min-width:0;"><div style="color:#fff;font-size:13px;font-weight:800;font-family:\'Baloo Bhaijaan 2\',cursive;">'+escapeHtml(p.name)+'</div><div style="color:rgba(255,255,255,.4);font-size:10px;margin-top:2px;line-height:1.4;">'+escapeHtml(p.desc)+have+'</div></div>'
+      + '<div style="flex-shrink:0;display:flex;align-items:center;gap:4px;color:var(--yellow);font-size:13px;font-weight:800;font-family:\'Baloo Bhaijaan 2\',cursive;"><span class="coin-custom" style="width:15px;height:15px;"></span>'+p.price+'</div>'
+      + '</div>';
+  }).join('');
+  return '<div style="background:#0d1117;border:1.5px solid rgba(255,255,255,.08);border-radius:16px;overflow:hidden;margin:0 14px;">'+rows+'</div>';
+}
+function renderShopGrid(cat){
+  var grid = document.getElementById('shopGrid'); var title = document.getElementById('shopGridTitle');
+  if(!grid) return;
+  window._shopCat = cat;
+  var html='', isList=false, titleTxt='Novedades';
+  if(cat==='rewards'){ titleTxt='Recompensas'; isList=true; html = shopPowerListHTML(); }
+  else if(cat && cat.indexOf('collection:')===0){
+    var col = FEATURED_SHOP.collections.find(function(c){return c.id===cat.split(':')[1];});
+    titleTxt = col?col.name:'Colección';
+    var picked=[]; (col?col.items:[]).forEach(function(id){ ['avatares','temas','badges'].forEach(function(c){ var it=window._shopItemRef(c,id); if(it) picked.push({item:it,cat:c}); }); });
+    html = picked.map(function(p){ return renderShopItemCard(p.item,p.cat); }).join('') || '<div style="grid-column:1/-1;color:rgba(255,255,255,.3);text-align:center;padding:30px;">Colección vacía</div>';
+  } else {
+    var arr = shopBuyables();
+    if(cat==='popular'){ titleTxt='Más populares'; arr.sort(function(a,b){return (b.item.price||0)-(a.item.price||0);}); }
+    else if(cat==='exclusive'){ titleTxt='Exclusivos'; arr=arr.filter(function(p){var r=shopRarityOf(p.item);return r==='épico'||r==='legendario';}); arr.sort(function(a,b){return (b.item.price||0)-(a.item.price||0);}); }
+    else { titleTxt='Novedades'; arr.sort(function(a,b){ var an=a.item.new?1:0, bn=b.item.new?1:0; if(an!==bn) return bn-an; return (b.item.price||0)-(a.item.price||0); }); }
+    html = arr.map(function(p){ return renderShopItemCard(p.item,p.cat); }).join('');
+  }
+  grid.className = 'shop-items-grid'+(isList?' list':'');
+  grid.style.animation='none'; grid.offsetHeight; grid.style.animation='shopGridIn .28s ease';
+  grid.innerHTML = html;
+  if(title) title.textContent = titleTxt;
+}
+function filterShopCategory(cat){
+  var chips=document.querySelectorAll('#shopCategoryChips .scc-chip');
+  chips.forEach(function(c){ c.classList.remove('active'); });
+  var map={all:0,popular:1,exclusive:2,rewards:3};
+  if(map[cat]!==undefined && chips[map[cat]]) chips[map[cat]].classList.add('active');
+  renderShopGrid(cat);
+}
+window.filterShopCategory = filterShopCategory;
+function shopShowCollection(id){
+  renderShopGrid('collection:'+id);
+  document.querySelectorAll('#shopCategoryChips .scc-chip').forEach(function(c){ c.classList.remove('active'); });
+  try{ document.getElementById('shopSectionMain').scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){}
+}
+window.shopShowCollection = shopShowCollection;
+function renderShopHero(){
+  var el = document.getElementById('shopHeroBanner'); if(!el) return;
+  var cols = FEATURED_SHOP.collections;
+  if(window._shopHeroIdx===undefined) window._shopHeroIdx = Math.floor(Date.now()/86400000/FEATURED_SHOP.rotationDays) % cols.length;
+  var col = cols[window._shopHeroIdx % cols.length];
+  el.style.background = col.gradient;
+  el.style.opacity='0';
+  el.innerHTML = '<div class="shop-hero-art">'+col.art+'</div>'
+    + '<div class="shop-hero-text"><div class="shop-hero-title">'+escapeHtml(col.name)+'</div><div class="shop-hero-sub">'+escapeHtml(col.subtitle)+'</div><button class="shop-hero-btn" onclick="shopShowCollection(\''+col.id+'\')">Ver colección</button></div>';
+  setTimeout(function(){ if(el) el.style.opacity='1'; }, 40);
+}
+function renderNewShop(){
+  renderShopHero();
+  filterShopCategory((window._shopCat && window._shopCat.indexOf('collection:')!==0) ? window._shopCat : 'all');
+  if(window._shopHeroTimer) clearInterval(window._shopHeroTimer);
+  window._shopHeroTimer = setInterval(function(){
+    if(!document.getElementById('shopHeroBanner') || (typeof currentPanel!=='undefined' && currentPanel!=='tienda')){ clearInterval(window._shopHeroTimer); window._shopHeroTimer=null; return; }
+    window._shopHeroIdx = (window._shopHeroIdx+1) % FEATURED_SHOP.collections.length;
+    renderShopHero();
+  }, 30000);
+}
+window.renderNewShop = renderNewShop;
+
+</script>
+<style id="shopRedesignCSS">
+.shop-hero-banner{position:relative;min-height:172px;border-radius:0 0 22px 22px;overflow:hidden;margin-bottom:14px;display:flex;align-items:flex-end;padding:18px;transition:opacity .4s ease;}
+.shop-hero-art{position:absolute;right:-6px;top:50%;transform:translateY(-50%);font-size:120px;opacity:.85;filter:drop-shadow(0 8px 20px rgba(0,0,0,.4));pointer-events:none;line-height:1;}
+.shop-hero-text{position:relative;z-index:2;max-width:64%;}
+.shop-hero-title{color:#fff;font-size:25px;font-weight:900;font-family:'Baloo Bhaijaan 2',cursive;line-height:1.05;text-shadow:0 2px 8px rgba(0,0,0,.55);}
+.shop-hero-sub{color:rgba(255,255,255,.82);font-size:11px;font-weight:600;margin-top:5px;text-shadow:0 1px 4px rgba(0,0,0,.5);}
+.shop-hero-btn{margin-top:13px;background:#fff;color:#111;border:none;border-radius:20px;padding:9px 20px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(0,0,0,.35);}
+.shop-category-chips{display:flex;gap:8px;padding:0 14px 14px;overflow-x:auto;scrollbar-width:none;}
+.shop-category-chips::-webkit-scrollbar{display:none;}
+.scc-chip{flex-shrink:0;padding:8px 14px;border-radius:12px;border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:rgba(255,255,255,.55);font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap;}
+.scc-chip.active{background:var(--teal);border-color:var(--teal);color:#fff;box-shadow:0 3px 12px rgba(42,100,150,.45);}
+.shop-section-title{color:#fff;font-size:15px;font-weight:800;padding:4px 14px 10px;font-family:'Baloo Bhaijaan 2',cursive;}
+.shop-items-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:0 14px;}
+.shop-items-grid.list{grid-template-columns:1fr;gap:0;padding:0;}
+@keyframes shopGridIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+.shop-item-card{background:var(--navy-mid);border-radius:16px;overflow:hidden;border:1.5px solid rgba(255,255,255,.07);cursor:pointer;transition:transform .2s,box-shadow .2s;position:relative;display:flex;flex-direction:column;}
+.shop-item-card:hover{transform:translateY(-4px);box-shadow:0 12px 30px rgba(0,0,0,.4);}
+.shop-item-card.r-comun{border-color:rgba(150,160,170,.4);}
+.shop-item-card.r-raro{border-color:rgba(58,133,196,.6);}
+.shop-item-card.r-epico{border-color:rgba(167,139,250,.65);}
+.shop-item-card.r-legendario{border-color:rgba(240,192,64,.7);box-shadow:0 0 16px rgba(240,192,64,.22);}
+.shop-item-art{width:100%;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;font-size:60px;position:relative;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(0,0,0,.25));}
+.shop-item-art img{width:100%;height:100%;object-fit:cover;}
+.shop-badge-new{position:absolute;top:8px;left:8px;background:var(--teal);color:#fff;font-size:9px;font-weight:900;padding:3px 8px;border-radius:8px;z-index:2;letter-spacing:.3px;}
+.shop-badge-rarity{position:absolute;top:8px;right:8px;font-size:8px;font-weight:900;padding:3px 7px;border-radius:8px;z-index:2;text-transform:uppercase;letter-spacing:.4px;}
+.rb-comun{background:rgba(150,160,170,.28);color:#cdd5dd;}
+.rb-raro{background:rgba(58,133,196,.3);color:#9fd0f5;}
+.rb-epico{background:rgba(167,139,250,.3);color:#d6c8ff;}
+.rb-legendario{background:rgba(240,192,64,.3);color:#ffd980;}
+.shop-item-footer{padding:9px 11px 11px;display:flex;flex-direction:column;gap:4px;}
+.shop-item-name{color:#fff;font-size:12.5px;font-weight:800;line-height:1.2;font-family:'Baloo Bhaijaan 2',cursive;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.shop-item-price{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:800;color:var(--yellow);font-family:'Baloo Bhaijaan 2',cursive;}
+.shop-item-price.owned{color:var(--green);}
+</style>
 </body>
 </html>

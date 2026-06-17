@@ -1619,7 +1619,7 @@ touch-action:manipulation;
 <div class="panel-content" id="shopMainContent" style="padding:0;gap:0;overflow-y:auto;display:block;">
 <strong id="shopCoinBig" style="display:none;">0</strong>
 <div id="shopHeroBanner" class="shop-hero-banner"></div>
-<div id="shopOGPromo" style="padding:0 14px;"></div>
+
 <div class="shop-category-chips" id="shopCategoryChips">
 <button class="scc-chip active" onclick="filterShopCategory('fondos')">🎨 Fondos</button>
 <button class="scc-chip" onclick="filterShopCategory('badges')">🏅 Badges</button>
@@ -12014,6 +12014,7 @@ const FEATURED_SHOP = {
     { id:'fondos', cat:'fondos', name:'Fondos', subtitle:'"Personaliza tu mundo."', gradient:'linear-gradient(135deg,#243447,#0c0e14)', art:'🎨' },
     { id:'badges', cat:'badges', name:'Insignias', subtitle:'"Presume tus logros."', gradient:'linear-gradient(135deg,#3a2a05,#9a6a10)', art:'🏅' },
     { id:'poderes', cat:'poderes', name:'Poderes', subtitle:'"Gana la ventaja."', gradient:'linear-gradient(135deg,#08291a,#1a5c30)', art:'⚡' },
+    { id:'og', cat:'og', name:'Badge OG', subtitle:'"Exclusivo. ¡Reclámalo gratis!"', gradient:'linear-gradient(135deg,#2a1f44,#0c0e14)', art:'🏅', og:true },
   ]
 };
 window._shopItemRef = function(cat, id){ var a=(SHOP_ITEMS[cat]||[]); for(var i=0;i<a.length;i++){ if(a[i].id===id) return a[i]; } return null; };
@@ -12026,7 +12027,7 @@ function claimOG(){
   try{ if(typeof saveAccount==='function') saveAccount(); }catch(e){}
   try{ if(typeof launchConfetti==='function') launchConfetti(window.innerWidth/2, window.innerHeight/2, {count:40,dist:200,dur:2.2}); }catch(e){}
   if(typeof showToast==='function') showToast('🎉 ¡Badge OG reclamado!');
-  if(typeof renderOGPromo==='function') renderOGPromo();
+  if(typeof renderShopHero==='function') renderShopHero();
   renderShopGrid(window._shopCat||'fondos');
 }
 window.claimOG = claimOG;
@@ -12106,12 +12107,25 @@ function renderShopHero(){
   var el = document.getElementById('shopHeroBanner'); if(!el) return;
   var cols = FEATURED_SHOP.collections;
   if(window._shopHeroIdx===undefined) window._shopHeroIdx = Math.floor(Date.now()/86400000) % cols.length;
-  var col = cols[window._shopHeroIdx % cols.length];
+  var ai = window._shopHeroIdx % cols.length;
+  var col = cols[ai];
   el.style.background = col.gradient; el.style.opacity='0';
-  var _dn=cols.map(function(c,i){return '<span class="shop-hero-dot'+(i===(window._shopHeroIdx%cols.length)?' active':'')+'"></span>';}).join('');
-  el.innerHTML = '<div class="shop-hero-art">'+col.art+'</div>'
+  el.style.border = col.og ? '2px solid rgba(240,192,64,.55)' : '';
+  var _dn=cols.map(function(c,i){return '<span class="shop-hero-dot'+(i===ai?' active':'')+'"></span>';}).join('');
+  var artHTML, btnHTML;
+  if(col.og){
+    artHTML = '<div style="position:absolute;right:24px;top:50%;transform:translateY(-50%);width:92px;height:92px;display:flex;align-items:center;justify-content:center;z-index:1;"><div class="og-badge-glow"></div><span class="og-badge-text" style="font-size:54px;">OG</span></div>';
+    var og=window._shopItemRef('badges','b11'); var owned=og&&og.owned;
+    btnHTML = owned
+      ? '<button class="shop-hero-btn" style="background:rgba(94,220,138,.25);color:#5edc8a;cursor:default;">✓ Reclamado</button>'
+      : '<button class="shop-hero-btn" style="background:linear-gradient(90deg,#ffd700,#fff7c0,#ffd700);background-size:220% 100%;color:#1a1500;animation:ogClaimBtn 2.4s linear infinite;" onclick="claimOG()">🎁 Reclamar gratis</button>';
+  } else {
+    artHTML = '<div class="shop-hero-art">'+col.art+'</div>';
+    btnHTML = '<button class="shop-hero-btn" onclick="shopShowCollection(\''+col.cat+'\')">Ver colección</button>';
+  }
+  el.innerHTML = artHTML
     + '<button class="shop-hero-nav left" onclick="shopHeroNav(-1,event)">‹</button><button class="shop-hero-nav right" onclick="shopHeroNav(1,event)">›</button>'
-    + '<div class="shop-hero-text"><div class="shop-hero-title">'+escapeHtml(col.name)+'</div><div class="shop-hero-sub">'+escapeHtml(col.subtitle)+'</div><button class="shop-hero-btn" onclick="shopShowCollection(\''+col.cat+'\')">Ver colección</button></div>'
+    + '<div class="shop-hero-text"><div class="shop-hero-title">'+escapeHtml(col.name)+'</div><div class="shop-hero-sub">'+escapeHtml(col.subtitle)+'</div>'+btnHTML+'</div>'
     + '<div class="shop-hero-dots">'+_dn+'</div>';
   setTimeout(function(){ if(el) el.style.opacity='1'; }, 40);
 }
@@ -12127,7 +12141,6 @@ function shopHeroNav(d, e){ if(e){ e.stopPropagation(); } var L=FEATURED_SHOP.co
 window.shopHeroNav = shopHeroNav;
 function renderNewShop(){
   renderShopHero();
-  renderOGPromo();
   filterShopCategory(window._shopCat || 'fondos');
   shopStartHeroTimer();
 }

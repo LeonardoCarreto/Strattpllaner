@@ -1783,94 +1783,8 @@ touch-action:manipulation;
 
 </div>
 
-<div id="apiKeyOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:99999;align-items:center;justify-content:center;padding:20px;">
-<div style="background:#1a1a1a;border:1.5px solid rgba(255,255,255,.12);border-radius:24px;padding:24px 20px;width:100%;max-width:360px;display:flex;flex-direction:column;gap:16px;">
-<div style="text-align:center;">
-<div style="font-size:36px;margin-bottom:6px;">🤖</div>
-<div style="color:#fff;font-size:17px;font-weight:800;font-family:'Baloo Bhaijaan 2',cursive;">Configura la IA</div>
-<div style="color:rgba(255,255,255,.4);font-size:11px;margin-top:4px;line-height:1.5;">Para verificar tus fotos necesitas una API Key de Gemini. Es gratis y tarda 2 minutos.</div>
-</div>
-<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px;">
-<div style="color:rgba(255,255,255,.5);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;">Cómo obtenerla gratis</div>
-<div style="display:flex;align-items:flex-start;gap:10px;font-size:12px;color:rgba(255,255,255,.7);">
-<span style="background:rgba(42,100,150,.4);border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;margin-top:1px;">1</span>
-<span>Entra a <strong style="color:#fff;">aistudio.google.com</strong> con tu cuenta de Google</span>
-</div>
-<div style="display:flex;align-items:flex-start;gap:10px;font-size:12px;color:rgba(255,255,255,.7);">
-<span style="background:rgba(42,100,150,.4);border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;margin-top:1px;">2</span>
-<span>Haz click en <strong style="color:#fff;">"Get API Key"</strong> → <strong style="color:#fff;">"Create API Key"</strong></span>
-</div>
-<div style="display:flex;align-items:flex-start;gap:10px;font-size:12px;color:rgba(255,255,255,.7);">
-<span style="background:rgba(42,100,150,.4);border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;margin-top:1px;">3</span>
-<span>Copia la key y pégala abajo</span>
-</div>
-<a href="https://aistudio.google.com/apikey" target="_blank" style="background:rgba(42,100,150,.25);border:1.5px solid rgba(42,100,150,.5);border-radius:10px;padding:9px;color:#7ab8e8;font-size:12px;font-weight:800;text-align:center;text-decoration:none;display:block;">🔗 Abrir Google AI Studio</a>
-</div>
-<div style="display:flex;flex-direction:column;gap:6px;">
-<div style="color:rgba(255,255,255,.5);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;">Tu API Key</div>
-<input id="apiKeyInput" type="password" placeholder="AIzaSy..." style="background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.15);border-radius:12px;color:#fff;font-size:13px;padding:11px 14px;font-family:'Baloo Bhaijaan 2',sans-serif;outline:none;width:100%;box-sizing:border-box;" />
-<div id="apiKeyHelper" style="font-size:10px;color:rgba(255,255,255,.3);padding:0 4px;min-height:14px;"></div>
-</div>
-<button onclick="saveApiKey()" style="background:linear-gradient(135deg,#2a6496,#6a3f9a);border:none;border-radius:14px;color:#fff;font-size:14px;font-weight:800;padding:14px;cursor:pointer;font-family:'Baloo Bhaijaan 2',sans-serif;width:100%;">✅ Guardar y continuar</button>
-<div style="text-align:center;color:rgba(255,255,255,.2);font-size:10px;line-height:1.5;">🔒 Tu key se guarda solo en este dispositivo.<br>Nadie más puede verla.</div>
-</div>
-</div>
 
 <script>
-
-// ⬇️ TU API KEY DE GEMINI (la misma para todos los usuarios). Pégala entre las comillas.
-const OWNER_GEMINI_KEY = '';
-function getUserGeminiKey() {
-  return OWNER_GEMINI_KEY;
-}
-function saveApiKey() {
-  const input = document.getElementById('apiKeyInput');
-  const helper = document.getElementById('apiKeyHelper');
-  const key = (input ? input.value.trim() : '');
-  if (!key || !key.startsWith('AIza') || key.length < 30) {
-    if (helper) { helper.textContent = '❌ Key inválida — debe empezar con AIza...'; helper.style.color = '#e8527a'; }
-    return;
-  }
-  localStorage.setItem('user_gemini_key', key);
-  const overlay = document.getElementById('apiKeyOverlay');
-  if (overlay) overlay.style.display = 'none';
-  
-  window._geminiKey = key;
-  window._geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${key}`;
-  showToast('✅ API Key guardada. ¡Ya puedes verificar fotos!');
-  updateApiKeyStatusLabel();
-}
-function checkApiKeySetup() {
-  const key = getUserGeminiKey();
-  if (key) {
-    window._geminiKey = key;
-    window._geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${key}`;
-  } else {
-    
-    window._geminiKey = '';
-    window._geminiUrl = '';
-  }
-}
-function requireApiKey() {
-  // La key ahora es la del dueño (OWNER_GEMINI_KEY); nunca se le pide al usuario.
-  return true;
-}
-function showChangeApiKey() {
-  // Deshabilitado: la app usa la key del dueño; el usuario ya no ingresa la suya.
-}
-checkApiKeySetup();
-function updateApiKeyStatusLabel() {
-  const el = document.getElementById('apiKeyStatusLabel');
-  if (!el) return;
-  const key = getUserGeminiKey();
-  el.textContent = key ? ' — ✅ Configurada' : ' — ⚠️ No configurada';
-}
-setTimeout(updateApiKeyStatusLabel, 800);
-</script>
-
-<script>const GEMINI_KEY = getUserGeminiKey();
-const GEMINI_URL = window._geminiUrl || `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${GEMINI_KEY}`;
-
 function comprimirImagen(base64, callback) {
   const img = new Image();
   img.onload = function() {
@@ -3996,8 +3910,7 @@ return true;
 async function getAnalysisUsage(type) {
 const today = new Date().toISOString().slice(0,10);
 const uid = window._fbCurrentUser?.uid || 'guest';
-const keyHash = (getUserGeminiKey() || 'nokey').slice(-8); 
-const storageKey = `aiUsage_${type}_${uid}_${keyHash}`;
+const storageKey = `aiUsage_${type}_${uid}`;
 try {
 const raw = localStorage.getItem(storageKey);
 const data = raw ? JSON.parse(raw) : {};
@@ -4007,8 +3920,7 @@ return data.date === today ? (data.count || 0) : 0;
 async function incrementAnalysisUsage(type) {
 const today = new Date().toISOString().slice(0,10);
 const uid = window._fbCurrentUser?.uid || 'guest';
-const keyHash = (getUserGeminiKey() || 'nokey').slice(-8);
-const storageKey = `aiUsage_${type}_${uid}_${keyHash}`;
+const storageKey = `aiUsage_${type}_${uid}`;
 try {
 const current = await getAnalysisUsage(type);
 localStorage.setItem(storageKey, JSON.stringify({ date: today, count: current + 1 }));
@@ -4018,8 +3930,7 @@ const AI_DAILY_LIMIT = 2;
 function getAnalysisUsageSync(type) {
   const today = new Date().toISOString().slice(0,10);
   const uid = window._fbCurrentUser?.uid || 'guest';
-  const keyHash = (getUserGeminiKey() || 'nokey').slice(-8);
-  const storageKey = `aiUsage_${type}_${uid}_${keyHash}`;
+  const storageKey = `aiUsage_${type}_${uid}`;
   try { const raw = localStorage.getItem(storageKey); const d = raw ? JSON.parse(raw) : {}; return d.date === today ? (d.count||0) : 0; } catch(e) { return 0; }
 }
 async function tskAnalyzeAll() {
@@ -4045,7 +3956,6 @@ if (usedTsk >= AI_DAILY_LIMIT) {
 showToast(`⛔ Límite diario alcanzado (${AI_DAILY_LIMIT} análisis/día). Vuelve mañana.`);
 return;
 }
-if (!requireApiKey()) return;
 const remaining = AI_DAILY_LIMIT - usedTsk;
 const confirmMsg = `📋 ANÁLISIS DE TAREAS (${usedTsk + 1}/${AI_DAILY_LIMIT} de hoy)\n\n💡 Recomendación: Para aprovechar al máximo tus ${AI_DAILY_LIMIT} análisis diarios, adjunta TODAS las fotos de tus tareas antes de analizar.\n\nTienes ${pendingEntries.length} foto${pendingEntries.length > 1 ? 's' : ''} listas.\n\n${remaining === 1 ? '⚠️ Este es tu ÚLTIMO análisis de hoy.' : `Te quedarán ${remaining - 1} análisis después de este.`}\n\n¿Continuar ahora?`;
 if (!confirm(confirmMsg)) return;
@@ -7013,7 +6923,6 @@ input.click();
 async function handleWorkoutCameraInput(input) {
 const file = input.files[0];
 if (!file) return;
-if (!requireApiKey()) return;
 const phase = _workoutPhotoPhase;
 const btn = document.getElementById('workoutStartBtn');
 if (btn) {

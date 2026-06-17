@@ -10718,7 +10718,7 @@ if(!canvas) return null;
 var ctx=canvas.getContext('2d');
 var dpr=window.devicePixelRatio||1;
 var W=canvas.width/dpr, H=canvas.height/dpr;
-var padT=32,padR=62,padB=38,padL=62;
+var padT=24,padR=50,padB=28,padL=50;
 var cx=padL+(W-padL-padR)/2, cy=padT+(H-padT-padB)/2;
 var R=Math.min(W-padL-padR,H-padT-padB)/2;
 var MS=1.5, uR=R/MS;
@@ -10780,7 +10780,7 @@ function frame(prog){
   dPts.forEach(function(p){ctx.beginPath();ctx.arc(p.x,p.y,3,0,Math.PI*2);ctx.fillStyle='#6edcd2';ctx.fill();});
   // Labels de grupos musculares: simples, sin letter-spacing
   ctx.fillStyle='rgba(255,255,255,.5)';
-  ctx.font='700 12px "Baloo Bhaijaan 2",sans-serif';
+  ctx.font='700 13px "Baloo Bhaijaan 2",sans-serif';
   AXES.forEach(function(ax){
     var a=rad(ax.deg);
     var lx=cx+Math.cos(a)*(R+12), ly=cy+Math.sin(a)*(R+12);
@@ -10949,8 +10949,8 @@ container.innerHTML='<div style="padding:16px;display:flex;flex-direction:column
 var canvas=document.getElementById('muscleRadarCanvas');
 if(canvas){
   var dpr=window.devicePixelRatio||1;
-  var size=Math.max(240,(canvas.parentElement.clientWidth||280)-20);
-  canvas.style.width=size+'px';canvas.style.height=size+'px';
+  var size=400;
+  canvas.style.height='auto';canvas.style.aspectRatio='1';
   canvas.width=size*dpr;canvas.height=size*dpr;
   _radarGeo=drawDiamondRadar(canvas,_mData,showingPrev?_mDataPrev:null);
   var mLabels={pierna:'Pierna',pecho:'Pecho',espalda:'Espalda',brazo:'Brazo',core:'Core'};

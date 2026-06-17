@@ -1619,6 +1619,7 @@ touch-action:manipulation;
 <div class="panel-content" id="shopMainContent" style="padding:0;gap:0;overflow-y:auto;display:block;">
 <strong id="shopCoinBig" style="display:none;">0</strong>
 <div id="shopHeroBanner" class="shop-hero-banner"></div>
+<div id="shopOGPromo" style="padding:0 14px;"></div>
 <div class="shop-category-chips" id="shopCategoryChips">
 <button class="scc-chip active" onclick="filterShopCategory('fondos')">🎨 Fondos</button>
 <button class="scc-chip" onclick="filterShopCategory('badges')">🏅 Badges</button>
@@ -12025,7 +12026,8 @@ function claimOG(){
   try{ if(typeof saveAccount==='function') saveAccount(); }catch(e){}
   try{ if(typeof launchConfetti==='function') launchConfetti(window.innerWidth/2, window.innerHeight/2, {count:40,dist:200,dur:2.2}); }catch(e){}
   if(typeof showToast==='function') showToast('🎉 ¡Badge OG reclamado!');
-  renderShopGrid('badges');
+  if(typeof renderOGPromo==='function') renderOGPromo();
+  renderShopGrid(window._shopCat||'fondos');
 }
 window.claimOG = claimOG;
 function shopOGClaimCard(){
@@ -12042,6 +12044,8 @@ function shopOGClaimCard(){
     +   btn
     + '</div></div>';
 }
+function renderOGPromo(){ var el=document.getElementById('shopOGPromo'); if(!el) return; var og=window._shopItemRef('badges','b11'); el.innerHTML = (og && og.owned) ? '' : shopOGClaimCard(); }
+window.renderOGPromo=renderOGPromo;
 function shopRarityOf(item){ if(item.rarity) return item.rarity; var p=item.price||0; if(p>=15000) return 'mítico'; if(p>=1000) return 'legendario'; if(p>=280) return 'épico'; if(p>=160) return 'raro'; return 'común'; }
 function shopRarKey(r){ return r==='común'?'comun':(r==='épico'?'epico':(r==='mítico'?'mitico':r)); }
 function shopBadgeBuyable(b){ return !b.ceo && !b.gang && !b.gymbro && !b.luck && !b.top1 && !b.streakRequired; }
@@ -12076,7 +12080,7 @@ function renderShopGrid(cat){
   window._shopCat = cat;
   var pairs=[], titleTxt='Fondos', prefix='';
   if(cat==='fondos'){ titleTxt='Fondos'; (SHOP_ITEMS.temas||[]).forEach(function(it){ pairs.push({item:it,cat:'temas'}); }); }
-  else if(cat==='badges'){ titleTxt='Insignias'; prefix=shopOGClaimCard(); (SHOP_ITEMS.badges||[]).forEach(function(it){ if(it.id!=='b11' && shopBadgeBuyable(it)) pairs.push({item:it,cat:'badges'}); }); }
+  else if(cat==='badges'){ titleTxt='Insignias'; (SHOP_ITEMS.badges||[]).forEach(function(it){ if(it.id!=='b11' && shopBadgeBuyable(it)) pairs.push({item:it,cat:'badges'}); }); }
   else if(cat==='poderes'){ titleTxt='Poderes'; (SHOP_ITEMS.poderes||[]).forEach(function(it){ pairs.push({item:it,cat:'poderes'}); }); }
   var html = prefix + pairs.map(function(p){ return renderShopItemCard(p.item,p.cat); }).join('');
   if(!html) html='<div style="grid-column:1/-1;color:rgba(255,255,255,.3);text-align:center;padding:30px;">Nada por aquí aún</div>';
@@ -12110,6 +12114,7 @@ function renderShopHero(){
 }
 function renderNewShop(){
   renderShopHero();
+  renderOGPromo();
   filterShopCategory(window._shopCat || 'fondos');
   if(window._shopHeroTimer) clearInterval(window._shopHeroTimer);
   window._shopHeroTimer = setInterval(function(){
@@ -12140,7 +12145,7 @@ window.renderNewShop = renderNewShop;
 .shop-item-card:hover{transform:translateY(-4px);box-shadow:0 12px 30px rgba(0,0,0,.4);}
 .shop-item-card.r-comun{border-color:rgba(150,160,170,.4);}
 .shop-item-card.shop-locked .shop-item-art{opacity:.5;}
-.shop-og-claim{grid-column:1/-1;position:relative;overflow:hidden;border-radius:18px;padding:18px;display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,#2a1f44,#0c0e14);border:2px solid #f0c040;box-shadow:0 0 26px rgba(240,192,64,.32);margin-bottom:4px;}
+.shop-og-claim{position:relative;overflow:hidden;border-radius:18px;padding:16px 18px;display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,#2a1f44,#0c0e14);border:2px solid #f0c040;box-shadow:0 0 26px rgba(240,192,64,.32);margin-bottom:12px;}
 .shop-og-badge{position:relative;width:74px;height:74px;display:flex;align-items:center;justify-content:center;flex-shrink:0;z-index:2;}
 .shop-og-shine{position:absolute;inset:0;background:linear-gradient(115deg,transparent 38%,rgba(255,255,255,.16) 50%,transparent 62%);transform:translateX(-130%);animation:shopShine 3s ease-in-out infinite;pointer-events:none;z-index:1;}
 @keyframes ogClaimBtn{to{background-position:220% 0;}}

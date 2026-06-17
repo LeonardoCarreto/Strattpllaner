@@ -371,17 +371,24 @@ if (window._hideAppLoader) window._hideAppLoader();
 }
 
 #panel-racha .streak-day-box{
-  background:rgba(255,255,255,.75) !important;
-  backdrop-filter:blur(4px);
-  border-color:rgba(0,0,0,.15) !important;
+  background:transparent !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+  border:none !important;
+  box-shadow:none !important;
 }
-#panel-racha .streak-day-box .sdb-day,
+#panel-racha .streak-day-box .sdb-day{
+  color:#475569 !important;
+}
 #panel-racha .streak-day-box .sdb-done{
-  color:#111 !important;
+  color:#e8590c !important;
 }
 #panel-racha .streak-day-box.active{
-  background:rgba(255,255,255,.92) !important;
-  border-color:rgba(200,140,0,.7) !important;
+  background:transparent !important;
+  border:none !important;
+}
+#panel-racha .streak-day-box.active .sdb-day{
+  color:#e8590c !important;
 }
 
 .sdb-fire-on{

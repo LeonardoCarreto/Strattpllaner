@@ -908,18 +908,18 @@ onkeydown="if(event.key==='Enter')tskModalConfirm()">
   
   <div class="racha-top">
     <div class="streak-big">
+      <div class="streak-flame-wrap">
       <div class="streak-icon-row" id="panelStreakEmoji">🔥</div>
       <div class="streak-big-num" id="panelStreakNum">1</div>
+      </div>
       <div class="streak-big-label">días seguidos</div>
       <div class="legendary-badge" id="panelLegendaryBadge" style="margin:6px auto 0;">🔮 ¡Racha Legendaria!</div>
     </div>
     <div class="streak-week-row" id="streakWeekRow"></div>
-    <div style="color:#222;font-size:11px;text-align:center;margin-top:2px;">🔒 La racha sube completando todas tus tareas del día</div>
   </div>
   
   <div class="racha-mid">
     <div class="mascota-section-title" style="font-size:15px;font-weight:800;margin-bottom:2px;">⚔️ Tu Caballero</div>
-    <div style="color:#222;font-size:11px;text-align:center;">Tu compañero de racha — crece contigo cada día</div>
   </div>
   
   <div class="racha-ground">
@@ -12194,18 +12194,17 @@ window.renderNewShop = renderNewShop;
 .shop-item-price.owned{color:var(--green);}
 </style>
 <style id="rachaRedesignCSS">
-.streak-big{display:inline-flex;flex-direction:column;align-items:center;gap:0;background:transparent !important;border:none !important;box-shadow:none !important;padding:0 !important;margin:2px auto 16px;}
-.streak-icon-row{font-size:38px !important;filter:drop-shadow(0 3px 7px rgba(255,110,0,.5));}
-.streak-big-num{font-size:72px !important;font-weight:900 !important;line-height:.92 !important;background:linear-gradient(180deg,#ffb13a,#ff6a1f 56%,#ff3d22) !important;-webkit-background-clip:text !important;background-clip:text !important;-webkit-text-fill-color:transparent !important;color:transparent !important;text-shadow:none !important;}
-.streak-big-num.legendary{background:linear-gradient(180deg,#c08bff,#8a4dff) !important;-webkit-background-clip:text !important;background-clip:text !important;-webkit-text-fill-color:transparent !important;}
-.streak-big-label{color:#334155 !important;font-size:12px !important;letter-spacing:2.5px !important;font-weight:800 !important;margin-top:4px;text-shadow:0 1px 2px rgba(255,255,255,.4);}
-.streak-week-row{gap:10px !important;flex-wrap:nowrap !important;max-width:430px;margin:2px auto 0;}
-.streak-day-box{flex:1 1 0 !important;max-width:50px;min-width:0;gap:5px !important;background:transparent !important;border:none !important;box-shadow:none !important;padding:4px 2px !important;transition:transform .15s !important;}
-.streak-day-box.active{background:transparent !important;border:none !important;box-shadow:none !important;transform:none !important;}
-.streak-day-box.active:active{transform:scale(.9);}
-.sdb-emoji{font-size:28px !important;width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:50%;margin:0 auto;}
-.streak-day-box.active .sdb-emoji{background:radial-gradient(circle,rgba(255,140,45,.38) 0%,rgba(255,140,45,0) 70%);}
-.streak-day-box.legendary-box.active .sdb-emoji{background:radial-gradient(circle,rgba(150,90,255,.4) 0%,rgba(150,90,255,0) 70%);}
+.streak-big{display:inline-flex;flex-direction:column;align-items:center;gap:0;background:transparent !important;border:none !important;box-shadow:none !important;padding:0 !important;margin:0 auto 14px;}
+.streak-flame-wrap{position:relative;display:inline-block;line-height:0;}
+.streak-icon-row{font-size:132px !important;line-height:1 !important;filter:drop-shadow(0 5px 12px rgba(255,90,0,.45));}
+.streak-big-num{position:absolute !important;top:60% !important;left:50% !important;transform:translate(-50%,-50%) !important;font-size:46px !important;font-weight:900 !important;color:#fff !important;background:none !important;-webkit-text-fill-color:#fff !important;-webkit-background-clip:border-box !important;text-shadow:0 2px 7px rgba(150,45,0,.75),0 0 3px rgba(0,0,0,.35) !important;z-index:2;line-height:1 !important;}
+.streak-big-num.legendary{-webkit-text-fill-color:#fff !important;background:none !important;}
+.streak-big-label{color:#334155 !important;font-size:12px !important;letter-spacing:2.5px !important;font-weight:800 !important;margin-top:-8px;text-shadow:0 1px 2px rgba(255,255,255,.4);}
+.streak-week-row{gap:12px !important;flex-wrap:nowrap !important;max-width:430px;margin:4px auto 0;}
+.streak-day-box,.streak-day-box.active,.streak-day-box.legendary-box.active{flex:1 1 0 !important;max-width:50px;min-width:0;gap:4px !important;background:none !important;background-color:transparent !important;border:none !important;box-shadow:none !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important;padding:4px 2px !important;}
+.sdb-emoji{font-size:30px !important;width:46px;height:46px;display:flex;align-items:center;justify-content:center;border-radius:50%;margin:0 auto;}
+.streak-day-box.active .sdb-emoji{background:radial-gradient(circle,rgba(255,140,45,.4) 0%,rgba(255,140,45,0) 70%) !important;}
+.streak-day-box.legendary-box.active .sdb-emoji{background:radial-gradient(circle,rgba(150,90,255,.42) 0%,rgba(150,90,255,0) 70%) !important;}
 .streak-day-box.active .sdb-fire-on{filter:drop-shadow(0 2px 5px rgba(255,110,0,.6));}
 .sdb-day{color:#475569 !important;font-size:12px !important;font-weight:800 !important;text-shadow:0 1px 2px rgba(255,255,255,.4);}
 .streak-day-box.active .sdb-day{color:#e8590c !important;}

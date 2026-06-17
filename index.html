@@ -10749,96 +10749,38 @@ function polyPath(pts){
   pts.forEach(function(p,i){if(i===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);});
   ctx.closePath();
 }
-// Estados que requieren animación continua
-var allZero=AXES.every(function(ax){return valFor(data,ax)===0;});
-var hasGold=AXES.some(function(ax){return valFor(data,ax)>=1;});
-function frame(prog,now){
-  now=now||0;
+// Estilo limpio (igual que drawVsRadar): sin animaciones continuas, sin glow, sin degradados
+function frame(prog){
   ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.clearRect(0,0,W,H);
-  // Fondo "escenario": radial oscuro profundo que cubre todo el canvas
-  var bgR=Math.max(Math.hypot(cx,cy),Math.hypot(W-cx,cy),Math.hypot(cx,H-cy),Math.hypot(W-cx,H-cy));
-  var bg=ctx.createRadialGradient(cx,cy,0,cx,cy,bgR);
-  bg.addColorStop(0,'rgba(13,27,42,0.9)');
-  bg.addColorStop(0.5,'rgba(10,20,35,0.95)');
-  bg.addColorStop(1,'rgba(6,7,10,1)');
-  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
-  // Anillos de referencia: puntos redondos muy sutiles (dotted)
-  ctx.save();
-  ctx.setLineDash([1.5,6]);ctx.lineCap='round';ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=1;
+  // Anillos de referencia: polígonos concéntricos simples, línea sólida sutil
+  ctx.strokeStyle='rgba(255,255,255,.08)';ctx.lineWidth=1;ctx.setLineDash([]);
   [0.2,0.4,0.6,0.8,1.0].forEach(function(lv){ringPath(lv*R);ctx.stroke();});
-  ctx.restore();
-  // Ejes: sólidos apenas perceptibles
-  ctx.strokeStyle='rgba(255,255,255,0.06)';ctx.lineWidth=1;ctx.setLineDash([]);
+  // Ejes: líneas sólidas del centro a cada vértice (misma línea sutil)
   AXES.forEach(function(ax){var a=rad(ax.deg);ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*R,cy+Math.sin(a)*R);ctx.stroke();});
-  // Porcentajes: solo eje vertical superior, sin 0%
-  ctx.fillStyle='rgba(255,255,255,0.25)';
-  ctx.font='600 9px Baloo Bhaijaan 2,sans-serif';
+  // Porcentajes en el eje vertical superior
+  ctx.fillStyle='rgba(255,255,255,.35)';
+  ctx.font='600 9px "Baloo Bhaijaan 2",sans-serif';
   ctx.textAlign='right';ctx.textBaseline='middle';
   [0.2,0.4,0.6,0.8,1.0].forEach(function(lv){ctx.fillText(Math.round(lv*100)+'%',cx-8,cy-lv*R);});
-  // Semana anterior: detrás, relleno tenue y borde punteado, sin puntos
+  // Comparativo semanal (semana anterior): borde punteado, relleno tenue, sin puntos
   if(prevData){
     polyPath(ptsFor(prevData,1));
-    ctx.fillStyle='rgba(255,255,255,0.03)';ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.05)';ctx.fill();
     ctx.save();
-    ctx.setLineDash([4,4]);ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.setLineDash([4,4]);ctx.strokeStyle='rgba(255,255,255,.25)';ctx.lineWidth=1.5;ctx.stroke();
     ctx.restore();
+    ctx.setLineDash([]);
   }
-  if(allZero){
-    // Estado vacío: polígono mínimo que "respira" (4%–7%) para invitar a llenarlo
-    var breath=(0.055+0.015*Math.sin(now/2000*Math.PI*2))*prog;
-    var zPts=AXES.map(function(ax){var a=rad(ax.deg);return {x:cx+Math.cos(a)*breath*uR,y:cy+Math.sin(a)*breath*uR};});
-    polyPath(zPts);
-    ctx.fillStyle='rgba(110,220,210,0.06)';ctx.fill();
-    ctx.setLineDash([]);ctx.strokeStyle='rgba(110,220,210,0.15)';ctx.lineWidth=1.5;ctx.lineJoin='round';ctx.stroke();
-  } else {
-    // Semana actual: relleno con degradado radial
-    var dPts=AXES.map(function(ax){
-      var base=valFor(data,ax),a=rad(ax.deg),v=base*prog;
-      return {key:ax.key,base:base,x:cx+Math.cos(a)*v*uR,y:cy+Math.sin(a)*v*uR};
-    });
-    polyPath(dPts);
-    var fg=ctx.createRadialGradient(cx,cy,0,cx,cy,R);
-    fg.addColorStop(0,'rgba(110,220,210,0.35)');
-    fg.addColorStop(1,'rgba(110,220,210,0.08)');
-    ctx.fillStyle=fg;ctx.fill();
-    // Borde con glow
-    ctx.save();
-    polyPath(dPts);
-    ctx.shadowBlur=12;ctx.shadowColor='rgba(110,220,210,0.5)';
-    ctx.strokeStyle='#6edcd2';ctx.lineWidth=2.5;ctx.setLineDash([]);ctx.lineJoin='round';ctx.stroke();
-    ctx.restore();
-    // Puntos: cian normal; dorado con pulso + anillo si el grupo está al 100%+
-    var goldPulse=Math.sin(now/1500*Math.PI*2)*0.5+0.5;
-    dPts.forEach(function(p){
-      if(p.base>=1){
-        ctx.save();
-        ctx.beginPath();ctx.arc(p.x,p.y,9+3*goldPulse,0,Math.PI*2);
-        ctx.strokeStyle='rgba(251,191,36,0.2)';ctx.lineWidth=1;ctx.stroke();
-        ctx.restore();
-        var rDot=5+2*goldPulse;
-        ctx.save();
-        ctx.shadowBlur=14;ctx.shadowColor='rgba(251,191,36,0.6)';
-        ctx.beginPath();ctx.arc(p.x,p.y,rDot,0,Math.PI*2);
-        ctx.fillStyle='#fbbf24';ctx.fill();
-        ctx.restore();
-        ctx.beginPath();ctx.arc(p.x,p.y,rDot,0,Math.PI*2);
-        ctx.lineWidth=1.5;ctx.strokeStyle='rgba(255,255,255,0.9)';ctx.stroke();
-      } else {
-        ctx.save();
-        ctx.shadowBlur=8;ctx.shadowColor='rgba(110,220,210,0.6)';
-        ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);
-        ctx.fillStyle='#6edcd2';ctx.fill();
-        ctx.restore();
-        ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);
-        ctx.lineWidth=1.5;ctx.strokeStyle='rgba(255,255,255,0.9)';ctx.stroke();
-      }
-    });
-  }
-  // Labels de grupos musculares (siempre)
-  ctx.fillStyle='rgba(255,255,255,0.85)';
-  ctx.font='800 11px Baloo Bhaijaan 2,sans-serif';
-  if('letterSpacing' in ctx) ctx.letterSpacing='1px';
+  // Semana actual: polígono limpio, relleno semitransparente + borde sólido + puntos pequeños
+  var dPts=ptsFor(data,prog);
+  polyPath(dPts);
+  ctx.fillStyle='rgba(110,220,210,.25)';ctx.fill();
+  ctx.strokeStyle='#6edcd2';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.stroke();
+  dPts.forEach(function(p){ctx.beginPath();ctx.arc(p.x,p.y,3,0,Math.PI*2);ctx.fillStyle='#6edcd2';ctx.fill();});
+  // Labels de grupos musculares: simples, sin letter-spacing
+  ctx.fillStyle='rgba(255,255,255,.5)';
+  ctx.font='700 12px "Baloo Bhaijaan 2",sans-serif';
   AXES.forEach(function(ax){
     var a=rad(ax.deg);
     var lx=cx+Math.cos(a)*(R+12), ly=cy+Math.sin(a)*(R+12);
@@ -10847,18 +10789,16 @@ function frame(prog,now){
     ctx.textBaseline=sa>0.3?'top':sa<-0.3?'bottom':'middle';
     ctx.fillText(ax.label,lx,ly);
   });
-  if('letterSpacing' in ctx) ctx.letterSpacing='0px';
 }
-// Animación: entrada (~600ms ease-out) + pulsos continuos si hay estado vacío o grupos al 100%
+// Animación de entrada simple (~600ms ease-out), sin loop continuo
 if(canvas._radarAnim) cancelAnimationFrame(canvas._radarAnim);
 var dur=600,t0=null;
 var ease=function(t){return 1-Math.pow(1-t,3);};
-var needsLoop=allZero||hasGold;
 function loop(ts){
   if(t0==null)t0=ts;
   var t=Math.min(1,(ts-t0)/dur);
-  frame(ease(t),ts);
-  if(t<1||needsLoop){canvas._radarAnim=requestAnimationFrame(loop);}else{canvas._radarAnim=null;}
+  frame(ease(t));
+  if(t<1){canvas._radarAnim=requestAnimationFrame(loop);}else{canvas._radarAnim=null;}
 }
 canvas._radarAnim=requestAnimationFrame(loop);
 // Geometría a valor completo (para tooltips/toques desde el primer momento)

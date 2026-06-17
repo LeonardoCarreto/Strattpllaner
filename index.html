@@ -11960,9 +11960,18 @@ window.renderOGPromo=renderOGPromo;
 function shopRarityOf(item){ if(item.rarity) return item.rarity; var p=item.price||0; if(p>=15000) return 'mítico'; if(p>=1000) return 'legendario'; if(p>=280) return 'épico'; if(p>=160) return 'raro'; return 'común'; }
 function shopRarKey(r){ return r==='común'?'comun':(r==='épico'?'epico':(r==='mítico'?'mitico':r)); }
 function shopBadgeBuyable(b){ return !b.ceo && !b.gang && !b.gymbro && !b.luck && !b.top1 && !b.streakRequired; }
+function shopBadgeVisual(item){
+  var inner, cls='profile-active-badge';
+  if(item.ceo){ inner='<span class="ceo-badge-text" style="font-size:17px;letter-spacing:1px;">CEO</span>'; cls+=' ceo-active'; }
+  else if(item.og){ inner='<span class="og-badge-text" style="font-size:17px;letter-spacing:1px;">OG</span>'; cls+=' og-active'; }
+  else if(item.luck){ inner='<span style="color:#5edc8a;font-family:&#39;Baloo Bhaijaan 2&#39;,cursive;font-size:13px;font-weight:900;text-shadow:0 0 6px rgba(94,220,138,.5);">\uD83C\uDF40 Luck \uD83C\uDF40</span>'; cls+=' luck-active'; }
+  else if(item.top1){ inner='<span class="top1-badge-text" style="font-size:17px;">\uD83E\uDD47 1.\u00BA</span>'; cls+=' top1-active'; }
+  else { inner='<span style="font-size:12.5px;font-weight:800;">'+(item.emoji||'\uD83C\uDFC5')+' '+escapeHtml(item.name)+'</span>'; }
+  return '<div class="'+cls+'" style="display:inline-flex;max-width:100px;overflow:hidden;white-space:nowrap;">'+inner+'</div>';
+}
 function shopItemArt(item, cat){
   if(cat==='temas') return '<div style="position:absolute;inset:0;background:'+(item.preview||'#222')+';"></div><div style="position:absolute;bottom:8px;left:8px;right:8px;height:30px;border-radius:8px;background:rgba(0,0,0,.35);backdrop-filter:blur(2px);"></div>';
-  if(cat==='badges'){ if(item.og) return '<span class="og-badge-text" style="font-size:34px;">OG</span>'; return '<span style="font-size:56px;line-height:1;">'+(item.emoji||'🏅')+'</span>'; }
+  if(cat==='badges'){ return shopBadgeVisual(item); }
   if(cat==='poderes') return '<span style="font-size:52px;line-height:1;">'+(item.emoji||'⚡')+'</span>';
   return '<span>'+(item.emoji||'❓')+'</span>';
 }

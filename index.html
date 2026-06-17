@@ -5602,7 +5602,7 @@ badges: [
 { id:'b10', name:'Irreal',       desc:'El badge casi imposible de obtener', emoji:'👁️', price:1500, owned:false, og:false, ceo:false },
 { id:'b11', name:'OG',           desc:'Exclusivo para los primeros usuarios', emoji:'OG', price:500, owned:false, og:true,  ceo:false, gang:false },
 { id:'b12', name:'CEO',          desc:'Inalcanzable. Solo existe en las leyendas.', emoji:'CEO', price:0, owned:false, og:false, ceo:true, gang:false },
-{ id:'b14', name:'???',          desc:'Nadie sabe qué hay detrás de esto...', emoji:'❓', price:100000, owned:false, og:false, ceo:false, gang:false, mystery:true },
+{ id:'b14', name:'Obsesión',     desc:'Para los obsesionados con el progreso.', emoji:'🩸', price:100000, owned:false, og:false, ceo:false, gang:false, mystery:true },
 { id:'b15', name:'Duo?',         desc:'100 días de racha. ¿Quién te acompaña?', emoji:'🦉', price:0, owned:false, og:false, ceo:false, gang:false, streakRequired:100 },
 { id:'b16', name:'GymBros',      desc:'Asigna a alguien como tu GymBro.', emoji:'💪', price:0, owned:false, og:false, ceo:false, gang:false, gymbro:true },
 { id:'b17', name:'Luck', desc:'Obtenido en la Ruleta de la Suerte.', emoji:'🍀', price:0, owned:false, og:false, ceo:false, gang:false, luck:true, roulette:true },
@@ -11961,13 +11961,19 @@ function shopRarityOf(item){ if(item.rarity) return item.rarity; var p=item.pric
 function shopRarKey(r){ return r==='común'?'comun':(r==='épico'?'epico':(r==='mítico'?'mitico':r)); }
 function shopBadgeBuyable(b){ return !b.ceo && !b.gang && !b.gymbro && !b.luck && !b.top1 && !b.streakRequired; }
 function shopBadgeVisual(item){
-  var inner, cls='profile-active-badge';
-  if(item.ceo){ inner='<span class="ceo-badge-text" style="font-size:17px;letter-spacing:1px;">CEO</span>'; cls+=' ceo-active'; }
-  else if(item.og){ inner='<span class="og-badge-text" style="font-size:17px;letter-spacing:1px;">OG</span>'; cls+=' og-active'; }
-  else if(item.luck){ inner='<span style="color:#5edc8a;font-family:&#39;Baloo Bhaijaan 2&#39;,cursive;font-size:13px;font-weight:900;text-shadow:0 0 6px rgba(94,220,138,.5);">\uD83C\uDF40 Luck \uD83C\uDF40</span>'; cls+=' luck-active'; }
-  else if(item.top1){ inner='<span class="top1-badge-text" style="font-size:17px;">\uD83E\uDD47 1.\u00BA</span>'; cls+=' top1-active'; }
-  else { inner='<span style="font-size:12.5px;font-weight:800;">'+(item.emoji||'\uD83C\uDFC5')+' '+escapeHtml(item.name)+'</span>'; }
-  return '<div class="'+cls+'" style="display:inline-flex;max-width:100px;overflow:hidden;white-space:nowrap;">'+inner+'</div>';
+  if(item.ceo) return '<div class="profile-active-badge ceo-active" style="display:inline-flex;"><span class="ceo-badge-text" style="font-size:17px;letter-spacing:1px;">CEO</span></div>';
+  if(item.og) return '<div class="profile-active-badge og-active" style="display:inline-flex;"><span class="og-badge-text" style="font-size:17px;letter-spacing:1px;">OG</span></div>';
+  if(item.luck) return '<div class="profile-active-badge luck-active" style="display:inline-flex;"><span style="color:#5edc8a;font-family:&#39;Baloo Bhaijaan 2&#39;,cursive;font-size:13px;font-weight:900;text-shadow:0 0 6px rgba(94,220,138,.5);">🍀 Luck 🍀</span></div>';
+  if(item.top1) return '<div class="profile-active-badge top1-active" style="display:inline-flex;"><span class="top1-badge-text" style="font-size:17px;">🥇 1.º</span></div>';
+  if(item.mystery) return '<div class="profile-active-badge shop-badge-obsesion" style="display:inline-flex;"><span style="font-size:13.5px;font-weight:900;color:#ff4d4d;text-shadow:0 0 8px rgba(255,40,40,.85);letter-spacing:.5px;">🩸 Obsesión</span></div>';
+  var rar=shopRarityOf(item);
+  if(rar==='legendario') return '<div class="profile-active-badge shop-badge-legend" style="display:inline-flex;"><span style="font-size:13px;font-weight:900;color:#fff2c0;text-shadow:0 0 6px rgba(240,192,64,.7);">'+(item.emoji||'')+' '+escapeHtml(item.name)+'</span></div>';
+  if(rar==='épico'){
+    var P=[['#c4a0ff','rgba(168,85,247,.18)','#a855f7'],['#f9a8d4','rgba(236,72,153,.18)','#ec4899'],['#67e8f9','rgba(6,182,212,.18)','#06b6d4'],['#fdba74','rgba(249,115,22,.18)','#f97316'],['#86efac','rgba(34,197,94,.18)','#22c55e']];
+    var h=0,id=item.id||''; for(var k=0;k<id.length;k++) h+=id.charCodeAt(k); var c=P[h%P.length];
+    return '<div class="profile-active-badge" style="display:inline-flex;background:'+c[1]+';border:1.5px solid '+c[2]+';box-shadow:0 0 10px '+c[1]+';"><span style="font-size:12.5px;font-weight:800;color:'+c[0]+';">'+(item.emoji||'')+' '+escapeHtml(item.name)+'</span></div>';
+  }
+  return '<div class="profile-active-badge" style="display:inline-flex;max-width:100px;overflow:hidden;white-space:nowrap;"><span style="font-size:12.5px;font-weight:800;">'+(item.emoji||'🏅')+' '+escapeHtml(item.name)+'</span></div>';
 }
 function shopItemArt(item, cat){
   if(cat==='temas') return '<div style="position:absolute;inset:0;background:'+(item.preview||'#222')+';"></div><div style="position:absolute;bottom:8px;left:8px;right:8px;height:30px;border-radius:8px;background:rgba(0,0,0,.35);backdrop-filter:blur(2px);"></div>';
@@ -12095,6 +12101,10 @@ window.renderNewShop = renderNewShop;
 .shop-item-card:hover{transform:translateY(-4px);box-shadow:0 12px 30px rgba(0,0,0,.4);}
 .shop-item-card.r-comun{border-color:rgba(150,160,170,.4);}
 .shop-item-card.shop-locked .shop-item-art{opacity:.5;}
+.shop-badge-legend{background:linear-gradient(90deg,rgba(240,192,64,.22),rgba(255,225,120,.5),rgba(240,192,64,.22)) !important;background-size:200% 100% !important;border:1.5px solid #f0c040 !important;box-shadow:0 0 12px rgba(240,192,64,.55) !important;animation:shopLegendChip 2.4s linear infinite;}
+@keyframes shopLegendChip{to{background-position:200% 0;}}
+.shop-badge-obsesion{background:linear-gradient(135deg,#2a0000,#7a0a0a) !important;border:1.5px solid #c01818 !important;animation:shopObsesion 1.8s ease-in-out infinite;}
+@keyframes shopObsesion{0%,100%{box-shadow:0 0 10px rgba(200,20,20,.5);}50%{box-shadow:0 0 22px rgba(255,30,30,.9);}}
 .shop-og-claim{position:relative;overflow:hidden;border-radius:18px;padding:16px 18px;display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,#2a1f44,#0c0e14);border:2px solid #f0c040;box-shadow:0 0 26px rgba(240,192,64,.32);margin-bottom:12px;}
 .shop-og-badge{position:relative;width:74px;height:74px;display:flex;align-items:center;justify-content:center;flex-shrink:0;z-index:2;}
 .shop-og-shine{position:absolute;inset:0;background:linear-gradient(115deg,transparent 38%,rgba(255,255,255,.16) 50%,transparent 62%);transform:translateX(-130%);animation:shopShine 3s ease-in-out infinite;pointer-events:none;z-index:1;}

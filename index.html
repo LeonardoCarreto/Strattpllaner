@@ -12016,24 +12016,28 @@ const FEATURED_SHOP = {
   ]
 };
 window._shopItemRef = function(cat, id){ var a=(SHOP_ITEMS[cat]||[]); for(var i=0;i<a.length;i++){ if(a[i].id===id) return a[i]; } return null; };
+window.shopBadgeInfo = function(id){ var b=window._shopItemRef('badges',id); if(b && typeof showToast==='function') showToast('🏆 '+b.name+': '+b.desc); };
 function shopRarityOf(item){ if(item.rarity) return item.rarity; var p=item.price||0; if(p>=15000) return 'mítico'; if(p>=1000) return 'legendario'; if(p>=280) return 'épico'; if(p>=160) return 'raro'; return 'común'; }
 function shopRarKey(r){ return r==='común'?'comun':(r==='épico'?'epico':(r==='mítico'?'mitico':r)); }
-function shopBadgeBuyable(b){ return (b.price||0)>0 && !b.og && !b.ceo && !b.gang && !b.mystery && !b.gymbro && !b.luck && !b.top1 && !b.streakRequired; }
+function shopBadgeBuyable(b){ return !b.ceo && !b.gang && !b.gymbro && !b.luck && !b.top1 && !b.streakRequired; }
 function shopItemArt(item, cat){
   if(cat==='temas') return '<div style="position:absolute;inset:0;background:'+(item.preview||'#222')+';"></div><div style="position:absolute;bottom:8px;left:8px;right:8px;height:30px;border-radius:8px;background:rgba(0,0,0,.35);backdrop-filter:blur(2px);"></div>';
-  if(cat==='badges') return '<span style="font-size:56px;line-height:1;">'+(item.emoji||'🏅')+'</span>';
+  if(cat==='badges'){ if(item.og) return '<span class="og-badge-text" style="font-size:34px;">OG</span>'; return '<span style="font-size:56px;line-height:1;">'+(item.emoji||'🏅')+'</span>'; }
   if(cat==='poderes') return '<span style="font-size:52px;line-height:1;">'+(item.emoji||'⚡')+'</span>';
   return '<span>'+(item.emoji||'❓')+'</span>';
 }
 function renderShopItemCard(item, cat){
   var rar = shopRarityOf(item), rk = shopRarKey(rar);
   var owned = (cat==='temas') ? (item.owned||item.equipped) : (cat==='poderes' ? false : item.owned);
+  var isAch = (cat==='badges' && (item.price||0)===0 && !owned);
+  var click = isAch ? ('shopBadgeInfo(\''+item.id+'\')') : ('openShopModal(window._shopItemRef(\''+cat+'\',\''+item.id+'\'),\''+cat+'\')');
   var price;
   if(cat==='poderes'){ price = '<span class="shop-item-price"><span class="coin-custom" style="width:14px;height:14px;"></span> '+item.price+(item.qty>0?' · <span style="color:var(--green);font-size:10px;">x'+item.qty+'</span>':'')+'</span>'; }
   else if(owned){ price = '<span class="shop-item-price owned">✓ Tuyo</span>'; }
+  else if(isAch){ price = '<span class="shop-item-price" style="color:rgba(255,255,255,.45);">🏆 Logro</span>'; }
   else if(item.price===0){ price = '<span class="shop-item-price">✓ Gratis</span>'; }
   else { price = '<span class="shop-item-price"><span class="coin-custom" style="width:14px;height:14px;"></span> '+item.price+'</span>'; }
-  return '<div class="shop-item-card r-'+rk+'" onclick="openShopModal(window._shopItemRef(\''+cat+'\',\''+item.id+'\'),\''+cat+'\')">'
+  return '<div class="shop-item-card r-'+rk+(isAch?' shop-locked':'')+'" onclick="'+click+'">'
     + (item.new?'<div class="shop-badge-new">Nuevo</div>':'')
     + '<div class="shop-badge-rarity rb-'+rk+'">'+rar+'</div>'
     + '<div class="shop-item-art">'+shopItemArt(item,cat)+'</div>'
@@ -12109,6 +12113,7 @@ window.renderNewShop = renderNewShop;
 .shop-item-card{background:var(--navy-mid);border-radius:16px;overflow:hidden;border:1.5px solid rgba(255,255,255,.07);cursor:pointer;transition:transform .2s,box-shadow .2s;position:relative;display:flex;flex-direction:column;}
 .shop-item-card:hover{transform:translateY(-4px);box-shadow:0 12px 30px rgba(0,0,0,.4);}
 .shop-item-card.r-comun{border-color:rgba(150,160,170,.4);}
+.shop-item-card.shop-locked .shop-item-art{opacity:.5;}
 .shop-item-card.r-raro{border-color:rgba(58,133,196,.6);}
 .shop-item-card.r-epico{border-color:rgba(167,139,250,.65);}
 .shop-item-card.r-legendario{border-color:rgba(240,192,64,.85);animation:shopLegGlow 2s ease-in-out infinite;}

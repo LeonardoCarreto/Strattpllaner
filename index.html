@@ -12194,18 +12194,20 @@ window.renderNewShop = renderNewShop;
 .shop-item-price.owned{color:var(--green);}
 </style>
 <style id="rachaRedesignCSS">
-.streak-big{display:inline-flex;flex-direction:column;align-items:center;gap:0;background:transparent !important;border:none !important;box-shadow:none !important;padding:0 !important;margin:2px auto 14px;}
-.streak-icon-row{font-size:36px !important;filter:drop-shadow(0 2px 6px rgba(255,120,0,.45));}
-.streak-big-num{font-size:68px !important;font-weight:900 !important;line-height:.95 !important;background:linear-gradient(180deg,#ffaa3a,#ff6a1f 58%,#ff4326) !important;-webkit-background-clip:text !important;background-clip:text !important;-webkit-text-fill-color:transparent !important;color:transparent !important;text-shadow:none !important;}
+.streak-big{display:inline-flex;flex-direction:column;align-items:center;gap:0;background:transparent !important;border:none !important;box-shadow:none !important;padding:0 !important;margin:2px auto 16px;}
+.streak-icon-row{font-size:38px !important;filter:drop-shadow(0 3px 7px rgba(255,110,0,.5));}
+.streak-big-num{font-size:72px !important;font-weight:900 !important;line-height:.92 !important;background:linear-gradient(180deg,#ffb13a,#ff6a1f 56%,#ff3d22) !important;-webkit-background-clip:text !important;background-clip:text !important;-webkit-text-fill-color:transparent !important;color:transparent !important;text-shadow:none !important;}
 .streak-big-num.legendary{background:linear-gradient(180deg,#c08bff,#8a4dff) !important;-webkit-background-clip:text !important;background-clip:text !important;-webkit-text-fill-color:transparent !important;}
-.streak-big-label{color:#374151 !important;font-size:11px !important;letter-spacing:2px !important;font-weight:800 !important;margin-top:4px;text-shadow:0 1px 2px rgba(255,255,255,.35);}
-.streak-week-row{gap:10px !important;flex-wrap:nowrap !important;max-width:420px;margin:2px auto 0;}
-.streak-day-box{flex:1 1 0 !important;max-width:48px;min-width:0;gap:4px !important;background:transparent !important;border:none !important;box-shadow:none !important;padding:4px 2px !important;transition:transform .15s !important;}
+.streak-big-label{color:#334155 !important;font-size:12px !important;letter-spacing:2.5px !important;font-weight:800 !important;margin-top:4px;text-shadow:0 1px 2px rgba(255,255,255,.4);}
+.streak-week-row{gap:10px !important;flex-wrap:nowrap !important;max-width:430px;margin:2px auto 0;}
+.streak-day-box{flex:1 1 0 !important;max-width:50px;min-width:0;gap:5px !important;background:transparent !important;border:none !important;box-shadow:none !important;padding:4px 2px !important;transition:transform .15s !important;}
 .streak-day-box.active{background:transparent !important;border:none !important;box-shadow:none !important;transform:none !important;}
-.streak-day-box.active:active{transform:scale(.92);}
-.sdb-emoji{font-size:26px !important;}
-.streak-day-box.active .sdb-fire-on{filter:drop-shadow(0 2px 4px rgba(255,120,0,.55));}
-.sdb-day{color:#4b5563 !important;font-size:11px !important;font-weight:800 !important;text-shadow:0 1px 2px rgba(255,255,255,.35);}
+.streak-day-box.active:active{transform:scale(.9);}
+.sdb-emoji{font-size:28px !important;width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:50%;margin:0 auto;}
+.streak-day-box.active .sdb-emoji{background:radial-gradient(circle,rgba(255,140,45,.38) 0%,rgba(255,140,45,0) 70%);}
+.streak-day-box.legendary-box.active .sdb-emoji{background:radial-gradient(circle,rgba(150,90,255,.4) 0%,rgba(150,90,255,0) 70%);}
+.streak-day-box.active .sdb-fire-on{filter:drop-shadow(0 2px 5px rgba(255,110,0,.6));}
+.sdb-day{color:#475569 !important;font-size:12px !important;font-weight:800 !important;text-shadow:0 1px 2px rgba(255,255,255,.4);}
 .streak-day-box.active .sdb-day{color:#e8590c !important;}
 .streak-day-box.legendary-box.active .sdb-day,.streak-day-box.legendary-box.active .sdb-done{color:#7c3aed !important;}
 .sdb-done{color:#e8590c !important;font-size:10px !important;min-height:11px !important;font-weight:900 !important;}

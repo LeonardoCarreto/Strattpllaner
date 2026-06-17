@@ -2,7 +2,7 @@
 // Incrementa la versión: 'v1.0.1' → 'v1.0.2' → 'v1.0.3' ...
 // Cambiar la versión invalida el caché viejo y todos los usuarios reciben
 // la versión nueva la próxima vez que abran la app.
-const CACHE_VERSION = 'v1.2.8';
+const CACHE_VERSION = 'v1.2.9';
 const CACHE_NAME = 'strattpllaner-' + CACHE_VERSION;
 
 // Archivos base para que la app funcione offline

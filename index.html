@@ -6323,23 +6323,43 @@ equippedBadgeIds.forEach(bid => {
 const badge = SHOP_ITEMS.badges.find(b => b.id === bid);
 if (!badge) return;
 const el = document.createElement('div');
+el.className = 'profile-active-badge';
+el.style.display = 'inline-flex';
 if (badge.ceo) {
+el.className += ' ceo-active';
 el.innerHTML = `<span class="ceo-badge-text" style="font-size:11px;letter-spacing:1px;">CEO</span>`;
-el.className = 'profile-active-badge ceo-active';
 } else if (badge.og) {
+el.className += ' og-active';
 el.innerHTML = `<span class="og-badge-text" style="font-size:11px;letter-spacing:1px;">OG</span>`;
-el.className = 'profile-active-badge og-active';
 } else if (badge.luck) {
+el.className += ' luck-active';
 el.innerHTML = `<span style="color:#5edc8a;font-family:'Baloo Bhaijaan 2',cursive;font-size:10px;font-weight:900;text-shadow:0 0 6px rgba(94,220,138,.5);">🍀 Luck 🍀</span>`;
-el.className = 'profile-active-badge luck-active';
 } else if (badge.top1) {
+el.className += ' top1-active';
 el.innerHTML = `<span class="top1-badge-text" style="font-size:11px;">🥇 1.º</span>`;
-el.className = 'profile-active-badge top1-active';
+} else if (badge.mystery || (typeof shopRarityOf==='function' && shopRarityOf(badge)==='secreto')) {
+el.className += ' shop-badge-obsesion';
+el.innerHTML = `<span style="font-size:11px;font-weight:900;color:#ff4d4d;text-shadow:0 0 8px rgba(255,40,40,.85);letter-spacing:.5px;">🩸 Obsesión</span>`;
+} else {
+const rar = (typeof shopRarityOf==='function') ? shopRarityOf(badge) : 'común';
+if (rar==='mítico') {
+el.className += ' shop-badge-mythic';
+el.innerHTML = `<span style="font-size:11px;font-weight:900;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.55);">${badge.emoji} ${badge.name}</span>`;
+} else if (rar==='legendario') {
+el.className += ' shop-badge-legend';
+el.innerHTML = `<span style="font-size:11px;font-weight:900;color:#fff2c0;text-shadow:0 0 6px rgba(240,192,64,.7);">${badge.emoji} ${badge.name}</span>`;
+} else if (rar==='épico') {
+const P=[['#c4a0ff','rgba(168,85,247,.18)','#a855f7'],['#f9a8d4','rgba(236,72,153,.18)','#ec4899'],['#67e8f9','rgba(6,182,212,.18)','#06b6d4'],['#fdba74','rgba(249,115,22,.18)','#f97316'],['#86efac','rgba(34,197,94,.18)','#22c55e']];
+let h=0,id=badge.id||''; for(let k=0;k<id.length;k++) h+=id.charCodeAt(k); const c=P[h%P.length];
+el.style.background=c[1]; el.style.border='1.5px solid '+c[2]; el.style.boxShadow='0 0 10px '+c[1];
+el.innerHTML = `<span style="font-size:11px;font-weight:800;color:${c[0]};">${badge.emoji} ${badge.name}</span>`;
+} else if (rar==='poco común') {
+el.style.background='rgba(125,211,252,.16)'; el.style.border='1.5px solid #7dd3fc'; el.style.boxShadow='0 0 9px rgba(125,211,252,.4)';
+el.innerHTML = `<span style="font-size:11px;font-weight:800;color:#bae6fd;">${badge.emoji} ${badge.name}</span>`;
 } else {
 el.innerHTML = `${badge.emoji} ${badge.name}`;
-el.className = 'profile-active-badge';
 }
-el.style.display = 'inline-flex';
+}
 wrap.appendChild(el);
 });
 const nameEl = document.getElementById('profileName');

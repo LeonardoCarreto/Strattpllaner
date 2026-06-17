@@ -1586,7 +1586,7 @@ Guardar configuración ✓
 <div class="panel" id="panel-tienda">
 <div class="panel-header">
 <div class="back-btn" onclick="closeTienda()">←</div>
-<div class="panel-title">🛒 Tienda</div>
+<div class="panel-title"><img src="assets/Imagenes/tienda.png" alt="" style="width:22px;height:22px;object-fit:contain;vertical-align:-4px;margin-right:5px;"> Tienda</div>
 <div style="display:flex;align-items:center;gap:8px;margin-left:auto;">
 <div id="eventoShopBtn" onclick="openPanel('evento')" style="
 width:36px;height:36px;border-radius:50%;
@@ -12079,7 +12079,7 @@ window.renderNewShop = renderNewShop;
 .scc-chip{flex-shrink:0;padding:8px 14px;border-radius:12px;border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:rgba(255,255,255,.55);font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap;}
 .scc-chip.active{background:var(--teal);border-color:var(--teal);color:#fff;box-shadow:0 3px 12px rgba(42,100,150,.45);}
 .shop-section-title{color:#fff;font-size:15px;font-weight:800;padding:4px 14px 10px;font-family:'Baloo Bhaijaan 2',cursive;}
-.shop-items-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;padding:0 14px;}
+.shop-items-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px;padding:0 12px;}
 .shop-items-grid.list{grid-template-columns:1fr;gap:0;padding:0;}
 @keyframes shopGridIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
 .shop-item-card{background:var(--navy-mid);border-radius:16px;overflow:hidden;border:1.5px solid rgba(255,255,255,.07);cursor:pointer;transition:transform .2s,box-shadow .2s;position:relative;display:flex;flex-direction:column;}
@@ -12100,7 +12100,7 @@ window.renderNewShop = renderNewShop;
 .shop-item-card.r-legendario .shop-item-art::after,.shop-item-card.r-mitico .shop-item-art::after{content:'';position:absolute;inset:0;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.28) 50%,transparent 65%);transform:translateX(-130%);animation:shopShine 2.8s ease-in-out infinite;pointer-events:none;}
 .shop-item-card.r-mitico .shop-item-art::after{animation-duration:1.9s;}
 @keyframes shopShine{0%{transform:translateX(-130%);}55%,100%{transform:translateX(130%);}}
-.shop-item-art{width:100%;aspect-ratio:1/1;max-height:190px;display:flex;align-items:center;justify-content:center;font-size:54px;position:relative;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(0,0,0,.25));}
+.shop-item-art{width:100%;aspect-ratio:1/1;max-height:140px;display:flex;align-items:center;justify-content:center;font-size:40px;position:relative;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(0,0,0,.25));}
 .shop-item-art img{width:100%;height:100%;object-fit:cover;}
 .shop-badge-new{position:absolute;top:8px;left:8px;background:var(--teal);color:#fff;font-size:9px;font-weight:900;padding:3px 8px;border-radius:8px;z-index:2;letter-spacing:.3px;}
 .shop-badge-rarity{position:absolute;top:8px;right:8px;font-size:8px;font-weight:900;padding:3px 7px;border-radius:8px;z-index:2;text-transform:uppercase;letter-spacing:.4px;}
@@ -12110,8 +12110,8 @@ window.renderNewShop = renderNewShop;
 .rb-legendario{background:rgba(240,192,64,.3);color:#ffd980;}
 .rb-mitico{background:linear-gradient(90deg,#ff3c78,#b450ff,#ff8a20);background-size:200% 100%;color:#fff;animation:shopMythText 3s linear infinite;}
 @keyframes shopMythText{to{background-position:200% 0;}}
-.shop-item-footer{padding:9px 11px 11px;display:flex;flex-direction:column;gap:4px;}
-.shop-item-name{color:#fff;font-size:12.5px;font-weight:800;line-height:1.2;font-family:'Baloo Bhaijaan 2',cursive;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.shop-item-footer{padding:7px 9px 9px;display:flex;flex-direction:column;gap:3px;}
+.shop-item-name{color:#fff;font-size:11px;font-weight:800;line-height:1.2;font-family:'Baloo Bhaijaan 2',cursive;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .shop-item-price{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:800;color:var(--yellow);font-family:'Baloo Bhaijaan 2',cursive;}
 .shop-item-price.owned{color:var(--green);}
 </style>

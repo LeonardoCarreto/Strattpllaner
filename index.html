@@ -12193,5 +12193,22 @@ window.renderNewShop = renderNewShop;
 .shop-item-price{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:800;color:var(--yellow);font-family:'Baloo Bhaijaan 2',cursive;}
 .shop-item-price.owned{color:var(--green);}
 </style>
+<style id="rachaRedesignCSS">
+.streak-big{display:inline-flex;flex-direction:column;align-items:center;gap:1px;background:rgba(255,255,255,.93);border:1.5px solid rgba(0,0,0,.05);border-radius:24px;padding:13px 42px 15px;margin:2px auto 16px;box-shadow:0 8px 24px rgba(0,0,0,.14);}
+.streak-icon-row{font-size:30px !important;filter:drop-shadow(0 2px 5px rgba(255,120,0,.4));}
+.streak-big-num{font-size:60px !important;font-weight:900 !important;line-height:.95 !important;background:linear-gradient(180deg,#ffaa3a,#ff6a1f 58%,#ff4326) !important;-webkit-background-clip:text !important;background-clip:text !important;-webkit-text-fill-color:transparent !important;color:transparent !important;text-shadow:none !important;}
+.streak-big-num.legendary{background:linear-gradient(180deg,#c08bff,#8a4dff) !important;-webkit-background-clip:text !important;background-clip:text !important;-webkit-text-fill-color:transparent !important;}
+.streak-big-label{color:#6b7280 !important;font-size:11px !important;letter-spacing:2px !important;font-weight:800 !important;margin-top:3px;}
+.streak-week-row{gap:8px !important;flex-wrap:nowrap !important;max-width:430px;margin:2px auto 0;}
+.streak-day-box{flex:1 1 0 !important;max-width:52px;min-width:0;gap:3px !important;background:#fff !important;border:1.5px solid rgba(0,0,0,.05) !important;border-radius:16px !important;padding:9px 2px !important;box-shadow:0 4px 12px rgba(0,0,0,.1) !important;transition:transform .2s,box-shadow .2s !important;}
+.streak-day-box.active{background:linear-gradient(180deg,#fff4e3,#ffe1be) !important;border-color:#ffb066 !important;box-shadow:0 6px 16px rgba(255,140,40,.32) !important;transform:translateY(-2px);}
+.streak-day-box.legendary-box.active{background:linear-gradient(180deg,#f4ecff,#e6d3ff) !important;border-color:#c4a0ff !important;box-shadow:0 6px 16px rgba(140,77,255,.3) !important;}
+.sdb-emoji{font-size:20px !important;}
+.streak-day-box.active .sdb-fire-on{filter:drop-shadow(0 1px 3px rgba(255,120,0,.5));}
+.sdb-day{color:#9aa0a6 !important;font-size:10px !important;font-weight:800 !important;}
+.streak-day-box.active .sdb-day{color:#e8590c !important;}
+.streak-day-box.legendary-box.active .sdb-day,.streak-day-box.legendary-box.active .sdb-done{color:#7c3aed !important;}
+.sdb-done{color:#e8590c !important;font-size:10px !important;min-height:11px !important;font-weight:900 !important;}
+</style>
 </body>
 </html>

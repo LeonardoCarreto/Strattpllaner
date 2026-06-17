@@ -10779,15 +10779,15 @@ function frame(prog){
   ctx.strokeStyle='#6edcd2';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.stroke();
   dPts.forEach(function(p){ctx.beginPath();ctx.arc(p.x,p.y,3,0,Math.PI*2);ctx.fillStyle='#6edcd2';ctx.fill();});
   // Labels de grupos musculares: simples, sin letter-spacing
-  ctx.fillStyle='rgba(255,255,255,.5)';
-  ctx.font='700 13px "Baloo Bhaijaan 2",sans-serif';
+  ctx.fillStyle='rgba(255,255,255,0.9)';
+  ctx.font='900 16px "Baloo Bhaijaan 2",sans-serif';
   AXES.forEach(function(ax){
     var a=rad(ax.deg);
     var lx=cx+Math.cos(a)*(R+12), ly=cy+Math.sin(a)*(R+12);
     var ca=Math.cos(a),sa=Math.sin(a);
     ctx.textAlign=ca>0.3?'left':ca<-0.3?'right':'center';
     ctx.textBaseline=sa>0.3?'top':sa<-0.3?'bottom':'middle';
-    ctx.fillText(ax.label,lx,ly);
+    ctx.fillText(ax.label.substring(0,3).toUpperCase(),lx,ly);
   });
 }
 // Animación de entrada simple (~600ms ease-out), sin loop continuo

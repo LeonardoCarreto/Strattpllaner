@@ -12044,7 +12044,7 @@ function shopOGClaimCard(){
     +   btn
     + '</div></div>';
 }
-function renderOGPromo(){ var el=document.getElementById('shopOGPromo'); if(!el) return; var og=window._shopItemRef('badges','b11'); el.innerHTML = (og && og.owned) ? '' : shopOGClaimCard(); }
+function renderOGPromo(){ var el=document.getElementById('shopOGPromo'); if(!el) return; el.innerHTML = shopOGClaimCard(); }
 window.renderOGPromo=renderOGPromo;
 function shopRarityOf(item){ if(item.rarity) return item.rarity; var p=item.price||0; if(p>=15000) return 'mítico'; if(p>=1000) return 'legendario'; if(p>=280) return 'épico'; if(p>=160) return 'raro'; return 'común'; }
 function shopRarKey(r){ return r==='común'?'comun':(r==='épico'?'epico':(r==='mítico'?'mitico':r)); }

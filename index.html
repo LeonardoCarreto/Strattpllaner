@@ -11944,7 +11944,7 @@ const FEATURED_SHOP = {
     { id:'fondos', cat:'fondos', name:'Fondos', subtitle:'"Personaliza tu mundo."', gradient:'linear-gradient(135deg,#243447,#0c0e14)', art:'🎨' },
     { id:'badges', cat:'badges', name:'Insignias', subtitle:'"Presume tus logros."', gradient:'linear-gradient(135deg,#3a2a05,#9a6a10)', art:'🏅' },
     { id:'poderes', cat:'poderes', name:'Poderes', subtitle:'"Gana la ventaja."', gradient:'linear-gradient(135deg,#08291a,#1a5c30)', art:'⚡' },
-    { id:'ruleta', cat:'ruleta', name:'Ruleta de la suerte', subtitle:'"¡Gira y gana premios!"', gradient:'linear-gradient(135deg,#0d3b1e,#2d8a4e)', art:'🍀', ruleta:true },
+    { id:'ruleta', cat:'ruleta', name:'Badge Luck', subtitle:'"¡Gíralo y gánatelo en la Ruleta!"', gradient:'linear-gradient(135deg,#0d3b1e,#2d8a4e)', art:'🍀', ruleta:true },
     { id:'og', cat:'og', name:'Badge OG', subtitle:'"Exclusivo. ¡Reclámalo gratis!"', gradient:'linear-gradient(135deg,#2a1f44,#0c0e14)', art:'🏅', og:true },
   ]
 };
@@ -12069,7 +12069,7 @@ function renderShopHero(){
       : '<button class="shop-hero-btn" onclick="claimOG()">🎁 Reclamar gratis</button>';
   } else if(col.ruleta){
     el.classList.remove('shop-hero-og'); el.style.background = col.gradient;
-    artHTML = '<div class="shop-hero-art">'+col.art+'</div>';
+    artHTML = '<div style="position:absolute;right:20px;top:50%;transform:translateY(-50%);z-index:1;animation:shopArtFloat 3.6s ease-in-out infinite;"><div class="profile-active-badge luck-active" style="display:inline-flex;transform:scale(1.7);"><span style="color:#5edc8a;font-family:&#39;Baloo Bhaijaan 2&#39;,cursive;font-size:13px;font-weight:900;text-shadow:0 0 6px rgba(94,220,138,.5);">🍀 Luck 🍀</span></div></div>';
     btnHTML = '<button class="shop-hero-btn" onclick="openPanel(\'ruleta\')">🍀 Girar ahora</button>';
   } else {
     el.classList.remove('shop-hero-og'); el.style.background = col.gradient;

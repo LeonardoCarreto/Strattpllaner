@@ -12059,7 +12059,7 @@ function renderShopHero(){
   var col = cols[ai];
   el.style.opacity='0'; el.style.border='';
   var _dn=cols.map(function(c,i){return '<span class="shop-hero-dot'+(i===ai?' active':'')+'"></span>';}).join('');
-  var artHTML, btnHTML;
+  var artHTML, btnHTML, extraHTML='';
   if(col.og){
     el.classList.add('shop-hero-og'); el.style.background='';
     artHTML = '<div style="position:absolute;right:24px;top:50%;transform:translateY(-50%);width:92px;height:92px;display:flex;align-items:center;justify-content:center;z-index:1;animation:shopArtFloat 3.6s ease-in-out infinite;"><div class="og-badge-glow"></div><span class="og-badge-text" style="font-size:54px;">OG</span></div>';
@@ -12069,7 +12069,8 @@ function renderShopHero(){
       : '<button class="shop-hero-btn" onclick="claimOG()">🎁 Reclamar gratis</button>';
   } else if(col.ruleta){
     el.classList.remove('shop-hero-og'); el.style.background = col.gradient;
-    artHTML = '<div style="position:absolute;right:20px;top:50%;transform:translateY(-50%);z-index:1;animation:shopArtFloat 3.6s ease-in-out infinite;"><div class="profile-active-badge luck-active" style="display:inline-flex;transform:scale(1.7);"><span style="color:#5edc8a;font-family:&#39;Baloo Bhaijaan 2&#39;,cursive;font-size:13px;font-weight:900;text-shadow:0 0 6px rgba(94,220,138,.5);">🍀 Luck 🍀</span></div></div>';
+    artHTML = '<div class="shop-hero-art">'+col.art+'</div>';
+    extraHTML = '<div style="margin-top:8px;"><div class="profile-active-badge luck-active" style="display:inline-flex;"><span style="color:#5edc8a;font-family:&#39;Baloo Bhaijaan 2&#39;,cursive;font-size:12px;font-weight:900;text-shadow:0 0 6px rgba(94,220,138,.5);">🍀 Luck 🍀</span></div></div>';
     btnHTML = '<button class="shop-hero-btn" onclick="openPanel(\'ruleta\')">🍀 Girar ahora</button>';
   } else {
     el.classList.remove('shop-hero-og'); el.style.background = col.gradient;
@@ -12078,7 +12079,7 @@ function renderShopHero(){
   }
   el.innerHTML = artHTML
     + '<button class="shop-hero-nav left" onclick="shopHeroNav(-1,event)">‹</button><button class="shop-hero-nav right" onclick="shopHeroNav(1,event)">›</button>'
-    + '<div class="shop-hero-text"><div class="shop-hero-title">'+escapeHtml(col.name)+'</div><div class="shop-hero-sub">'+escapeHtml(col.subtitle)+'</div>'+btnHTML+'</div>'
+    + '<div class="shop-hero-text"><div class="shop-hero-title">'+escapeHtml(col.name)+'</div><div class="shop-hero-sub">'+escapeHtml(col.subtitle)+'</div>'+extraHTML+btnHTML+'</div>'
     + '<div class="shop-hero-dots">'+_dn+'</div>';
   setTimeout(function(){ if(el) el.style.opacity='1'; }, 40);
 }

@@ -12061,7 +12061,7 @@ function renderShopHero(){
   var artHTML, btnHTML;
   if(col.og){
     el.classList.add('shop-hero-og'); el.style.background='';
-    artHTML = '<div style="position:absolute;right:24px;top:50%;transform:translateY(-50%);width:92px;height:92px;display:flex;align-items:center;justify-content:center;z-index:1;"><div class="og-badge-glow"></div><span class="og-badge-text" style="font-size:54px;">OG</span></div>';
+    artHTML = '<div style="position:absolute;right:24px;top:50%;transform:translateY(-50%);width:92px;height:92px;display:flex;align-items:center;justify-content:center;z-index:1;animation:shopArtFloat 3.6s ease-in-out infinite;"><div class="og-badge-glow"></div><span class="og-badge-text" style="font-size:54px;">OG</span></div>';
     var og=window._shopItemRef('badges','b11'); var owned=og&&og.owned;
     btnHTML = owned
       ? '<button class="shop-hero-btn" style="background:rgba(94,220,138,.9);color:#0c2a16;cursor:default;">✓ Reclamado</button>'
@@ -12097,10 +12097,11 @@ window.renderNewShop = renderNewShop;
 </script>
 <style id="shopRedesignCSS">
 .shop-hero-banner{position:relative;min-height:150px;border-radius:0 0 22px 22px;overflow:hidden;margin-bottom:14px;display:flex;align-items:flex-end;padding:18px;transition:opacity .4s ease;}
-.shop-hero-art{position:absolute;right:-6px;top:50%;transform:translateY(-50%);font-size:120px;opacity:.85;filter:drop-shadow(0 8px 20px rgba(0,0,0,.4));pointer-events:none;line-height:1;}
+.shop-hero-art{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:86px;opacity:.92;filter:drop-shadow(0 8px 20px rgba(0,0,0,.4));pointer-events:none;line-height:1;animation:shopArtFloat 3.6s ease-in-out infinite;}
+@keyframes shopArtFloat{0%,100%{transform:translateY(-50%) translateY(0) rotate(0deg);}50%{transform:translateY(-50%) translateY(-11px) rotate(5deg);}}
 .shop-hero-og{background:linear-gradient(115deg,#ff0080,#ff8c00,#ffe100,#00ff88,#00c8ff,#a855f7,#ff0080);background-size:300% 100%;animation:ogShift 5s linear infinite;}
 .shop-hero-og::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.75) 0%,rgba(0,0,0,.32) 55%,rgba(0,0,0,0) 100%);z-index:0;pointer-events:none;}
-.shop-hero-text{position:relative;z-index:2;max-width:64%;}
+.shop-hero-text{position:relative;z-index:2;max-width:62%;padding-left:36px;}
 .shop-hero-title{color:#fff;font-size:25px;font-weight:900;font-family:'Baloo Bhaijaan 2',cursive;line-height:1.05;text-shadow:0 2px 8px rgba(0,0,0,.55);}
 .shop-hero-sub{color:rgba(255,255,255,.82);font-size:11px;font-weight:600;margin-top:5px;text-shadow:0 1px 4px rgba(0,0,0,.5);}
 .shop-hero-btn{margin-top:13px;background:#fff;color:#111;border:none;border-radius:20px;padding:9px 20px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(0,0,0,.35);}

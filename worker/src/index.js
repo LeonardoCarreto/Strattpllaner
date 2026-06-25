@@ -167,7 +167,7 @@ function indexOf(haystack, needle) {
 }
 
 function validateImage(part) {
-  const { mimeType, data } = part.inlineData ?? {};
+  const { mime_type: mimeType, data } = part.inline_data ?? {};
 
   if (!mimeType || !MAGIC[mimeType]) {
     return `Tipo de archivo no permitido: ${mimeType || 'desconocido'}`;
@@ -275,7 +275,7 @@ export default {
     // ── 4. Image validation (magic bytes + malware scan) ──
     for (const content of body.contents) {
       for (const part of content.parts ?? []) {
-        if (!part.inlineData) continue;
+        if (!part.inline_data) continue;
         const err = validateImage(part);
         if (err) return jsonResponse(400, { error: { message: err } }, cors);
       }

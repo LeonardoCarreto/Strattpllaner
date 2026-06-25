@@ -1820,15 +1820,21 @@ async function geminiPost(body, maxRetries = 3) {
       await new Promise(r => setTimeout(r, wait));
     }
     const token  = await user.getIdToken();
-    const res = await fetch(GEMINI_PROXY_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token,
-        'X-User-Id':     user.uid
-      },
-      body: JSON.stringify(body)
-    });
+    let res;
+    try {
+      res = await fetch(GEMINI_PROXY_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+          'X-User-Id':     user.uid
+        },
+        body: JSON.stringify(body)
+      });
+    } catch (fetchErr) {
+      lastErr = fetchErr;
+      continue;
+    }
     if (res.status === 429) {
       lastErr = new Error('Límite de IA alcanzado. Espera 1 minuto e intenta de nuevo.');
       continue;
@@ -1840,7 +1846,14 @@ async function geminiPost(body, maxRetries = 3) {
       const j = await res.json().catch(() => ({}));
       throw new Error('HTTP ' + res.status + ': ' + JSON.stringify(j).slice(0, 120));
     }
-    return res.json();
+    let data;
+    try {
+      data = await res.json();
+    } catch (jsonErr) {
+      lastErr = jsonErr;
+      continue;
+    }
+    return data;
   }
   throw lastErr;
 }
@@ -6935,14 +6948,21 @@ const reader = new FileReader();
 reader.onload = async (ev) => {
 const rawBase64 = ev.target.result.split(',')[1];
 comprimirImagen(rawBase64, async (b64) => {
-try {
 const prompt = phase === 'start'
 ? '¿Esta foto muestra un lugar adecuado para hacer ejercicio? (gimnasio, parque, espacio en casa con equipo, etc). Responde SOLO con JSON: {"aprobado": true/false, "razon": "..."}'
 : '¿Esta foto muestra un lugar donde alguien acaba de hacer ejercicio? (gimnasio, espacio de entrenamiento, equipo deportivo, etc). Responde SOLO con JSON: {"aprobado": true/false, "razon": "..."}';
-const json = await geminiPost({
+let json;
+try {
+json = await geminiPost({
 contents: [{parts: [{inline_data:{mime_type:'image/jpeg',data:b64}},{text:prompt}]}],
 generationConfig: {maxOutputTokens:80,temperature:0.3}
 });
+} catch(err) {
+console.error(err);
+showToast('❌ Error de conexión. Intenta de nuevo.');
+renderWorkoutBtn();
+return;
+}
 const text = json.candidates?.[0]?.content?.parts?.[0]?.text || '';
 let result;
 try { result = JSON.parse(text.replace(/```json|```/g,'').trim()); }
@@ -6980,10 +7000,6 @@ renderRutina();
 } else {
 const msg = phase==='start' ? '❌ No parece un lugar adecuado para entrenar. Intenta de nuevo.' : '❌ No se pudo verificar el fin del entrenamiento. Intenta de nuevo.';
 showToast(msg);
-renderWorkoutBtn();
-}
-} catch(err) {
-showToast('❌ Error de conexión. Intenta de nuevo.');
 renderWorkoutBtn();
 }
 });
